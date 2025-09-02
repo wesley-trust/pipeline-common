@@ -40,7 +40,7 @@ jobs:
           artifactName: source-snapshot
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
-        - ${{ if gt(length(actionGroup.actions), 0) }}:
+        - ${{ if ne(coalesce(actionGroup.actions, ''), '') }}:
           - ${{ each action in actionGroup.actions }}:
             - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
               - template: ../../steps/powershell.yml@PipelineCommon
