@@ -95,7 +95,7 @@ stages:
       environments: ${{ coalesce(parameters.configuration.environments, parameters.environments) }}
       pool: ${{ coalesce(parameters.configuration.defaultPool, parameters.defaultPool) }}
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
-      validation: ${{ coalesce(parameters.configuration.validation, {}) }}
+      validation: ${{ coalesce(parameters.configuration.validation, '') }}
       customValidationScripts: ${{ coalesce(parameters.configuration.customValidationScripts, parameters.customValidationScripts) }}
       dependsOnStages:
         - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}: setup_global
@@ -130,8 +130,8 @@ stages:
             variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
             variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
             variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, {}) }}
-            keyVault: ${{ coalesce(parameters.configuration.keyVault, {}) }}
+            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+            keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
             poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
             dependsOnStages:
               - validation
@@ -158,8 +158,8 @@ stages:
               variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
               variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
               variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-              additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, {}) }}
-              keyVault: ${{ coalesce(parameters.configuration.keyVault, {}) }}
+              additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+              keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
               dependsOnStages:
                 - validation
@@ -182,8 +182,8 @@ stages:
             variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
             variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
             variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, {}) }}
-            keyVault: ${{ coalesce(parameters.configuration.keyVault, {}) }}
+            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+            keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
             poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
             dependsOnStages:
               - validation
@@ -214,8 +214,8 @@ stages:
             variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
             variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
             variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, {}) }}
-            keyVault: ${{ coalesce(parameters.configuration.keyVault, {}) }}
+            additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+            keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
             poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
             dependsOnStages:
               - validation
