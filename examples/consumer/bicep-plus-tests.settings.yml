@@ -29,7 +29,8 @@ parameters:
 resources:
   repositories:
     - repository: PipelineDispatcher
-      type: git
+      type: github
+      endpoint: wesley-trust
       name: pipeline-dispatcher
       ref: 'refs/heads/main'
 
