@@ -160,7 +160,7 @@ stages:
                     - ${{ if gt(length(actionGroup.actions), 0) }}:
                       - ${{ each action in actionGroup.actions }}:
                         - ${{ if eq(action.type, 'terraform') }}:
-                          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                          - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                               - template: steps/replace-tokens.yml@PipelineCommon
                                 parameters:
@@ -196,7 +196,7 @@ stages:
                                 condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                         - ${{ if eq(action.type, 'bicep') }}:
-                          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                          - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                               - template: steps/replace-tokens.yml@PipelineCommon
                                 parameters:

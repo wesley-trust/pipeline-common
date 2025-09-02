@@ -42,7 +42,7 @@ jobs:
       - ${{ each actionGroup in parameters.actionGroups }}:
         - ${{ if ne(coalesce(actionGroup.actions, ''), '') }}:
           - ${{ each action in actionGroup.actions }}:
-            - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+            - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
               - template: ../../steps/powershell.yml@PipelineCommon
                 parameters:
                   displayName: Validate token patterns (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'ACTION'), '_', ' '))) }})

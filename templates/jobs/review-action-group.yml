@@ -97,7 +97,7 @@ jobs:
       # Execute each action sequentially within the action group
       - ${{ each action in parameters.actionGroup.actions }}:
         - ${{ if and(eq(action.type, 'terraform'), eq(parameters.runTerraformPlan, true)) }}:
-          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+          - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
               - template: ../steps/replace-tokens.yml@PipelineCommon
                 parameters:
@@ -139,7 +139,7 @@ jobs:
               targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
         - ${{ if and(eq(action.type, 'bicep'), eq(parameters.runBicepWhatIf, true)) }}:
-          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+          - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
               - template: ../steps/replace-tokens.yml@PipelineCommon
                 parameters:
@@ -188,7 +188,7 @@ jobs:
 
         - ${{ if eq(action.type, 'powershell') }}:
           - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
-            - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+            - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
               - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                 - template: ../steps/replace-tokens.yml@PipelineCommon
                   parameters:
