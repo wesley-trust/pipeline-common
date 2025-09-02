@@ -12,8 +12,7 @@ parameters:
 jobs:
   - job: validate_settings
     displayName: Validate Settings
-    $${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     pool:
       ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
         name: ${{ parameters.pool.name }}
