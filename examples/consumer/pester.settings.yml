@@ -8,8 +8,15 @@ parameters:
     type: boolean
     default: false
 
+resources:
+  repositories:
+    - repository: PipelineDispatcher
+      type: git
+      name: pipeline-dispatcher
+      ref: 'refs/heads/main'
+
 extends:
-  template: ../dispatcher/dispatcher.yml
+  template: /templates/pipeline-dispatcher.yml@PipelineDispatcher
   parameters:
     configuration:
       environments:

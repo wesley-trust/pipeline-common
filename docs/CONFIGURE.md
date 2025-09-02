@@ -7,7 +7,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 - You keep two consumer-side files per example:
   - `<example>.pipeline.yml` (top-level): declares standard triggers, individual parameters (e.g., enableProduction, runReviewStage, per-environment skip booleans), and an `actionGroups` object in the unified main-group/child model.
   - `<example>.settings.yml`: composes a single `configuration` object from the pipeline parameters, actionGroups, and defaults. It extends the shared dispatcher and passes only `configuration` through.
-  - The shared dispatcher lives at `examples/dispatcher/dispatcher.yml` and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
+  - The shared dispatcher lives at `examples/dispatcher/pipeline-dispatcher.yml` and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
 - All scripts run PowerShell 7 (pwsh) from a central `pipeline-common/scripts/` folder via reusable task templates. Inline scripts are not allowed.
 - The setup stage locks sources by publishing a snapshot artifact; every later stage downloads and uses the same snapshot.
 
@@ -41,7 +41,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 ```
 <example>.pipeline.yml (parameters + actionGroups) →
 <example>.settings.yml (compose `configuration`) →
-examples/dispatcher/dispatcher.yml (pass `configuration`) →
+examples/dispatcher/pipeline-dispatcher.yml (pass `configuration`) →
 templates/main.yml@PipelineCommon (consume `configuration`)
 ```
 
@@ -260,7 +260,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Examples
 
-- Shared dispatcher: `examples/dispatcher/dispatcher.yml` (all examples extend and pass one `configuration`).
+- Shared dispatcher: `examples/dispatcher/pipeline-dispatcher.yml` (all examples extend and pass one `configuration`).
 - Consumer pipelines:
   - `examples/consumer/bicep.pipeline.yml`
   - `examples/consumer/terraform.pipeline.yml`
