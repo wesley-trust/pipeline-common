@@ -53,7 +53,6 @@ stages:
   - stage: review_${{ parameters.environmentName }}
     displayName: "Review: ${{ parameters.environmentName }}"
     dependsOn: ${{ coalesce(parameters.dependsOnStages, 'validation') }}
-      dependsOn: validation
     condition: succeeded()
     jobs:
       # Fan-out by regions if provided; otherwise single set without region.
