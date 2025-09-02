@@ -31,7 +31,7 @@ resources:
     - repository: PipelineDispatcher
       type: github
       endpoint: wesley-trust
-      name: pipeline-dispatcher
+      name: wesley-trust/pipeline-dispatcher
       ref: 'refs/heads/main'
 
 extends:
