@@ -26,7 +26,6 @@ parameters:
     type: string
     default: 'vars'
 
-
   # Optional: regions fan-out (if provided, per-env jobs can iterate regions)
   - name: regions
     type: object
@@ -83,7 +82,7 @@ stages:
     - template: stages/setup-stage.yml@PipelineCommon
       parameters:
         stageName: setup_global
-        display: Setup: Global
+        display: 'Setup: Global'
         serviceConnection: ${{ coalesce(parameters.configuration.serviceConnection, parameters.serviceConnection) }}
         pool: ${{ coalesce(parameters.configuration.defaultPool, parameters.defaultPool) }}
         terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
