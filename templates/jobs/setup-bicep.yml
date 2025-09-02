@@ -14,20 +14,21 @@ parameters:
     type: object
     default: {}
 
-job: ${{ parameters.name }}
-displayName: ${{ parameters.displayName }}
-pool:
-  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-    name: ${{ parameters.pool.name }}
-  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-    vmImage: ${{ parameters.pool.vmImage }}
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    pool:
+      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        name: ${{ parameters.pool.name }}
+      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        vmImage: ${{ parameters.pool.vmImage }}
 
-steps:
-  - checkout: PipelineCommon
+    steps:
+      - checkout: PipelineCommon
 
-  - template: steps/azurecli.yml@PipelineCommon
-    parameters:
-      displayName: Install Bicep
-      azureSubscription: ${{ parameters.serviceConnection }}
-      repoAlias: PipelineCommon
-      script: setup_bicep.ps1
+      - template: steps/azurecli.yml@PipelineCommon
+        parameters:
+          displayName: Install Bicep
+          azureSubscription: ${{ parameters.serviceConnection }}
+          repoAlias: PipelineCommon
+          script: setup_bicep.ps1

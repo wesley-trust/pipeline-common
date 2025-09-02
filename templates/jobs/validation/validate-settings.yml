@@ -9,34 +9,35 @@ parameters:
     type: object
     default: []
 
-job: validate_settings
-displayName: Validate Settings
-$${{ if gt(length(parameters.dependsOnStages), 0) }}:
-  dependsOn: ${{ parameters.dependsOnStages }}
-pool:
-  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-    name: ${{ parameters.pool.name }}
-  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-    vmImage: ${{ parameters.pool.vmImage }}
+jobs:
+  - job: validate_settings
+    displayName: Validate Settings
+    $${{ if gt(length(parameters.dependsOnStages), 0) }}:
+      dependsOn: ${{ parameters.dependsOnStages }}
+    pool:
+      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        name: ${{ parameters.pool.name }}
+      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        vmImage: ${{ parameters.pool.vmImage }}
 
-steps:
-  - checkout: none
-  - checkout: PipelineCommon
-  - template: ../../steps/powershell.yml@PipelineCommon
-    parameters:
-      displayName: Validate pools configuration
-      repoAlias: PipelineCommon
-      script: validate_pools.ps1
-      arguments: >-
-        -DefaultPoolName "${{ coalesce(parameters.pool.name, '') }}"
-        -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
-        -EnvPools ${{ each env in parameters.environments }}:@{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
+    steps:
+      - checkout: none
+      - checkout: PipelineCommon
+      - template: ../../steps/powershell.yml@PipelineCommon
+        parameters:
+          displayName: Validate pools configuration
+          repoAlias: PipelineCommon
+          script: validate_pools.ps1
+          arguments: >-
+            -DefaultPoolName "${{ coalesce(parameters.pool.name, '') }}"
+            -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
+            -EnvPools ${{ each env in parameters.environments }}:@{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
 
-  - template: ../../steps/powershell.yml@PipelineCommon
-    parameters:
-      displayName: Validate environment model
-      repoAlias: PipelineCommon
-      script: validate_environment_model.ps1
-      arguments: >-
-        -Environments ${{ each env in parameters.environments }}:@{ name='${{ env.name }}'; class='${{ env.class }}'; dependsOn='${{ env.dependsOn }}' }
+      - template: ../../steps/powershell.yml@PipelineCommon
+        parameters:
+          displayName: Validate environment model
+          repoAlias: PipelineCommon
+          script: validate_environment_model.ps1
+          arguments: >-
+            -Environments ${{ each env in parameters.environments }}:@{ name='${{ env.name }}'; class='${{ env.class }}'; dependsOn='${{ env.dependsOn }}' }
 

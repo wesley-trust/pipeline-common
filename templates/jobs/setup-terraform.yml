@@ -14,21 +14,22 @@ parameters:
     type: object
     default: {}
 
-job: ${{ parameters.name }}
-displayName: ${{ parameters.displayName }}
-condition: and(succeeded(), ne('${{ parameters.terraformVersion }}',''))
-pool:
-  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-    name: ${{ parameters.pool.name }}
-  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-    vmImage: ${{ parameters.pool.vmImage }}
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    condition: and(succeeded(), ne('${{ parameters.terraformVersion }}',''))
+    pool:
+      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        name: ${{ parameters.pool.name }}
+      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        vmImage: ${{ parameters.pool.vmImage }}
 
-steps:
-  - checkout: PipelineCommon
+    steps:
+      - checkout: PipelineCommon
 
-  - template: steps/azurecli.yml@PipelineCommon
-    parameters:
-      displayName: Install Terraform ${{ parameters.terraformVersion }}
-      repoAlias: PipelineCommon
-      script: setup_terraform.ps1
-      arguments: -Version ${{ parameters.terraformVersion }}
+      - template: steps/azurecli.yml@PipelineCommon
+        parameters:
+          displayName: Install Terraform ${{ parameters.terraformVersion }}
+          repoAlias: PipelineCommon
+          script: setup_terraform.ps1
+          arguments: -Version ${{ parameters.terraformVersion }}

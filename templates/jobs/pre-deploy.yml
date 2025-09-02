@@ -55,56 +55,57 @@ parameters:
     type: boolean
     default: true
 
-job: ${{ parameters.name }}
-displayName: ${{ parameters.displayName }}
-dependsOn: ${{ parameters.dependsOn }}
-pool:
-  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-    name: ${{ parameters.pool.name }}
-  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-    vmImage: ${{ parameters.pool.vmImage }}
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    dependsOn: ${{ parameters.dependsOn }}
+    pool:
+      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        name: ${{ parameters.pool.name }}
+      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        vmImage: ${{ parameters.pool.vmImage }}
 
-variables:
-  - template: variables/include.yml@PipelineCommon
-    parameters:
-      variableRoot: ${{ parameters.variableRoot }}
-      environmentName: ${{ parameters.environmentName }}
-      regionName: ${{ parameters.region }}
-      includeCommon: ${{ parameters.variableIncludeCommon }}
-      includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
-      includeEnv: ${{ parameters.variableIncludeEnv }}
-      includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
+    variables:
+      - template: variables/include.yml@PipelineCommon
+        parameters:
+          variableRoot: ${{ parameters.variableRoot }}
+          environmentName: ${{ parameters.environmentName }}
+          regionName: ${{ parameters.region }}
+          includeCommon: ${{ parameters.variableIncludeCommon }}
+          includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+          includeEnv: ${{ parameters.variableIncludeEnv }}
+          includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
 
-steps:
-  # Use locked sources for RTL integrity
-  - ${{ if eq(parameters.useLockedSources, true) }}:
-    - checkout: none
-    - checkout: PipelineCommon
-    - template: steps/download-artifact.yml@PipelineCommon
-      parameters:
-        displayName: Download source snapshot
-        artifactName: ${{ parameters.lockedArtifactName }}
-        downloadPath: ${{ parameters.lockedSourcePath }}
-  - ${{ if eq(parameters.useLockedSources, false) }}:
-    - checkout: self
-    - checkout: PipelineCommon
-  - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-    - ${{ each repo in parameters.additionalRepositories }}:
-      - checkout: ${{ repo.alias }}
+    steps:
+      # Use locked sources for RTL integrity
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+        - checkout: none
+        - checkout: PipelineCommon
+        - template: steps/download-artifact.yml@PipelineCommon
+          parameters:
+            displayName: Download source snapshot
+            artifactName: ${{ parameters.lockedArtifactName }}
+            downloadPath: ${{ parameters.lockedSourcePath }}
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+        - checkout: self
+        - checkout: PipelineCommon
+      - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+        - ${{ each repo in parameters.additionalRepositories }}:
+          - checkout: ${{ repo.alias }}
 
-  - ${{ each s in parameters.scripts }}:
-    - template: steps/powershell.yml@PipelineCommon
-      parameters:
-        displayName: Pre (script)
-        repoAlias: PipelineCommon
-        script: ${{ s.script }}
-        arguments: ${{ s.arguments }}
+      - ${{ each s in parameters.scripts }}:
+        - template: steps/powershell.yml@PipelineCommon
+          parameters:
+            displayName: Pre (script)
+            repoAlias: PipelineCommon
+            script: ${{ s.script }}
+            arguments: ${{ s.arguments }}
 
-  # Optional Key Vault secret import for pre-deploy (if configured)
-  - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-    - template: steps/import-keyvault-secrets.yml@PipelineCommon
-      parameters:
-        displayName: Import Key Vault Secrets
-        azureSubscription: ''
-        keyVaultName: ${{ parameters.keyVault.name }}
-        secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+      # Optional Key Vault secret import for pre-deploy (if configured)
+      - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
+        - template: steps/import-keyvault-secrets.yml@PipelineCommon
+          parameters:
+            displayName: Import Key Vault Secrets
+            azureSubscription: ''
+            keyVaultName: ${{ parameters.keyVault.name }}
+            secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}

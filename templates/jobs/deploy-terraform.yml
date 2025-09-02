@@ -79,90 +79,91 @@ parameters:
     type: boolean
     default: true
 
-job: ${{ parameters.name }}
-displayName: ${{ coalesce(parameters.displayName, upper(replace(parameters.name, '_', ' '))) }}
-dependsOn: ${{ parameters.dependsOn }}
-pool:
-  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-    name: ${{ parameters.pool.name }}
-  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-    vmImage: ${{ parameters.pool.vmImage }}
-  ${{ if gt(length(parameters.demands), 0) }}:
-    demands: ${{ parameters.demands }}
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ coalesce(parameters.displayName, upper(replace(parameters.name, '_', ' '))) }}
+    dependsOn: ${{ parameters.dependsOn }}
+    pool:
+      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        name: ${{ parameters.pool.name }}
+      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        vmImage: ${{ parameters.pool.vmImage }}
+      ${{ if gt(length(parameters.demands), 0) }}:
+        demands: ${{ parameters.demands }}
 
-variables:
-  - template: variables/include.yml@PipelineCommon
-    parameters:
-      variableRoot: ${{ parameters.variableRoot }}
-      environmentName: ${{ parameters.environmentName }}
-      regionName: ${{ parameters.region }}
-      includeCommon: ${{ parameters.variableIncludeCommon }}
-      includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
-      includeEnv: ${{ parameters.variableIncludeEnv }}
-      includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
-
-steps:
-  # Use locked sources for RTL integrity (no fresh checkout of self)
-  - ${{ if eq(parameters.useLockedSources, true) }}:
-    - checkout: none
-    - checkout: PipelineCommon
-    - template: steps/download-artifact.yml@PipelineCommon
-      parameters:
-        displayName: Download source snapshot
-        artifactName: ${{ parameters.lockedArtifactName }}
-        downloadPath: ${{ parameters.lockedSourcePath }}
-  - ${{ if eq(parameters.useLockedSources, false) }}:
-    - checkout: self
-    - checkout: PipelineCommon
-  - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-    - ${{ each repo in parameters.additionalRepositories }}:
-      - checkout: ${{ repo.alias }}
-
-  # Optional Key Vault secret import
-  - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-    - template: steps/import-keyvault-secrets.yml@PipelineCommon
-      parameters:
-        displayName: Import Key Vault Secrets
-        azureSubscription: ${{ parameters.serviceConnection }}
-        keyVaultName: ${{ parameters.keyVault.name }}
-        secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
-
-  # Optional token replacement (supports multiple patterns)
-  - ${{ if eq(parameters.tokenReplaceEnabled, true) }}:
-    - ${{ if gt(length(parameters.tokenTargetPatterns), 0) }}:
-      - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
-        - template: steps/replace-tokens.yml@PipelineCommon
-          parameters:
-            displayName: Terraform token replacement (${ tokenPattern })
-            targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
-            tokenPrefix: ${{ parameters.tokenPrefix }}
-            tokenSuffix: ${{ parameters.tokenSuffix }}
-    - ${{ if eq(length(parameters.tokenTargetPatterns), 0) }}:
-      - template: steps/replace-tokens.yml@PipelineCommon
+    variables:
+      - template: variables/include.yml@PipelineCommon
         parameters:
-          displayName: Terraform token replacement
-          targetFiles: ${{ format('{0}/{1}/**/*.tfvars', parameters.lockedSourcePath, parameters.workingDirectory) }}
-          tokenPrefix: ${{ parameters.tokenPrefix }}
-          tokenSuffix: ${{ parameters.tokenSuffix }}
+          variableRoot: ${{ parameters.variableRoot }}
+          environmentName: ${{ parameters.environmentName }}
+          regionName: ${{ parameters.region }}
+          includeCommon: ${{ parameters.variableIncludeCommon }}
+          includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+          includeEnv: ${{ parameters.variableIncludeEnv }}
+          includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
 
-  # Run Terraform via centralized script using AzureCLI to ensure login
-  - template: steps/azurecli.yml@PipelineCommon
-    parameters:
-      displayName: ${{ coalesce(parameters.displayName, upper(replace(parameters.name, '_', ' '))) }} ${{ parameters.action }}
-      azureSubscription: ${{ parameters.serviceConnection }}
-      repoAlias: PipelineCommon
-      script: terraform_run.ps1
-      arguments: >-
-        -Action ${{ parameters.action }}
-        -WorkDir "${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.workingDirectory) }}"
-        -EnvironmentName "${{ parameters.environmentName }}"
-        -VarFilesString "${{ parameters.varFilesString }}"
-      workingDirectory: ${{ parameters.lockedSourcePath }}
+    steps:
+      # Use locked sources for RTL integrity (no fresh checkout of self)
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+        - checkout: none
+        - checkout: PipelineCommon
+        - template: steps/download-artifact.yml@PipelineCommon
+          parameters:
+            displayName: Download source snapshot
+            artifactName: ${{ parameters.lockedArtifactName }}
+            downloadPath: ${{ parameters.lockedSourcePath }}
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+        - checkout: self
+        - checkout: PipelineCommon
+      - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+        - ${{ each repo in parameters.additionalRepositories }}:
+          - checkout: ${{ repo.alias }}
 
-  # Publish plan when requested (plan action only)
-  - ${{ if and(eq(parameters.action, 'plan'), eq(parameters.publishPlan, true)) }}:
-    - template: steps/publish-artifact.yml@PipelineCommon
-      parameters:
-        displayName: Publish Terraform Plan
-        artifactName: terraform-plan-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
-        targetPath: ${{ format('{0}/{1}/tfplan', parameters.lockedSourcePath, parameters.workingDirectory) }}
+      # Optional Key Vault secret import
+      - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
+        - template: steps/import-keyvault-secrets.yml@PipelineCommon
+          parameters:
+            displayName: Import Key Vault Secrets
+            azureSubscription: ${{ parameters.serviceConnection }}
+            keyVaultName: ${{ parameters.keyVault.name }}
+            secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+
+      # Optional token replacement (supports multiple patterns)
+      - ${{ if eq(parameters.tokenReplaceEnabled, true) }}:
+        - ${{ if gt(length(parameters.tokenTargetPatterns), 0) }}:
+          - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
+            - template: steps/replace-tokens.yml@PipelineCommon
+              parameters:
+                displayName: Terraform token replacement (${ tokenPattern })
+                targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
+                tokenPrefix: ${{ parameters.tokenPrefix }}
+                tokenSuffix: ${{ parameters.tokenSuffix }}
+        - ${{ if eq(length(parameters.tokenTargetPatterns), 0) }}:
+          - template: steps/replace-tokens.yml@PipelineCommon
+            parameters:
+              displayName: Terraform token replacement
+              targetFiles: ${{ format('{0}/{1}/**/*.tfvars', parameters.lockedSourcePath, parameters.workingDirectory) }}
+              tokenPrefix: ${{ parameters.tokenPrefix }}
+              tokenSuffix: ${{ parameters.tokenSuffix }}
+
+      # Run Terraform via centralized script using AzureCLI to ensure login
+      - template: steps/azurecli.yml@PipelineCommon
+        parameters:
+          displayName: ${{ coalesce(parameters.displayName, upper(replace(parameters.name, '_', ' '))) }} ${{ parameters.action }}
+          azureSubscription: ${{ parameters.serviceConnection }}
+          repoAlias: PipelineCommon
+          script: terraform_run.ps1
+          arguments: >-
+            -Action ${{ parameters.action }}
+            -WorkDir "${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.workingDirectory) }}"
+            -EnvironmentName "${{ parameters.environmentName }}"
+            -VarFilesString "${{ parameters.varFilesString }}"
+          workingDirectory: ${{ parameters.lockedSourcePath }}
+
+      # Publish plan when requested (plan action only)
+      - ${{ if and(eq(parameters.action, 'plan'), eq(parameters.publishPlan, true)) }}:
+        - template: steps/publish-artifact.yml@PipelineCommon
+          parameters:
+            displayName: Publish Terraform Plan
+            artifactName: terraform-plan-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
+            targetPath: ${{ format('{0}/{1}/tfplan', parameters.lockedSourcePath, parameters.workingDirectory) }}
