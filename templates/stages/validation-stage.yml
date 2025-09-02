@@ -124,16 +124,16 @@ stages:
 
       # Invoke PowerShell actions in Validation when requested
       - ${{ each actionGroup in parameters.actionGroups }}:
-        - ${{ if ne(coalesce(ag.actions, ''), '') }}:
+        - ${{ if ne(coalesce(actionGroup.actions, ''), '') }}:
           - ${{ each action in actionGroup.actions }}:
-            - ${{ if and(eq(a.type, 'powershell'), eq(coalesce(a.runInValidation, false), true)) }}:
+            - ${{ if and(eq(action.type, 'powershell'), eq(coalesce(action.runInValidation, false), true)) }}:
               - template: ../jobs/run-powershell.yml@PipelineCommon
                 parameters:
-                  name: ${{ coalesce(a.name, 'ps') }}_validation
-                  displayName: ${{ coalesce(a.displayName, upper(replace(coalesce(a.name, 'POWERSHELL'), '_', ' '))) }} (Validation)
-                  scriptPath: ${{ a.scriptPath }}
+                  name: ${{ coalesce(action.name, 'ps') }}_validation
+                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Validation)
+                  scriptPath: ${{ action.scriptPath }}
                   scriptFullPath: ''
-                  arguments: ${{ a.arguments }}
+                  arguments: ${{ action.arguments }}
                   variableRoot: ${{ parameters.variableRoot }}
                   environmentName: ''
                   region: ''
@@ -141,11 +141,11 @@ stages:
                   lockedArtifactName: source-snapshot
                   lockedSourcePath: $(Pipeline.Workspace)/locked-sources
                   pool: ${{ parameters.pool }}
-                  tokenReplaceEnabled: ${{ coalesce(a.tokenReplaceEnabled, true) }}
-                  tokenTargetPatterns: ${{ a.tokenTargetPatterns }}
-                  tokenPrefix: ${{ coalesce(a.tokenPrefix, '#{') }}
-                  tokenSuffix: ${{ coalesce(a.tokenSuffix, '}') }}
-                  delayMinutes: ${{ coalesce(a.delayMinutes, 0) }}
+                  tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, true) }}
+                  tokenTargetPatterns: ${{ action.tokenTargetPatterns }}
+                  tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                  tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                  delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
                   additionalRepositories: ${{ parameters.additionalRepositories }}
                   keyVault: ${{ parameters.keyVault }}
                   serviceConnection: ${{ parameters.serviceConnection }}
