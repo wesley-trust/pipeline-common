@@ -22,21 +22,33 @@ jobs:
     steps:
       - checkout: none
       - checkout: PipelineCommon
+      
+      # Always validate defaults
       - template: ../../steps/powershell.yml@PipelineCommon
         parameters:
-          displayName: Validate pools configuration
+          displayName: Validate default pool
           repoAlias: PipelineCommon
           script: validate_pools.ps1
           arguments: >-
             -DefaultPoolName "${{ coalesce(parameters.pool.name, '') }}"
             -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
-            -EnvPools ${{ each env in parameters.environments }}:@{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
 
-      - template: ../../steps/powershell.yml@PipelineCommon
-        parameters:
-          displayName: Validate environment model
-          repoAlias: PipelineCommon
-          script: validate_environment_model.ps1
-          arguments: >-
-            -Environments ${{ each env in parameters.environments }}:@{ name='${{ env.name }}'; class='${{ env.class }}'; dependsOn='${{ env.dependsOn }}' }
+        # One run per environment
+        ${{ each env in parameters.environments }}:
+          - template: ../../steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: "Validate pool config for ${{ env.name }}"
+              repoAlias: PipelineCommon
+              script: validate_pools.ps1
+              arguments: >-
+                -EnvPools @{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
 
+          - template: ../../steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: "Validate environment model — ${{ env.name }}"
+              repoAlias: PipelineCommon
+              script: validate_environment_model.ps1
+              arguments: >-
+                -Name '${{ env.name }}'
+                -Class '${{ env.class }}'
+                -DependsOn '${{ coalesce(env.dependsOn, '') }}'
