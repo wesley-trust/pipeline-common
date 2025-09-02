@@ -106,7 +106,7 @@ stages:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
           stageName: ${{ format('setup_{0}', env.name) }}
-          display: ${{ format('Setup: {0}', env.name) }}
+          display: "${{ format('Setup: {0}', env.name) }}"
           serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
           pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
