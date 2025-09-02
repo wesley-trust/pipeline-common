@@ -69,8 +69,7 @@ stages:
     displayName: "Deploy: ${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }} (${{ parameters.regionName }})"
     ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
       condition: and(succeeded(), false)
-    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}

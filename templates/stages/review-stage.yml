@@ -52,9 +52,7 @@ parameters:
 stages:
   - stage: review_${{ parameters.environmentName }}
     displayName: "Review: ${{ parameters.environmentName }}"
-    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
-    ${{ if eq(length(parameters.dependsOnStages), 0) }}:
+    dependsOn: ${{ coalesce(parameters.dependsOnStages, 'validation') }}
       dependsOn: validation
     condition: succeeded()
     jobs:

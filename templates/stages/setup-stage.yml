@@ -27,8 +27,7 @@ parameters:
 stages:
   - stage: ${{ parameters.stageName }}
     displayName: ${{ parameters.display }}
-    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     jobs:
       - template: ../jobs/setup-common.yml@PipelineCommon
         parameters:

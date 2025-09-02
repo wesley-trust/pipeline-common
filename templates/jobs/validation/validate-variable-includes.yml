@@ -18,8 +18,7 @@ parameters:
 jobs:
   - job: validate_variable_includes
     displayName: Validate Variable Includes
-    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     pool:
       ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
         name: ${{ parameters.pool.name }}

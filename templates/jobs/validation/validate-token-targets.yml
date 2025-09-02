@@ -21,8 +21,7 @@ parameters:
 jobs:
   - job: validate_token_targets
     displayName: Validate Token Targets
-    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     pool:
       ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
         name: ${{ parameters.pool.name }}
