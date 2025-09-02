@@ -21,7 +21,7 @@ parameters:
     type: object
     default: []
   - name: dependsOnStages
-    type: array
+    type: object
     default: []
   - name: additionalRepositories
     type: object
