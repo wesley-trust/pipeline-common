@@ -124,7 +124,7 @@ stages:
 
       # Invoke PowerShell actions in Validation when requested
       - ${{ each ag in parameters.actionGroups }}:
-        - ${{ if gt(length(ag.actions), 0) }}:
+        - ${{ if ne(length(ag.actions), 0) }}:
           - ${{ each a in ag.actions }}:
             - ${{ if and(eq(a.type, 'powershell'), eq(coalesce(a.runInValidation, false), true)) }}:
               - template: ../jobs/run-powershell.yml@PipelineCommon
