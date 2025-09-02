@@ -28,7 +28,7 @@ jobs:
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
         - ${{ each repo in parameters.additionalRepositories }}:
           - checkout: ${{ repo.alias }}
-          
+
       # Always validate defaults
       - template: ../../steps/powershell.yml@PipelineCommon
         parameters:
@@ -40,21 +40,21 @@ jobs:
             -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
 
         # One run per environment
-        ${{ each env in parameters.environments }}:
-          - template: ../../steps/powershell.yml@PipelineCommon
-            parameters:
-              displayName: "Validate pool config for ${{ env.name }}"
-              repoAlias: PipelineCommon
-              script: validate_pools.ps1
-              arguments: >-
-                -EnvPools @{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
+      - ${{ each env in parameters.environments }}:
+        - template: ../../steps/powershell.yml@PipelineCommon
+          parameters:
+            displayName: "Validate pool config for ${{ env.name }}"
+            repoAlias: PipelineCommon
+            script: validate_pools.ps1
+            arguments: >-
+              -EnvPools @{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
 
-          - template: ../../steps/powershell.yml@PipelineCommon
-            parameters:
-              displayName: "Validate environment model — ${{ env.name }}"
-              repoAlias: PipelineCommon
-              script: validate_environment_model.ps1
-              arguments: >-
-                -Name '${{ env.name }}'
-                -Class '${{ env.class }}'
-                -DependsOn '${{ coalesce(env.dependsOn, '') }}'
+        - template: ../../steps/powershell.yml@PipelineCommon
+          parameters:
+            displayName: "Validate environment model — ${{ env.name }}"
+            repoAlias: PipelineCommon
+            script: validate_environment_model.ps1
+            arguments: >-
+              -Name '${{ env.name }}'
+              -Class '${{ env.class }}'
+              -DependsOn '${{ coalesce(env.dependsOn, '') }}'
