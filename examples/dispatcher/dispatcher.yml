@@ -1,0 +1,27 @@
+# Shared dispatcher used by all consumer examples
+
+parameters:
+  - name: configuration
+    type: object
+    default: {}
+  - name: pipelineCommonRef
+    type: string
+    default: 'refs/heads/main'
+
+resources:
+  repositories:
+    - repository: PipelineCommon
+      type: git
+      name: pipeline-common
+      ref: ${{ parameters.pipelineCommonRef }}
+    # Additional repositories declared via settings configuration.additionalRepositories
+    - ${{ each repo in parameters.configuration.additionalRepositories }}:
+      - repository: ${{ repo.alias }}
+        type: git
+        name: ${{ repo.name }}
+        ref: ${{ repo.ref }}
+
+extends:
+  template: templates/main.yml@PipelineCommon
+  parameters:
+    configuration: ${{ parameters.configuration }}

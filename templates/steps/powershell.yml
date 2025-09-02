@@ -1,0 +1,43 @@
+# Reusable PowerShell Core step template
+parameters:
+  - name: displayName
+    type: string
+    default: PowerShell
+  - name: repoAlias
+    type: string
+    default: PipelineCommon
+  - name: script
+    type: string
+    default: ''
+  - name: scriptFullPath
+    type: string
+    default: ''
+  - name: arguments
+    type: string
+    default: ''
+  - name: workingDirectory
+    type: string
+    default: ''
+  - name: pwsh
+    type: boolean
+    default: true
+  - name: condition
+    type: string
+    default: ''
+
+steps:
+  - task: PowerShell@2
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      pwsh: ${{ parameters.pwsh }}
+      targetType: filePath
+      ${{ if ne(parameters.scriptFullPath, '') }}:
+        filePath: ${{ parameters.scriptFullPath }}
+      ${{ if eq(parameters.scriptFullPath, '') }}:
+        filePath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+      ${{ if ne(parameters.arguments, '') }}:
+        arguments: ${{ parameters.arguments }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}

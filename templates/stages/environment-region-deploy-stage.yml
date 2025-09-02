@@ -1,0 +1,269 @@
+# Environment regional deploy stage using deployment job and Azure DevOps Environments
+# Parameters
+# - environmentName: logical environment name
+# - regionName: region code displayed in stage name
+# - envClass: development|test|acceptance|production
+# - enableProduction: bool flag to allow running production
+# - variableRoot: root folder for variable files (default: vars)
+# - allowedBranches: list of allowed branches (wildcards)
+# - actionGroups: unified main action groups array; each may have optional 'actions'
+# - pool, serviceConnection
+
+parameters:
+  - name: environmentName
+    type: string
+  - name: regionName
+    type: string
+    default: ''
+  - name: envClass
+    type: string
+    default: ''
+  - name: enableProduction
+    type: boolean
+    default: false
+  - name: variableRoot
+    type: string
+    default: 'vars'
+  - name: allowedBranches
+    type: object
+    default: []
+  - name: actionGroups
+    type: object
+    default: []
+  - name: pool
+    type: object
+    default: {}
+  - name: serviceConnection
+    type: string
+    default: ''
+  - name: dependsOnStages
+    type: object
+    default: []
+  - name: bicepModeOverride
+    type: string
+    default: ''
+  - name: additionalRepositories
+    type: object
+    default: []
+  - name: keyVault
+    type: object
+    default: {}
+  - name: poolRegionDemand
+    type: boolean
+    default: false
+  - name: variableIncludeCommon
+    type: boolean
+    default: true
+  - name: variableIncludeEnv
+    type: boolean
+    default: true
+  - name: variableIncludeEnvRegion
+    type: boolean
+    default: true
+  - name: variableIncludeRegionOnly
+    type: boolean
+    default: true
+
+stages:
+  - stage: deploy_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
+    displayName: "Deploy: ${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }} (${{ parameters.regionName }})"
+    ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
+      condition: and(succeeded(), false)
+    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
+      dependsOn: ${{ parameters.dependsOnStages }}
+    jobs:
+      # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
+      - job: precheck_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
+        displayName: "Precheck: ${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }} (${{ parameters.regionName }})"
+        pool:
+          ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+            name: ${{ parameters.pool.name }}
+          ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+            vmImage: ${{ parameters.pool.vmImage }}
+          ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
+            demands:
+              - region -equals ${{ parameters.regionName }}
+        steps:
+          - checkout: PipelineCommon
+          - template: steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: Check allowed branches
+              repoAlias: PipelineCommon
+              script: branch_check.ps1
+              arguments: >-
+                -AllowedBranches @('${{ join(parameters.allowedBranches, ''',''') }}')
+      - ${{ each actionGroup in parameters.actionGroups }}:
+        - ${{ if and(ne(actionGroup.enabled, false), or(eq(length(actionGroup.environments),0), contains(actionGroup.environments, parameters.environmentName))) }}:
+          - deployment: deploy_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
+            displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
+            dependsOn:
+              - precheck_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
+            pool:
+              ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+                name: ${{ parameters.pool.name }}
+              ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+                vmImage: ${{ parameters.pool.vmImage }}
+            environment: ${{ parameters.environmentName }}
+            ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
+              demands:
+                - region -equals ${{ parameters.regionName }}
+            ${{ if ne(actionGroup.condition, '') }}:
+              condition: ${{ actionGroup.condition }}
+            ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:
+              condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+            ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), eq(coalesce(actionGroup.runConditions.scheduleOnly, false), true)) }}:
+              condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+            ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), ne(coalesce(actionGroup.runConditions.scheduleOnly, false), true), eq(coalesce(actionGroup.runConditions.prOnly, false), true)) }}:
+              condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+            variables:
+              - template: variables/include.yml@PipelineCommon
+                parameters:
+                  variableRoot: ${{ parameters.variableRoot }}
+                  environmentName: ${{ parameters.environmentName }}
+                  regionName: ${{ parameters.regionName }}
+                  includeCommon: ${{ parameters.variableIncludeCommon }}
+                  includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+                  includeEnv: ${{ parameters.variableIncludeEnv }}
+                  includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - checkout: none
+                    - checkout: PipelineCommon
+                    - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+                      - ${{ each repo in parameters.additionalRepositories }}:
+                        - checkout: ${{ repo.alias }}
+                    - template: steps/download-artifact.yml@PipelineCommon
+                      parameters:
+                        displayName: Download source snapshot
+                        artifactName: source-snapshot
+                        downloadPath: $(Pipeline.Workspace)/locked-sources
+
+                    # Branch allow-list is enforced in a precheck job; do not repeat here
+                    # Optional Key Vault secret import
+                    - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
+                      - template: steps/import-keyvault-secrets.yml@PipelineCommon
+                        parameters:
+                          displayName: Import Key Vault Secrets
+                          azureSubscription: ${{ parameters.serviceConnection }}
+                          keyVaultName: ${{ parameters.keyVault.name }}
+                          secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+
+                    - ${{ if ne(actionGroup.preDeploy.scripts, '') }}:
+                      - ${{ each script in actionGroup.preDeploy.scripts }}:
+                        - template: steps/powershell.yml@PipelineCommon
+                          parameters:
+                            displayName: Pre-Deploy (script)
+                            scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                            arguments: ${{ script.arguments }}
+
+                    - ${{ if gt(length(actionGroup.actions), 0) }}:
+                      - ${{ each action in actionGroup.actions }}:
+                        - ${{ if eq(action.type, 'terraform') }}:
+                          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                            - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                              - template: steps/replace-tokens.yml@PipelineCommon
+                                parameters:
+                                  displayName: Terraform token replacement (${ tokenPattern })
+                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                  tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                          - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+                            - template: steps/replace-tokens.yml@PipelineCommon
+                              parameters:
+                                displayName: Terraform token replacement
+                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
+                                tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                          - template: steps/azurecli.yml@PipelineCommon
+                            parameters:
+                              displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }}
+                              azureSubscription: ${{ parameters.serviceConnection }}
+                              repoAlias: PipelineCommon
+                              script: terraform_run.ps1
+                              arguments: >-
+                                -Action apply
+                                -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+                                -EnvironmentName "${{ parameters.environmentName }}"
+                                -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
+                              ${{ if ne(action.condition, '') }}:
+                                condition: ${{ action.condition }}
+                              ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+
+                        - ${{ if eq(action.type, 'bicep') }}:
+                          - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                            - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                              - template: steps/replace-tokens.yml@PipelineCommon
+                                parameters:
+                                  displayName: Bicep token replacement (${ tokenPattern })
+                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                  tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                          - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+                            - template: steps/replace-tokens.yml@PipelineCommon
+                              parameters:
+                                displayName: Bicep token replacement
+                                targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
+                                tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                          - template: steps/azurecli.yml@PipelineCommon
+                            parameters:
+                              displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }}
+                              azureSubscription: ${{ parameters.serviceConnection }}
+                              repoAlias: PipelineCommon
+                              script: bicep_run.ps1
+                              arguments: >-
+                                -Action deploy
+                                -Scope ${{ action.scope }}
+                                -ResourceGroupName ${{ action.resourceGroupName }}
+                                -Location ${{ action.location }}
+                                -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
+                                -ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"
+                                -AdditionalParameters "${{ action.additionalParameters }}"
+                                -ManagementGroupId ${{ action.managementGroupId }}
+                                -SubscriptionId ${{ action.subscriptionId }}
+                                ${{ if ne(parameters.bicepModeOverride, '') }}:-Mode ${{ parameters.bicepModeOverride }}
+                                ${{ if and(eq(parameters.bicepModeOverride, ''), ne(action.mode, '')) }}:-Mode ${{ action.mode }}
+                              ${{ if ne(action.condition, '') }}:
+                                condition: ${{ action.condition }}
+                              ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+
+                        - ${{ if eq(action.type, 'powershell') }}:
+                          - ${{ if gt(coalesce(action.delayMinutes, 0), 0) }}:
+                            - task: Delay@1
+                              inputs:
+                                delayForMinutes: ${{ action.delayMinutes }}
+                          - template: steps/powershell.yml@PipelineCommon
+                            parameters:
+                              displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
+                              scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
+                              arguments: ${{ action.arguments }}
+                              ${{ if ne(action.condition, '') }}:
+                                condition: ${{ action.condition }}
+                              ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                              ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+
+                    # Enforce actions model: no group-level fallbacks
+
+                    - ${{ if ne(actionGroup.postDeploy.scripts, '') }}:
+                      - ${{ each script in actionGroup.postDeploy.scripts }}:
+                        - template: steps/powershell.yml@PipelineCommon
+                          parameters:
+                            displayName: Post-Deploy (script)
+                            scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                            arguments: ${{ script.arguments }}

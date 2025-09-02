@@ -1,0 +1,46 @@
+# Setup stage: prepares shared tooling and source snapshot for RTL integrity.
+# Jobs:
+# - setup_common: always publishes the self repo snapshot
+# - setup_terraform: installs Terraform (when version specified)
+# - setup_bicep: ensures Bicep CLI is available (only if Bicep task is used)
+
+parameters:
+  - name: stageName
+    type: string
+    default: setup
+  - name: display
+    type: string
+    default: Setup
+  - name: serviceConnection
+    type: string
+    default: ''
+  - name: pool
+    type: object
+    default: {}
+  - name: terraformVersion
+    type: string
+    default: ''
+  - name: dependsOnStages
+    type: object
+    default: []
+
+stages:
+  - stage: ${{ parameters.stageName }}
+    displayName: ${{ parameters.display }}
+    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
+      dependsOn: ${{ parameters.dependsOnStages }}
+    jobs:
+      - template: ../jobs/setup-common.yml@PipelineCommon
+        parameters:
+          pool: ${{ parameters.pool }}
+
+      # Optional tooling setup jobs
+      - template: ../jobs/setup-bicep.yml@PipelineCommon
+        parameters:
+          serviceConnection: ${{ parameters.serviceConnection }}
+          pool: ${{ parameters.pool }}
+
+      - template: ../jobs/setup-terraform.yml@PipelineCommon
+        parameters:
+          terraformVersion: ${{ parameters.terraformVersion }}
+          pool: ${{ parameters.pool }}

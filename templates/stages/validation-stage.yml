@@ -1,0 +1,152 @@
+parameters:
+  - name: actionGroups
+    type: object
+    default: []
+  - name: serviceConnection
+    type: string
+    default: ''
+  - name: environments
+    type: object
+    default: []
+  - name: pool
+    type: object
+    default: {}
+  - name: variableRoot
+    type: string
+    default: 'vars'
+  - name: validation
+    type: object
+    default: {}
+  - name: customValidationScripts
+    type: object
+    default: []
+  - name: dependsOnStages
+    type: object
+    default: []
+  - name: additionalRepositories
+    type: object
+    default: []
+  - name: keyVault
+    type: object
+    default: {}
+
+stages:
+  - stage: validation
+    displayName: Validation
+    ${{ if gt(length(parameters.dependsOnStages), 0) }}:
+      dependsOn: ${{ parameters.dependsOnStages }}
+    jobs:
+      - template: ../jobs/validation/validate-settings.yml@PipelineCommon
+        parameters:
+          environments: ${{ parameters.environments }}
+          pool: ${{ parameters.pool }}
+          dependsOnStages: []
+          additionalRepositories: ${{ parameters.additionalRepositories }}
+
+      - ${{ if ne(coalesce(parameters.validation.enableBranchAllowlist, true), false) }}:
+        - template: ../jobs/validation/validate-branch-allowlist.yml@PipelineCommon
+          parameters:
+            environments: ${{ parameters.environments }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+
+      - ${{ if ne(coalesce(parameters.validation.enableVariableIncludes, true), false) }}:
+        - template: ../jobs/validation/validate-variable-includes.yml@PipelineCommon
+          parameters:
+            environments: ${{ parameters.environments }}
+            variableRoot: ${{ parameters.variableRoot }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+
+      - ${{ if ne(coalesce(parameters.validation.enableTokenTargets, true), false) }}:
+        - template: ../jobs/validation/validate-token-targets.yml@PipelineCommon
+          parameters:
+            actionGroups: ${{ parameters.actionGroups }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+            keyVault: ${{ parameters.keyVault }}
+            serviceConnection: ${{ parameters.serviceConnection }}
+
+      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=bicep') }}:
+        - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
+          parameters:
+            actionGroups: ${{ parameters.actionGroups }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+            keyVault: ${{ parameters.keyVault }}
+            serviceConnection: ${{ parameters.serviceConnection }}
+
+      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=terraform') }}:
+        - template: ../jobs/validation/validate-terraform.yml@PipelineCommon
+          parameters:
+            actionGroups: ${{ parameters.actionGroups }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+            keyVault: ${{ parameters.keyVault }}
+            serviceConnection: ${{ parameters.serviceConnection }}
+
+      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=powershell') }}:
+        - template: ../jobs/validation/validate-powershell.yml@PipelineCommon
+          parameters:
+            actionGroups: ${{ parameters.actionGroups }}
+            pool: ${{ parameters.pool }}
+            dependsOnStages: []
+            additionalRepositories: ${{ parameters.additionalRepositories }}
+            keyVault: ${{ parameters.keyVault }}
+            serviceConnection: ${{ parameters.serviceConnection }}
+
+      - ${{ if gt(length(parameters.customValidationScripts), 0) }}:
+        - job: Custom_Validation
+          displayName: Custom Validation Scripts
+          pool:
+            ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+              name: ${{ parameters.pool.name }}
+            ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+              vmImage: ${{ parameters.pool.vmImage }}
+          steps:
+            - checkout: none
+            - checkout: PipelineCommon
+            - template: steps/download-artifact.yml@PipelineCommon
+              parameters:
+                displayName: Download source snapshot
+                artifactName: source-snapshot
+                downloadPath: $(Pipeline.Workspace)/locked-sources
+            - ${{ each s in parameters.customValidationScripts }}:
+              - template: steps/powershell.yml@PipelineCommon
+                parameters:
+                  displayName: Custom Validation
+                  scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ s.path }}
+                  arguments: ${{ s.arguments }}
+
+      # Invoke PowerShell actions in Validation when requested
+      - ${{ each ag in parameters.actionGroups }}:
+        - ${{ if gt(length(ag.actions), 0) }}:
+          - ${{ each a in ag.actions }}:
+            - ${{ if and(eq(a.type, 'powershell'), eq(coalesce(a.runInValidation, false), true)) }}:
+              - template: ../jobs/run-powershell.yml@PipelineCommon
+                parameters:
+                  name: ${{ coalesce(a.name, 'ps') }}_validation
+                  displayName: ${{ coalesce(a.displayName, upper(replace(coalesce(a.name, 'POWERSHELL'), '_', ' '))) }} (Validation)
+                  scriptPath: ${{ a.scriptPath }}
+                  scriptFullPath: ''
+                  arguments: ${{ a.arguments }}
+                  variableRoot: ${{ parameters.variableRoot }}
+                  environmentName: ''
+                  region: ''
+                  useLockedSources: true
+                  lockedArtifactName: source-snapshot
+                  lockedSourcePath: $(Pipeline.Workspace)/locked-sources
+                  pool: ${{ parameters.pool }}
+                  tokenReplaceEnabled: ${{ coalesce(a.tokenReplaceEnabled, true) }}
+                  tokenTargetPatterns: ${{ a.tokenTargetPatterns }}
+                  tokenPrefix: ${{ coalesce(a.tokenPrefix, '#{') }}
+                  tokenSuffix: ${{ coalesce(a.tokenSuffix, '}') }}
+                  delayMinutes: ${{ coalesce(a.delayMinutes, 0) }}
+                  additionalRepositories: ${{ parameters.additionalRepositories }}
+                  keyVault: ${{ parameters.keyVault }}
+                  serviceConnection: ${{ parameters.serviceConnection }}

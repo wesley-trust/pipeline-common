@@ -1,0 +1,5 @@
+variables:
+  Environment: preprod
+  location: westeurope
+  sku: preprod-sku
+

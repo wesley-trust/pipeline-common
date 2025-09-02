@@ -1,0 +1,48 @@
+# Reusable AzureCLI step template (pscore)
+parameters:
+  - name: displayName
+    type: string
+    default: Azure CLI
+  - name: azureSubscription
+    type: string
+    default: ''
+  - name: repoAlias
+    type: string
+    default: PipelineCommon
+  - name: script
+    type: string
+    default: ''
+  - name: arguments
+    type: string
+    default: ''
+  - name: workingDirectory
+    type: string
+    default: ''
+  - name: condition
+    type: string
+    default: ''
+
+steps:
+  - task: AzureCLI@2
+    displayName: ${{ parameters.displayName }}
+    ${{ if ne(parameters.azureSubscription, '') }}:
+      inputs:
+        azureSubscription: ${{ parameters.azureSubscription }}
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+        ${{ if ne(parameters.arguments, '') }}:
+          arguments: ${{ parameters.arguments }}
+        ${{ if ne(parameters.workingDirectory, '') }}:
+          workingDirectory: ${{ parameters.workingDirectory }}
+    ${{ if eq(parameters.azureSubscription, '') }}:
+      inputs:
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+        ${{ if ne(parameters.arguments, '') }}:
+          arguments: ${{ parameters.arguments }}
+        ${{ if ne(parameters.workingDirectory, '') }}:
+          workingDirectory: ${{ parameters.workingDirectory }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}

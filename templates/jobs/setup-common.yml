@@ -1,0 +1,36 @@
+# Setup: common preparation
+# - Publishes a snapshot of the self repository as a pipeline artifact for
+#   route-to-live integrity. All later jobs download this snapshot instead of
+#   re-checking out fresh sources.
+
+parameters:
+  - name: name
+    type: string
+    default: setup_common
+  - name: displayName
+    type: string
+    default: Setup: Common
+  - name: artifactName
+    type: string
+    default: source-snapshot
+  - name: pool
+    type: object
+    default: {}
+
+job: ${{ parameters.name }}
+displayName: ${{ parameters.displayName }}
+pool:
+  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+    name: ${{ parameters.pool.name }}
+  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+    vmImage: ${{ parameters.pool.vmImage }}
+
+steps:
+  - checkout: self
+  - checkout: PipelineCommon
+
+  - template: steps/publish-artifact.yml@PipelineCommon
+    parameters:
+      displayName: Publish Source Snapshot
+      artifactName: ${{ parameters.artifactName }}
+      targetPath: $(Build.SourcesDirectory)

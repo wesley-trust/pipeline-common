@@ -1,0 +1,61 @@
+# Example PowerShell scripts pipeline with grouped actions
+
+parameters:
+  - name: enableProduction
+    type: boolean
+    default: false
+  - name: runReviewStage
+    type: boolean
+    default: true
+  - name: drInvocation
+    type: boolean
+    default: false
+  - name: skip_dev
+    type: boolean
+    default: false
+  - name: skip_qa
+    type: boolean
+    default: false
+  - name: skip_preprod
+    type: boolean
+    default: false
+  - name: skip_prod
+    type: boolean
+    default: false
+
+extends:
+  template: powershell.settings.yml
+  parameters:
+    enableProduction: ${{ parameters.enableProduction }}
+    runReviewStage: ${{ parameters.runReviewStage }}
+    drInvocation: ${{ parameters.drInvocation }}
+    skip_dev: ${{ parameters.skip_dev }}
+    skip_qa: ${{ parameters.skip_qa }}
+    skip_preprod: ${{ parameters.skip_preprod }}
+    skip_prod: ${{ parameters.skip_prod }}
+    actionGroups:
+      - name: ps_task_1
+        type: powershell
+        displayName: PowerShell Single
+        runConditions:
+          manualOnly: true
+        actions:
+          - name: single
+            type: powershell
+            scriptPath: examples/assets/scripts/example_pre.ps1
+            arguments: "-EnvName $(Environment)"
+      - name: ps_task_2
+        type: powershell
+        displayName: PowerShell Grouped
+        actions:
+          - name: one
+            type: powershell
+            scriptPath: examples/assets/scripts/example_pre.ps1
+            arguments: "-EnvName $(Environment)"
+            delayMinutes: 1
+            runInValidation: true
+            runInReview: true
+          - name: two
+            type: powershell
+            scriptPath: examples/assets/scripts/example_post.ps1
+            arguments: "-EnvName $(Environment)"

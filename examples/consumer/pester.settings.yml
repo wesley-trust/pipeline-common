@@ -1,0 +1,37 @@
+# Settings for Pester-only example
+
+parameters:
+  - name: actionGroups
+    type: object
+    default: []
+  - name: drInvocation
+    type: boolean
+    default: false
+
+extends:
+  template: ../dispatcher/dispatcher.yml
+  parameters:
+    configuration:
+      environments:
+        - name: dev
+          class: development
+          primaryRegion: weu
+          allowedBranches: [ '*' ]
+          pool: { vmImage: 'ubuntu-latest' }
+      actionGroups: ${{ parameters.actionGroups }}
+      runReviewStage: false
+      drInvocation: ${{ parameters.drInvocation }}
+      defaultPool: { vmImage: 'ubuntu-latest' }
+      variableRoot: examples/consumer/vars
+      variables:
+        includeCommon: true
+        includeEnv: true
+        includeEnvRegion: true
+        includeRegionOnly: true
+      additionalRepositories:
+        - alias: Modules
+          name: org/project.modules
+          ref: refs/heads/main
+      keyVault:
+        name: kv-example
+        secretsFilter: 'app-*'

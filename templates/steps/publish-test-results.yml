@@ -1,0 +1,25 @@
+parameters:
+  - name: displayName
+    type: string
+    default: Publish test results
+  - name: testResultsFiles
+    type: string
+  - name: testResultsFormat
+    type: string
+    default: NUnit
+  - name: testRunTitle
+    type: string
+    default: Tests
+  - name: condition
+    type: string
+    default: ''
+
+steps:
+  - task: PublishTestResults@2
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      testResultsFiles: ${{ parameters.testResultsFiles }}
+      testResultsFormat: ${{ parameters.testResultsFormat }}
+      testRunTitle: ${{ parameters.testRunTitle }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}

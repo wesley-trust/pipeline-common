@@ -1,0 +1,73 @@
+# [ARCHIVED] Run Pester tests via standalone job template
+# Superseded by PowerShell actions using scripts/pester_run.ps1 and review/deploy orchestration.
+parameters:
+  - name: displayName
+    type: string
+    default: Pester Tests
+  - name: testsPath
+    type: string
+    default: tests
+  - name: resultsFile
+    type: string
+    default: TestResults/pester.xml
+  - name: publishResults
+    type: boolean
+    default: true
+  - name: variableRoot
+    type: string
+    default: 'vars'
+  - name: environmentName
+    type: string
+    default: ''
+  - name: region
+    type: string
+    default: ''
+  - name: useLockedSources
+    type: boolean
+    default: true
+  - name: lockedArtifactName
+    type: string
+    default: source-snapshot
+  - name: lockedSourcePath
+    type: string
+    default: $(Pipeline.Workspace)/locked-sources
+  - name: pool
+    type: object
+    default: {}
+
+job: ${{ replace(replace(parameters.displayName, ' ', '_'), '-', '_') }}
+displayName: ${{ coalesce(parameters.displayName, 'Pester Tests') }}
+pool:
+  ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+    name: ${{ parameters.pool.name }}
+  ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+    vmImage: ${{ parameters.pool.vmImage }}
+
+steps:
+  - ${{ if eq(parameters.useLockedSources, true) }}:
+    - checkout: none
+    - template: ../../steps/download-artifact.yml@PipelineCommon
+      parameters:
+        displayName: Download source snapshot
+        artifactName: ${{ parameters.lockedArtifactName }}
+        downloadPath: ${{ parameters.lockedSourcePath }}
+  - ${{ if eq(parameters.useLockedSources, false) }}:
+    - checkout: self
+
+  - task: PowerShell@2
+    displayName: Run Pester (archived)
+    inputs:
+      pwsh: true
+      targetType: filePath
+      filePath: scripts/pester_run.ps1
+      arguments: >-
+        -TestsPath "${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.testsPath) }}"
+        -ResultsFile "${{ parameters.resultsFile }}"
+
+  - ${{ if eq(parameters.publishResults, true) }}:
+    - task: PublishTestResults@2
+      displayName: Publish Pester Results
+      inputs:
+        testResultsFiles: ${{ parameters.resultsFile }}
+        testResultsFormat: NUnit
+

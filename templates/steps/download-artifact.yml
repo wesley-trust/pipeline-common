@@ -1,0 +1,21 @@
+parameters:
+  - name: displayName
+    type: string
+    default: Download artifact
+  - name: artifactName
+    type: string
+  - name: downloadPath
+    type: string
+  - name: condition
+    type: string
+    default: ''
+
+steps:
+  - task: DownloadPipelineArtifact@2
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      artifact: ${{ parameters.artifactName }}
+      path: ${{ parameters.downloadPath }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+

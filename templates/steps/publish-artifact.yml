@@ -1,0 +1,21 @@
+parameters:
+  - name: displayName
+    type: string
+    default: Publish artifact
+  - name: artifactName
+    type: string
+  - name: targetPath
+    type: string
+  - name: condition
+    type: string
+    default: ''
+
+steps:
+  - task: PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      artifact: ${{ parameters.artifactName }}
+      targetPath: ${{ parameters.targetPath }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+

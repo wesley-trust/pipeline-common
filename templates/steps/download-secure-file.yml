@@ -1,0 +1,14 @@
+parameters:
+  - name: displayName
+    type: string
+    default: Download secure file
+  - name: secureFile
+    type: string
+
+steps:
+  - task: DownloadSecureFile@1
+    name: downloadSecureFile
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      secureFile: ${{ parameters.secureFile }}
+

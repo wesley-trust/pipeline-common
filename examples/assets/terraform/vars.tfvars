@@ -1,0 +1,3 @@
+location = "#{location}"
+sku      = "#{sku}"
+
