@@ -78,8 +78,8 @@ stages:
           ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
             name: ${{ parameters.pool.name }}
             ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
-            demands:
-              - region -equals ${{ parameters.regionName }}
+              demands:
+                - region -equals ${{ parameters.regionName }}
           ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
             vmImage: ${{ parameters.pool.vmImage }}
         steps:
