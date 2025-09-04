@@ -65,15 +65,15 @@ parameters:
     default: true
 
 stages:
-  - stage: deploy_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
-    displayName: "Deploy: ${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }} (${{ parameters.regionName }})"
+  - stage: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}
+    displayName: "Deploy: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
     ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
       condition: and(succeeded(), false)
     dependsOn: ${{ parameters.dependsOnStages }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
-      - job: precheck_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
-        displayName: "Precheck: ${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }} (${{ parameters.regionName }})"
+      - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
+        displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
         pool:
           ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
             name: ${{ parameters.pool.name }}
@@ -93,10 +93,10 @@ stages:
                 -AllowedBranches @('${{ join(parameters.allowedBranches, ''',''') }}')
       - ${{ each actionGroup in parameters.actionGroups }}:
         - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
-          - deployment: deploy_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
+          - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
             displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
             dependsOn:
-              - precheck_${{ parameters.environmentName }}${{ if ne(parameters.regionName, '') }}_${{ parameters.regionName }}
+              - precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
             pool:
               ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
                 name: ${{ parameters.pool.name }}
