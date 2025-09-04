@@ -70,20 +70,19 @@ stages:
     ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
       condition: and(succeeded(), false)
     dependsOn: ${{ parameters.dependsOnStages }}
+    ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+      pool:
+        name: ${{ parameters.pool.name }}
+        ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
+          demands:
+            - region -equals ${{ parameters.regionName }}
+    ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+      pool:
+        vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
         displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
-        ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-          pool:
-            name: ${{ parameters.pool.name }}
-            ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
-              demands:
-                - region -equals ${{ parameters.regionName }}
-        # ${{ if eq(coalesce(parameters.pool.name, ''), '') }}:
-        # #${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        #   pool:
-        #     vmImage: ${{ parameters.pool.vmImage }}
         steps:
           - checkout: PipelineCommon
           - template: steps/powershell.yml@PipelineCommon
@@ -99,15 +98,6 @@ stages:
             displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
             dependsOn:
               - precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
-            pool:
-              ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-                name: ${{ parameters.pool.name }}
-              ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-                vmImage: ${{ parameters.pool.vmImage }}
-            environment: ${{ parameters.environmentName }}
-            ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
-              demands:
-                - region -equals ${{ parameters.regionName }}
             ${{ if ne(actionGroup.condition, '') }}:
               condition: ${{ actionGroup.condition }}
             ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:
