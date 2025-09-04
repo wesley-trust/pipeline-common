@@ -77,11 +77,11 @@ stages:
         pool:
           ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
             name: ${{ parameters.pool.name }}
-          ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-            vmImage: ${{ parameters.pool.vmImage }}
-          ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
+            ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
             demands:
               - region -equals ${{ parameters.regionName }}
+          ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+            vmImage: ${{ parameters.pool.vmImage }}
         steps:
           - checkout: PipelineCommon
           - template: steps/powershell.yml@PipelineCommon
