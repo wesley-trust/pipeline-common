@@ -59,7 +59,7 @@ stages:
       - ${{ if gt(length(parameters.regions), 0) }}:
         - ${{ each region in parameters.regions }}:
           - ${{ each actionGroup in parameters.actionGroups }}:
-            - ${{ if and(ne(actionGroup.enabled, false), or(eq(length(actionGroup.environments),0), contains(actionGroup.environments, parameters.environmentName))) }}:
+            - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
               - template: jobs/review-action-group.yml@PipelineCommon
                 parameters:
                   name: ${{ coalesce(actionGroup.name, 'review') }}_${{ region }}
@@ -84,7 +84,7 @@ stages:
 
       - ${{ if eq(length(parameters.regions), 0) }}:
         - ${{ each actionGroup in parameters.actionGroups }}:
-          - ${{ if and(ne(actionGroup.enabled, false), or(eq(length(actionGroup.environments),0), contains(actionGroup.environments, parameters.environmentName))) }}:
+          - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
             - template: jobs/review-action-group.yml@PipelineCommon
               parameters:
                 name: ${{ coalesce(actionGroup.name, 'review') }}
