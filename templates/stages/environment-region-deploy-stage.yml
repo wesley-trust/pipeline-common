@@ -76,7 +76,7 @@ stages:
         ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
           demands:
             - region -equals ${{ parameters.regionName }}
-    ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+    ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
