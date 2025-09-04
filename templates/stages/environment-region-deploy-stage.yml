@@ -227,8 +227,8 @@ stages:
                                 -AdditionalParameters "${{ action.additionalParameters }}"
                                 -ManagementGroupId ${{ action.managementGroupId }}
                                 -SubscriptionId ${{ action.subscriptionId }}
-                                ${{ if ne(parameters.bicepModeOverride, '') }}:-Mode ${{ parameters.bicepModeOverride }}
-                                ${{ if and(eq(parameters.bicepModeOverride, ''), ne(action.mode, '')) }}:-Mode ${{ action.mode }}
+                                -ModeOverride ${{ parameters.bicepModeOverride }}
+                                -Mode ${{ action.mode }}
                               ${{ if ne(action.condition, '') }}:
                                 condition: ${{ action.condition }}
                               ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:

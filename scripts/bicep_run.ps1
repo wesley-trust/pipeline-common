@@ -9,7 +9,8 @@ param(
   [string]$ManagementGroupId = '',
   [string]$SubscriptionId = '',
   [string]$OutFile = 'whatif.txt',
-  [ValidateSet('incremental','complete')][string]$Mode = ''
+  [ValidateSet('incremental','complete')][string]$Mode = '',
+  [ValidateSet('incremental','complete', '')][string]$ModeOverride = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,6 +21,10 @@ if ($Action -eq 'validate') {
   az bicep version | Out-Null
   az bicep build --file "$Template"
   exit 0
+}
+
+if ($ModeOverride){
+  $Mode = $ModeOverride
 }
 
 $paramArgs = @()
