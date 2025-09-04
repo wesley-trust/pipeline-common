@@ -74,13 +74,14 @@ stages:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
         displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
-        pool:
-          ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+        ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+          pool:
             name: ${{ parameters.pool.name }}
             ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
               demands:
                 - region -equals ${{ parameters.regionName }}
-          ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+        ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+          pool:
             vmImage: ${{ parameters.pool.vmImage }}
         steps:
           - checkout: PipelineCommon
