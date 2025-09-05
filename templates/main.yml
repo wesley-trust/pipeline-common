@@ -8,72 +8,10 @@ parameters:
   - name: configuration
     type: object
     default: {}
-  # General execution switches
-  - name: runInParallel
-    type: boolean
-    default: false
-  - name: runReviewStage
-    type: boolean
-    default: true
-
-  # Route-to-live and environment config
-  - name: environments
-    type: object
-    default: []
-
-  # Variable files to auto-load
-  - name: variableRoot
-    type: string
-    default: 'vars'
-
-  # Optional: regions fan-out (if provided, per-env jobs can iterate regions)
-  - name: regions
-    type: object
-    default: []
-
-  # Optional: default Azure subscription/endpoint name
-  - name: serviceConnection
-    type: string
-    default: ''
-
-  # Variable groups (Library)
-  - name: variableGroups
-    type: object
-    default: []
-  # Pools
-  - name: defaultPool
-    type: object
-    default: {}
-  - name: environmentPools
-    type: object
-    default: {}
-  # Skips and gating
-  - name: skipEnvironments
-    type: object
-    default: []
-  - name: enableProduction
-    type: boolean
-    default: false
-  - name: bicepModeOverride
-    type: string
-    default: '' # complete|incremental
-  - name: customValidationScripts
-    type: object
-    default: []
-  - name: runTerraformPlan
-    type: boolean
-    default: true
-  - name: runBicepWhatIf
-    type: boolean
-    default: true
-  - name: runSkipEnvironments
-    type: object
-    default: []
-
 
 variables:
-  - ${{ each vg in coalesce(parameters.configuration.variableGroups, parameters.variableGroups) }}:
-    - group: ${{ vg }}
+  - ${{ each variableGroup in parameters.configuration.variableGroups }}:
+    - group: ${{ variableGroup }}
 
 stages:
   # 0) Optional Setup stages
@@ -83,20 +21,20 @@ stages:
       parameters:
         stageName: setup_global
         display: 'Setup: Global'
-        serviceConnection: ${{ coalesce(parameters.configuration.serviceConnection, parameters.serviceConnection) }}
-        pool: ${{ coalesce(parameters.configuration.defaultPool, parameters.defaultPool) }}
+        serviceConnection: ${{ parameters.configuration.serviceConnection }}
+        pool: ${{ parameters.configuration.defaultPool }}
         terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
   # 1) Validation stage – only depends on Global Setup if present
   - template: stages/validation-stage.yml@PipelineCommon
     parameters:
       actionGroups: ${{ parameters.configuration.actionGroups }}
-      serviceConnection: ${{ coalesce(parameters.configuration.serviceConnection, parameters.serviceConnection) }}
-      environments: ${{ coalesce(parameters.configuration.environments, parameters.environments) }}
-      pool: ${{ coalesce(parameters.configuration.defaultPool, parameters.defaultPool) }}
+      serviceConnection: ${{ parameters.configuration.serviceConnection }}
+      environments: ${{ parameters.configuration.environments }}
+      pool: ${{ parameters.configuration.defaultPool }}
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
       validation: ${{ coalesce(parameters.configuration.validation, '') }}
-      customValidationScripts: ${{ coalesce(parameters.configuration.customValidationScripts, parameters.customValidationScripts) }}
+      customValidationScripts: ${{ parameters.configuration.customValidationScripts }}
       dependsOnStages:
         - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
           - setup_global
@@ -126,8 +64,8 @@ stages:
             variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
             serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
             pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
-            runTerraformPlan: ${{ coalesce(parameters.configuration.runTerraformPlan, parameters.runTerraformPlan, true) }}
-            runBicepWhatIf: ${{ coalesce(parameters.configuration.runBicepWhatIf, parameters.runBicepWhatIf, true) }}
+            runTerraformPlan: ${{ coalesce(parameters.configuration.runTerraformPlan, true) }}
+            runBicepWhatIf: ${{ coalesce(parameters.configuration.runBicepWhatIf, true) }}
             variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
             variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
             variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
