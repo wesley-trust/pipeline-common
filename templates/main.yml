@@ -123,7 +123,6 @@ stages:
                       keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                       poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                       dependsOnStages:
-                        #- validation
                         - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
                             - review_${{ env.name }}
                         - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
@@ -152,19 +151,17 @@ stages:
                   keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                   poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                   dependsOnStages:
-                    #- validation
                     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                        - review_${{ env.name }}
+                      - review_${{ env.name }}
                     - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                        - ${{ format('setup_{0}', env.name) }}
-                    # - ${{ each secondaryRegion in env.secondaryRegions }}:
-                    #     - deploy_${{ env.name }}_${{ secondaryRegion }}
-                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnRegion, '')) }}:
-                        - deploy_${{ env.dependsOn }}_${{ env.dependsOnRegion }}
+                      - ${{ format('setup_{0}', env.name) }}
+                    - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
+                      - ${{ each secondaryRegion in env.secondaryRegions }}:
+                          - deploy_${{ env.name }}_${{ secondaryRegion }}
                     - ${{ if ne(env.dependsOn, '') }}:
-                        - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
-                  # NOTE: Azure DevOps has limited support for dynamically enumerating all prior
-                  # environment region stages for gating. Primary-only gating retained by design.
+                      - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
+                    - ${{ else }}:
+                      - deploy_${{ env.dependsOn }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
   # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
