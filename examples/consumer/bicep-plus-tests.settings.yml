@@ -110,7 +110,7 @@ extends:
       validation:
         enableVariableIncludes: false
       additionalRepositories:
-        - alias: Modules
+        # - alias: Modules
       keyVault:
         name: kv-example
         secretsFilter: "app-*"
