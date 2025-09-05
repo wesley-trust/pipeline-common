@@ -159,8 +159,10 @@ stages:
                         - ${{ format('setup_{0}', env.name) }}
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
-                    - ${{ if ne(env.dependsOn, '') }}:
+                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnPrimaryRegion, '') }}:
                         - deploy_${{ env.dependsOn }}_${{ env.dependsOnPrimaryRegion }}
+                    - ${{ elseif ne(env.dependsOn, '') }}:
+                        - deploy_${{ env.dependsOn }}
                   # NOTE: Azure DevOps has limited support for dynamically enumerating all prior
                   # environment region stages for gating. Primary-only gating retained by design.
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
