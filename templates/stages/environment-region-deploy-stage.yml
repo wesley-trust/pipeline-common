@@ -85,7 +85,7 @@ stages:
         displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
         steps:
           - checkout: PipelineCommon
-          - template: steps/powershell.yml@PipelineCommon
+          - template: ../steps/powershell.yml@PipelineCommon
             parameters:
               displayName: Check allowed branches
               repoAlias: PipelineCommon
