@@ -90,7 +90,7 @@ extends:
         includeEnv: true
         includeEnvRegion: true
         includeRegionOnly: true
-      #defaultPool: { vmImage: 'ubuntu-latest' }
+      defaultPool: { vmImage: 'ubuntu-latest' }
       variableGroups: [ 'Common-Variables' ]
       validation:
         enableVariableIncludes: false
