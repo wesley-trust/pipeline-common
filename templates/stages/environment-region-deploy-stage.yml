@@ -70,16 +70,15 @@ stages:
     ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
       condition: and(succeeded(), false)
     dependsOn: ${{ parameters.dependsOnStages }}
-    # Define a single pool block; choose child keys conditionally
-    ${{ if or(ne(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
+    ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
-        ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-          name: ${{ parameters.pool.name }}
-        ${{ if and(ne(coalesce(parameters.pool.name, ''), ''), eq(coalesce(parameters.poolRegionDemand, false), true)) }}:
+        name: ${{ parameters.pool.name }}
+        ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
           demands:
             - region -equals ${{ parameters.regionName }}
-        ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-          vmImage: ${{ parameters.pool.vmImage }}
+    ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
+      pool:
+        vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}

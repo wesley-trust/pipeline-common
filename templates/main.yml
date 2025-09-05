@@ -155,7 +155,8 @@ stages:
               variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
               allowedBranches: ${{ env.allowedBranches }}
               actionGroups: ${{ parameters.configuration.actionGroups }}
-              pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
+              pool: ${{ env.pool }}
+              #pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
               serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
               variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
               variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
