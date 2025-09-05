@@ -39,6 +39,18 @@ extends:
   parameters:
     configuration:
       environments:
+        - name: Pdev
+          class: development
+          primaryRegion: weu
+          secondaryRegions:
+            - neu
+          drRegion: neu
+          allowedBranches:
+            - "*"
+          pool:
+            vmImage: "ubuntu-latest"
+          skipEnvironment: ${{ parameters.skip_dev }}
+          poolRegionDemand: false
         - name: dev
           class: development
           primaryRegion: weu
