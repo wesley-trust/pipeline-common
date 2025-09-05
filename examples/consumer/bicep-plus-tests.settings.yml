@@ -54,7 +54,7 @@ extends:
         - name: qa
           class: test
           #dependsOn: dev
-          #dependsOnSecondaryRegions: false
+          dependsOnSecondaryRegions: true
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
