@@ -64,7 +64,7 @@ extends:
             vmImage: "ubuntu-latest"
           skipEnvironment: ${{ parameters.skip_qa }}
           poolRegionDemand: false
-        - name: preprod
+        - name: ppr
           class: acceptance
           #dependsOn: qa
           #dependsOnSecondaryRegions: false
@@ -77,7 +77,7 @@ extends:
             vmImage: "ubuntu-latest"
           skipEnvironment: ${{ parameters.skip_preprod }}
           poolRegionDemand: false
-        - name: prod
+        - name: prd
           class: production
           #dependsOn: preprod
           #dependsOnSecondaryRegions: false
