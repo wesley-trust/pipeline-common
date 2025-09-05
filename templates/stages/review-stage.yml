@@ -64,7 +64,7 @@ stages:
       # Fan-out by regions if provided; otherwise single set without region.
       - ${{ each region in parameters.regions }}:
           - ${{ each actionGroup in parameters.actionGroups }}:
-              - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName)), eq(coalesce(actionGroup.environments, ''), '')) }}:
+              - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName), eq(coalesce(actionGroup.environments, ''), ''))) }}:
                   - template: ../jobs/review-action-group.yml@PipelineCommon
                     parameters:
                       name: ${{ coalesce(actionGroup.name, 'review') }}_${{ region }}
