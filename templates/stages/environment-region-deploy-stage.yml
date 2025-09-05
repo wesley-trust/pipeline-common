@@ -76,9 +76,9 @@ stages:
         ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
           demands:
             - region -equals ${{ parameters.regionName }}
-      ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
-        pool:
-          vmImage: ${{ parameters.pool.vmImage }}
+    ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
+      pool:
+        vmImage: ${{ format('{0}', parameters.pool.vmImage) }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
