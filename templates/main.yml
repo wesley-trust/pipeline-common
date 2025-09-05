@@ -158,8 +158,9 @@ stages:
                     # - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                     #   - ${{ each secondaryRegion in env.secondaryRegions }}:
                     #       - deploy_${{ env.name }}_${{ secondaryRegion }}
-                    - ${{ if ne(env.dependsOn, '') }}:
-                      - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
+                    # - ${{ if ne(env.dependsOn, '') }}:
+                    #   - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
+                    - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
                     # - ${{ else }}:
                     #   - deploy_${{ env.dependsOn }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
