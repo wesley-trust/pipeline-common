@@ -143,7 +143,7 @@ stages:
 
                         - ${{ if ne(actionGroup.preDeploy.scripts, '') }}:
                             - ${{ each script in actionGroup.preDeploy.scripts }}:
-                                - template: steps/powershell.yml@PipelineCommon
+                                - template: ../steps/powershell.yml@PipelineCommon
                                   parameters:
                                     displayName: Pre-Deploy (script)
                                     scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
