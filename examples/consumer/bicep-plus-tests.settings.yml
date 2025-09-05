@@ -99,10 +99,10 @@ extends:
       drInvocation: ${{ parameters.drInvocation }}
       variableRoot: examples/consumer/vars
       variables:
-        includeCommon: true
-        includeEnv: true
-        includeEnvRegion: true
-        includeRegionOnly: true
+        includeCommon: false
+        includeEnv: false
+        includeEnvRegion: false
+        includeRegionOnly: false
       defaultPool:
         vmImage: "ubuntu-latest"
       variableGroups:
