@@ -62,37 +62,15 @@ stages:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       # Fan-out by regions if provided; otherwise single set without region.
-      - ${{ if gt(length(parameters.regions), 0) }}:
-          - ${{ each region in parameters.regions }}:
-              - ${{ each actionGroup in parameters.actionGroups }}:
-                  - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
-                      - template: jobs/review-action-group.yml@PipelineCommon
-                        parameters:
-                          name: ${{ coalesce(actionGroup.name, 'review') }}_${{ region }}
-                          displayName: ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'REVIEW'), '_', ' '))) }} (${{ region }})
-                          environmentName: ${{ parameters.environmentName }}
-                          region: ${{ region }}
-                          actionGroup: ${{ actionGroup }}
-                          variableRoot: ${{ parameters.variableRoot }}
-                          serviceConnection: ${{ parameters.serviceConnection }}
-                          variableIncludeCommon: ${{ parameters.variableIncludeCommon }}
-                          variableIncludeEnv: ${{ parameters.variableIncludeEnv }}
-                          variableIncludeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
-                          variableIncludeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
-                          additionalRepositories: ${{ parameters.additionalRepositories }}
-                          keyVault: ${{ parameters.keyVault }}
-                          runTerraformPlan: ${{ parameters.runTerraformPlan }}
-                          runBicepWhatIf: ${{ parameters.runBicepWhatIf }}
-
-      - ${{ if eq(length(parameters.regions), 0) }}:
+      - ${{ each region in parameters.regions }}:
           - ${{ each actionGroup in parameters.actionGroups }}:
               - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
                   - template: jobs/review-action-group.yml@PipelineCommon
                     parameters:
-                      name: ${{ coalesce(actionGroup.name, 'review') }}
-                      displayName: ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'REVIEW'), '_', ' '))) }}
+                      name: ${{ coalesce(actionGroup.name, 'review') }}_${{ region }}
+                      displayName: ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'REVIEW'), '_', ' '))) }} (${{ region }})
                       environmentName: ${{ parameters.environmentName }}
-                      region: ""
+                      region: ${{ region }}
                       actionGroup: ${{ actionGroup }}
                       variableRoot: ${{ parameters.variableRoot }}
                       serviceConnection: ${{ parameters.serviceConnection }}
