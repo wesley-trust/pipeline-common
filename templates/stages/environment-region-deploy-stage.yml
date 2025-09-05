@@ -79,7 +79,7 @@ stages:
     ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
       pool:
         name: AzurePipelines
-        vmImage: ${{ parameters.pool.vmImage }}
+        vmImage: ${{ parameters.pool.vmImage.vmImage }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
