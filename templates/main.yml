@@ -94,8 +94,8 @@ stages:
                       allowedBranches: ${{ env.allowedBranches }}
                       actionGroups: ${{ parameters.configuration.actionGroups }}
                       #pool: ${{ env.pool }}
-                      #pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
-                      pool: ${{ parameters.configuration.defaultPool }}
+                      pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
+                      #pool: ${{ parameters.configuration.defaultPool }}
                       serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
                       variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                       variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
