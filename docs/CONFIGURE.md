@@ -34,7 +34,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
   - `serviceConnection`: Azure service connection override
   - `skipEnvironment: true|false` (skip this environment)
   - `dependsOn: 'previousEnvName'`
-  - `dependsOnPrimaryRegion: 'weu'` (optional; helps gate next env on the prior env primary)
+  - `dependsOnRegion: 'weu'` (optional; helps gate next env on the prior env primary)
 
 ## Parameter Flow (single configuration object)
 
@@ -186,12 +186,12 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - Production runs only when `configuration.enableProduction: true` (runtime parameter gate).
 - Each environment job enforces branch allow-list (wildcards) via `scripts/branch_check.ps1`.
-- acceptance should succeed before production; set `prod.dependsOn: preprod` and optionally `prod.dependsOnPrimaryRegion: '<preprod-primary>'` to ensure gating.
+- acceptance should succeed before production; set `prod.dependsOn: preprod` and optionally `prod.dependsOnRegion: '<preprod-primary>'` to ensure gating.
 
 ## Regional Rollouts & Approvals
 
 - Per environment, regional stages execute secondaries first, primary last (singular `primaryRegion`). All regions (secondary + primary) always deploy.
-- The next environment depends only on the previous environment’s primary region stage. Specify `env.dependsOn` and optionally `env.dependsOnPrimaryRegion` to make the dependency explicit.
+- The next environment depends only on the previous environment’s primary region stage. Specify `env.dependsOn` and optionally `env.dependsOnRegion` to make the dependency explicit.
 - Each regional task runs as a deployment job bound to the environment (`environment: <env>`), so Azure DevOps Environment approvals/checks apply.
 
 ## Setup (Global vs Per-Environment)
@@ -286,5 +286,5 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 ## Notes
 
 - Display name derivation uses `upper(replace(name, '_', ' '))`. You can explicitly set `displayName` to override.
-- For strict gating of “next env waits on previous env’s primary region”, add `dependsOn` and `dependsOnPrimaryRegion` to environments for clarity.
+- For strict gating of “next env waits on previous env’s primary region”, add `dependsOn` and `dependsOnRegion` to environments for clarity.
 - Replace Tokens requires the Qetza extension to be installed.

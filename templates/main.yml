@@ -92,6 +92,7 @@ stages:
                   poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                   dependsOnStages:
                     - validation
+                    - review_${{ env.name }}
                     - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
                         - ${{ format('setup_{0}', env.name) }}
 
@@ -159,8 +160,8 @@ stages:
                         - ${{ format('setup_{0}', env.name) }}
                     # - ${{ each secondaryRegion in env.secondaryRegions }}:
                     #     - deploy_${{ env.name }}_${{ secondaryRegion }}
-                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnPrimaryRegion, '')) }}:
-                        - deploy_${{ env.dependsOn }}_${{ env.dependsOnPrimaryRegion }}
+                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnRegion, '')) }}:
+                        - deploy_${{ env.dependsOn }}_${{ env.dependsOnRegion }}
                     - ${{ if ne(env.dependsOn, '') }}:
                         - deploy_${{ env.dependsOn }}_${{ env.primaryRegion }}
                   # NOTE: Azure DevOps has limited support for dynamically enumerating all prior

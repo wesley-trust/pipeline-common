@@ -51,7 +51,7 @@ extends:
         - name: qa
           class: test
           dependsOn: dev
-          dependsOnPrimaryRegion: weu
+          dependsOnRegion: weu
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches: [ 'main', 'release/*' ]
@@ -61,7 +61,7 @@ extends:
         - name: preprod
           class: acceptance
           dependsOn: test
-          dependsOnPrimaryRegion: weu
+          dependsOnRegion: weu
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches: [ 'main', 'release/*' ]
@@ -71,7 +71,7 @@ extends:
         - name: prod
           class: production
           dependsOn: preprod
-          dependsOnPrimaryRegion: weu
+          dependsOnRegion: weu
           dependsOnDRRegion: neu
           primaryRegion: weu
           secondaryRegions: [ neu ]
