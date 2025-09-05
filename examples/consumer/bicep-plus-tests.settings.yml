@@ -52,7 +52,7 @@ extends:
         - name: qa
           class: test
           dependsOn: validation
-          dependsOnSecondaryRegions: true
+          dependsOnSecondaryRegions: false
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
