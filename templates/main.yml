@@ -120,12 +120,15 @@ stages:
                   keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                   poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                   dependsOnStages:
-                    - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                      - review_${{ env.name }}
+                    - ${{ if ne(env.dependsOn, '') }}:
+                      - ${{ env.dependsOn }}
                     - ${{ else }}:
-                      - validation
-                      - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                        - ${{ format('setup_{0}', env.name) }}
+                      - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
+                        - review_${{ env.name }}
+                      - ${{ else }}:
+                        - validation
+                        - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                          - ${{ format('setup_{0}', env.name) }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
