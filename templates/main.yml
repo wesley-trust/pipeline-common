@@ -151,13 +151,13 @@ stages:
                 dependsOnStages:
                   - ${{ if ne(env.dependsOn, '') }}:
                     - ${{ env.dependsOn }}
-                  - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                    - review_${{ env.name }}
-                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                    - ${{ format('setup_{0}', env.name) }}
-                  - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
-                    - ${{ each secondaryRegion in env.secondaryRegions }}:
-                        - deploy_${{ env.name }}_${{ secondaryRegion }}
+                  # - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
+                  #   - review_${{ env.name }}
+                  # - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                  #   - ${{ format('setup_{0}', env.name) }}
+                  # - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
+                  #   - ${{ each secondaryRegion in env.secondaryRegions }}:
+                  #       - deploy_${{ env.name }}_${{ secondaryRegion }}
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
     # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
