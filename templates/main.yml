@@ -153,7 +153,7 @@ stages:
                     - review_${{ env.name }}
                   - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
                     - ${{ format('setup_{0}', env.name) }}
-                  - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), 'true') }}:
+                  - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
                   # - ${{ if ne(env.dependsOn, '') }}:
