@@ -54,7 +54,7 @@ extends:
         - name: qa
           class: test
           #dependsOn: dev
-          dependsOnSecondaryRegions: true
+          #dependsOnSecondaryRegions: true
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
@@ -67,7 +67,7 @@ extends:
         - name: ppr
           class: acceptance
           #dependsOn: qa
-          #dependsOnSecondaryRegions: false
+          dependsOnSecondaryRegions: true
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
