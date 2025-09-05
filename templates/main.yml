@@ -65,7 +65,7 @@ stages:
                   environmentName: ${{ env.name }}
                   ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
                     regions: ${{ concat(env.drRegion) }}
-                  ${{ elseif eq(length(coalesce(env.secondaryRegions, [])), 0) }}:
+                  ${{ elseif eq(coalesce(join(env.secondaryRegions, ','), ''), '') }}:
                     regions: ${{ concat(env.primaryRegion) }}
                   ${{ else }}:
                     regions: ${{ concat(env.primaryRegion, env.secondaryRegions) }}
