@@ -175,7 +175,8 @@ jobs:
             -AdditionalParameters "${{ parameters.additionalParameters }}"
             -ManagementGroupId ${{ parameters.managementGroupId }}
             -SubscriptionId ${{ parameters.subscriptionId }}
-            ${{ if ne(parameters.mode, '') }}:-Mode ${{ parameters.mode }}
+            -ModeOverride ${{ parameters.bicepModeOverride }}
+            -Mode ${{ action.mode }}
           workingDirectory: ${{ parameters.lockedSourcePath }}
 
       # Publish what-if output when requested

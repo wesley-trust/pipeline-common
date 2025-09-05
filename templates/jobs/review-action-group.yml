@@ -105,7 +105,7 @@ jobs:
                       tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
               - template: ../steps/azurecli.yml@PipelineCommon
                 parameters:
-                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }} (Plan${{ if ne(parameters.region,'') }} ${{ parameters.region }})
+                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }} (Plan ${{ parameters.region }})
                   azureSubscription: ${{ parameters.serviceConnection }}
                   repoAlias: PipelineCommon
                   script: terraform_run.ps1
@@ -126,7 +126,7 @@ jobs:
               - template: ../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish Terraform Plan (${{ coalesce(action.name, 'terraform') }})
-                  artifactName: terraform-plan-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
+                  artifactName: terraform-plan-${{ parameters.environmentName }-${{ parameters.region }}
                   targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
           - ${{ if and(eq(action.type, 'bicep'), eq(parameters.runBicepWhatIf, true)) }}:
@@ -147,7 +147,7 @@ jobs:
                       tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
               - template: ../steps/azurecli.yml@PipelineCommon
                 parameters:
-                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }} (What-If${{ if ne(parameters.region,'') }} ${{ parameters.region }})
+                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }} (What-If ${{ parameters.region }})
                   azureSubscription: ${{ parameters.serviceConnection }}
                   repoAlias: PipelineCommon
                   script: bicep_run.ps1
@@ -161,7 +161,8 @@ jobs:
                     -AdditionalParameters "${{ action.additionalParameters }}"
                     -ManagementGroupId ${{ action.managementGroupId }}
                     -SubscriptionId ${{ action.subscriptionId }}
-                    ${{ if ne(coalesce(action.mode, ''), '') }}:-Mode ${{ action.mode }}
+                    -ModeOverride ${{ parameters.bicepModeOverride }}
+                    -Mode ${{ action.mode }}
                   workingDirectory: $(Pipeline.Workspace)/locked-sources
                   ${{ if ne(action.condition, '') }}:
                     condition: ${{ action.condition }}
@@ -174,7 +175,7 @@ jobs:
               - template: ../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish What-If Output (${{ coalesce(action.name, 'bicep') }})
-                  artifactName: bicep-whatif-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
+                  artifactName: bicep-whatif-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
 
           - ${{ if eq(action.type, 'powershell') }}:
@@ -193,7 +194,7 @@ jobs:
                       delayForMinutes: ${{ action.delayMinutes }}
               - template: ../steps/powershell.yml@PipelineCommon
                 parameters:
-                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review${{ if ne(parameters.region,'') }} ${{ parameters.region }})
+                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review ${{ parameters.region }})
                   scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
                   arguments: ${{ action.arguments }}
                   ${{ if ne(action.condition, '') }}:
