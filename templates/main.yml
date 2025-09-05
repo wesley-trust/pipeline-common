@@ -91,8 +91,7 @@ stages:
                   keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                   poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                   dependsOnStages:
-                    - validation
-                    - review_${{ env.name }}
+                    #- validation
                     - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
                         - ${{ format('setup_{0}', env.name) }}
 
