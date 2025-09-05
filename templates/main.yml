@@ -157,7 +157,7 @@ stages:
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
                   - ${{ if ne(env.dependsOn, '') }}:
-                    - deploy_${{ env.dependsOn }}
+                    - ${{ env.dependsOn }}
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
     # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
