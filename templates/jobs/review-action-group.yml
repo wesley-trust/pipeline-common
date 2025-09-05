@@ -126,7 +126,7 @@ jobs:
               - template: ../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish Terraform Plan (${{ coalesce(action.name, 'terraform') }})
-                  artifactName: terraform-plan-${{ parameters.environmentName }-${{ parameters.region }}
+                  artifactName: terraform-plan-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
           - ${{ if and(eq(action.type, 'bicep'), eq(parameters.runBicepWhatIf, true)) }}:
