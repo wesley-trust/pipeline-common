@@ -89,9 +89,9 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-              dependsOnStages:
-                - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                    - ${{ format('setup_{0}', env.name) }}
+              # dependsOnStages:
+              #   - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+              #       - ${{ format('setup_{0}', env.name) }}
 
   # 3) Deployment stages – generate a stage per environment region
   # Normal mode (non-DR): run secondaries then primary; next env gates on prior primary
@@ -157,8 +157,8 @@ stages:
                     - review_${{ env.name }}
                   - ${{ else }}:
                     - validation
-                  # - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                  #   - ${{ format('setup_{0}', env.name) }}
+                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                    - ${{ format('setup_{0}', env.name) }}
                   # - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                   #   - ${{ each secondaryRegion in env.secondaryRegions }}:
                   #       - deploy_${{ env.name }}_${{ secondaryRegion }}
