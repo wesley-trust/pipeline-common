@@ -159,7 +159,7 @@ stages:
                         - ${{ format('setup_{0}', env.name) }}
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
-                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnPrimaryRegion, '') }}:
+                    - ${{ if and(ne(env.dependsOn, ''), ne(env.dependsOnPrimaryRegion, '')) }}:
                         - deploy_${{ env.dependsOn }}_${{ env.dependsOnPrimaryRegion }}
                     - ${{ elseif ne(env.dependsOn, '') }}:
                         - deploy_${{ env.dependsOn }}
