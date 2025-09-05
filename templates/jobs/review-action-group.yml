@@ -96,7 +96,7 @@ jobs:
                           targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                           tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                           tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-              - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+              - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - template: ../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: Terraform token replacement
@@ -138,7 +138,7 @@ jobs:
                           targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                           tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                           tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-              - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+              - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - template: ../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: Bicep token replacement
