@@ -89,9 +89,9 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-              # dependsOnStages:
-              #   - ${{ if ne(env.dependsOn, '') }}:
-              #     - ${{ env.dependsOn }}
+              dependsOnStages:
+                - ${{ if ne(env.dependsOn, '') }}:
+                  - ${{ env.dependsOn }}
               #   - ${{ else }}:
               #     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
               #         - review_${{ env.name }}
