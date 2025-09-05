@@ -72,7 +72,7 @@ stages:
                   ${{ else }}:
                     regions:
                       - ${{ env.primaryRegion }}
-                      - ${{ each secondaryRegion in env.secondaryRegions) }}:
+                      - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - ${{ secondaryRegion }}
                   actionGroups: ${{ parameters.configuration.actionGroups }}
                   variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
