@@ -93,9 +93,10 @@ stages:
                       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
                       allowedBranches: ${{ env.allowedBranches }}
                       actionGroups: ${{ parameters.configuration.actionGroups }}
-                      #pool: ${{ env.pool }}
-                      pool: ${{ coalesce(env.pool, parameters.configuration.defaultPool) }}
-                      #pool: ${{ parameters.configuration.defaultPool }}
+                      ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
+                        pool: ${{ env.pool }}
+                      ${{ else }}:
+                        pool: ${{ parameters.configuration.defaultPool }}
                       serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
                       variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                       variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
