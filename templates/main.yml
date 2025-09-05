@@ -64,11 +64,11 @@ stages:
                 parameters:
                   environmentName: ${{ env.name }}
                   ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
-                    regions: ${{ [ env.drRegion ] }}
+                    regions: ${{ concat(env.drRegion) }}
                   ${{ elseif eq(length(coalesce(env.secondaryRegions, [])), 0) }}:
-                    regions: ${{ [ env.primaryRegion ] }}
+                    regions: ${{ concat(env.primaryRegion) }}
                   ${{ else }}:
-                    regions: ${{ concat( [ env.primaryRegion ], env.secondaryRegions ) }}
+                    regions: ${{ concat(env.primaryRegion, env.secondaryRegions) }}
                   actionGroups: ${{ parameters.configuration.actionGroups }}
                   variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
                   serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
