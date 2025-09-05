@@ -90,7 +90,7 @@ extends:
             - "main"
             - "release/*"
           pool:
-            name: "Prod-SelfHosted"
+            vmImage: "ubuntu-latest"
           skipEnvironment: ${{ parameters.skip_prod }}
           poolRegionDemand: true
       actionGroups: ${{ parameters.actionGroups }}
