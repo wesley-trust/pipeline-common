@@ -120,7 +120,6 @@ stages:
                   runOnce:
                     deploy:
                       steps:
-                        - checkout: none
                         - checkout: PipelineCommon
                         - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
                             - ${{ each repo in parameters.additionalRepositories }}:

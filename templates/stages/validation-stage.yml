@@ -102,7 +102,6 @@ stages:
           - job: Custom_Validation
             displayName: Custom Validation Scripts
             steps:
-              - checkout: none
               - checkout: PipelineCommon
               - template: steps/download-artifact.yml@PipelineCommon
                 parameters:

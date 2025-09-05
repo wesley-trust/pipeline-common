@@ -45,7 +45,6 @@ pool:
 
 steps:
   - ${{ if eq(parameters.useLockedSources, true) }}:
-    - checkout: none
     - template: ../../steps/download-artifact.yml@PipelineCommon
       parameters:
         displayName: Download source snapshot

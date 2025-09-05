@@ -23,7 +23,6 @@ jobs:
     displayName: Validate BICEP
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
-      - checkout: none
       - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
           - ${{ each repo in parameters.additionalRepositories }}:

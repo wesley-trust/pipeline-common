@@ -118,7 +118,6 @@ jobs:
     steps:
       # Use locked sources for RTL integrity
       - ${{ if eq(parameters.useLockedSources, true) }}:
-          - checkout: none
           - checkout: PipelineCommon
           - template: steps/download-artifact.yml@PipelineCommon
             parameters:

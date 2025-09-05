@@ -17,7 +17,6 @@ jobs:
     displayName: Validate Branch Allow-List
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
-      - checkout: none
       - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
           - ${{ each r in parameters.additionalRepositories }}:
