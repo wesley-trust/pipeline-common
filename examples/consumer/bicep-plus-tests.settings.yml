@@ -51,7 +51,7 @@ extends:
           poolRegionDemand: false
         - name: qa
           class: test
-          #dependsOn: dev
+          dependsOn: validation
           dependsOnSecondaryRegions: true
           dependsOnDRRegion: neu
           primaryRegion: weu
