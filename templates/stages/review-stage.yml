@@ -52,7 +52,7 @@ parameters:
 stages:
   - stage: review_${{ parameters.environmentName }}
     displayName: "Review: ${{ upper(parameters.environmentName) }}"
-    #dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     #dependsOn: ${{ coalesce(parameters.dependsOnStages, 'validation') }}
     condition: succeeded()
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
