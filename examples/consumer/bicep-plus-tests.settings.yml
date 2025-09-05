@@ -22,9 +22,6 @@ parameters:
   - name: skip_preprod
     type: boolean
     default: false
-  - name: skip_prod
-    type: boolean
-    default: false
 
 resources:
   repositories:
@@ -91,7 +88,6 @@ extends:
             - "release/*"
           pool:
             vmImage: "ubuntu-latest"
-          skipEnvironment: ${{ parameters.skip_prod }}
           poolRegionDemand: true
       actionGroups: ${{ parameters.actionGroups }}
       enableProduction: ${{ parameters.enableProduction }}
