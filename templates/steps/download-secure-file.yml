@@ -11,4 +11,3 @@ steps:
     displayName: ${{ parameters.displayName }}
     inputs:
       secureFile: ${{ parameters.secureFile }}
-

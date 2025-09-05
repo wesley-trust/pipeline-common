@@ -5,22 +5,22 @@ parameters:
     default: Azure CLI
   - name: azureSubscription
     type: string
-    default: ''
+    default: ""
   - name: repoAlias
     type: string
     default: PipelineCommon
   - name: script
     type: string
-    default: ''
+    default: ""
   - name: arguments
     type: string
-    default: ''
+    default: ""
   - name: workingDirectory
     type: string
-    default: ''
+    default: ""
   - name: condition
     type: string
-    default: ''
+    default: ""
 
 steps:
   - task: AzureCLI@2

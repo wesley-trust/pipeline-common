@@ -1,7 +1,7 @@
 parameters:
   - name: variableRoot
     type: string
-    default: 'vars'
+    default: "vars"
   - name: environments
     type: object
     default: []
@@ -19,18 +19,12 @@ jobs:
   - job: validate_variable_includes
     displayName: Validate Variable Includes
     dependsOn: ${{ parameters.dependsOnStages }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-
     steps:
       - checkout: none
       - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-        - ${{ each repo in parameters.additionalRepositories }}:
-          - checkout: ${{ repo.alias }}
+          - ${{ each repo in parameters.additionalRepositories }}:
+              - checkout: ${{ repo.alias }}
       - template: ../../steps/powershell.yml@PipelineCommon
         parameters:
           displayName: Preflight variable includes

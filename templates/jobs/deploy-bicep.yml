@@ -14,40 +14,40 @@ parameters:
     default: false
   - name: environmentName
     type: string
-    default: ''
+    default: ""
   - name: region
     type: string
-    default: ''
+    default: ""
   - name: variableRoot
     type: string
-    default: 'vars'
+    default: "vars"
   - name: scope
     type: string
-    default: 'resourceGroup'
+    default: "resourceGroup"
   - name: resourceGroupName
     type: string
-    default: ''
+    default: ""
   - name: location
     type: string
-    default: ''
+    default: ""
   - name: templatePath
     type: string
-    default: ''
+    default: ""
   - name: parametersFile
     type: string
-    default: ''
+    default: ""
   - name: additionalParameters
     type: string
-    default: ''
+    default: ""
   - name: managementGroupId
     type: string
-    default: ''
+    default: ""
   - name: subscriptionId
     type: string
-    default: ''
+    default: ""
   - name: serviceConnection
     type: string
-    default: ''
+    default: ""
   - name: dependsOn
     type: object
     default: []
@@ -68,13 +68,13 @@ parameters:
     default: []
   - name: tokenPrefix
     type: string
-    default: '#{'
+    default: "#{"
   - name: tokenSuffix
     type: string
-    default: '}'
+    default: "}"
   - name: mode
     type: string
-    default: '' # complete|incremental; empty to use default or runtime override
+    default: "" # complete|incremental; empty to use default or runtime override
   - name: pool
     type: object
     default: {}
@@ -104,14 +104,6 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ coalesce(parameters.displayName, upper(replace(parameters.name, '_', ' '))) }}
     dependsOn: ${{ parameters.dependsOn }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-      ${{ if gt(length(parameters.demands), 0) }}:
-        demands: ${{ parameters.demands }}
-
     variables:
       - template: variables/include.yml@PipelineCommon
         parameters:
@@ -126,46 +118,46 @@ jobs:
     steps:
       # Use locked sources for RTL integrity
       - ${{ if eq(parameters.useLockedSources, true) }}:
-        - checkout: none
-        - checkout: PipelineCommon
-        - template: steps/download-artifact.yml@PipelineCommon
-          parameters:
-            displayName: Download source snapshot
-            artifactName: ${{ parameters.lockedArtifactName }}
-            downloadPath: ${{ parameters.lockedSourcePath }}
+          - checkout: none
+          - checkout: PipelineCommon
+          - template: steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: ${{ parameters.lockedArtifactName }}
+              downloadPath: ${{ parameters.lockedSourcePath }}
       - ${{ if eq(parameters.useLockedSources, false) }}:
-        - checkout: self
-        - checkout: PipelineCommon
+          - checkout: self
+          - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-        - ${{ each repo in parameters.additionalRepositories }}:
-          - checkout: ${{ repo.alias }}
+          - ${{ each repo in parameters.additionalRepositories }}:
+              - checkout: ${{ repo.alias }}
 
       # Optional Key Vault secret import
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-        - template: steps/import-keyvault-secrets.yml@PipelineCommon
-          parameters:
-            displayName: Import Key Vault Secrets
-            azureSubscription: ${{ parameters.serviceConnection }}
-            keyVaultName: ${{ parameters.keyVault.name }}
-            secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+          - template: steps/import-keyvault-secrets.yml@PipelineCommon
+            parameters:
+              displayName: Import Key Vault Secrets
+              azureSubscription: ${{ parameters.serviceConnection }}
+              keyVaultName: ${{ parameters.keyVault.name }}
+              secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
       # Optional token replacement (supports multiple patterns)
       - ${{ if eq(parameters.tokenReplaceEnabled, true) }}:
-        - ${{ if gt(length(parameters.tokenTargetPatterns), 0) }}:
-          - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
-            - template: steps/replace-tokens.yml@PipelineCommon
-              parameters:
-                displayName: Bicep token replacement (${ tokenPattern })
-                targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
-                tokenPrefix: ${{ parameters.tokenPrefix }}
-                tokenSuffix: ${{ parameters.tokenSuffix }}
-        - ${{ if eq(length(parameters.tokenTargetPatterns), 0) }}:
-          - template: steps/replace-tokens.yml@PipelineCommon
-            parameters:
-              displayName: Bicep token replacement
-              targetFiles: ${{ format('{0}/**/*.bicepparam', parameters.lockedSourcePath) }}
-              tokenPrefix: ${{ parameters.tokenPrefix }}
-              tokenSuffix: ${{ parameters.tokenSuffix }}
+          - ${{ if gt(length(parameters.tokenTargetPatterns), 0) }}:
+              - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
+                  - template: steps/replace-tokens.yml@PipelineCommon
+                    parameters:
+                      displayName: Bicep token replacement (${ tokenPattern })
+                      targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
+                      tokenPrefix: ${{ parameters.tokenPrefix }}
+                      tokenSuffix: ${{ parameters.tokenSuffix }}
+          - ${{ if eq(length(parameters.tokenTargetPatterns), 0) }}:
+              - template: steps/replace-tokens.yml@PipelineCommon
+                parameters:
+                  displayName: Bicep token replacement
+                  targetFiles: ${{ format('{0}/**/*.bicepparam', parameters.lockedSourcePath) }}
+                  tokenPrefix: ${{ parameters.tokenPrefix }}
+                  tokenSuffix: ${{ parameters.tokenSuffix }}
 
       # Execute Bicep using centralized script
       - template: steps/azurecli.yml@PipelineCommon
@@ -189,8 +181,8 @@ jobs:
 
       # Publish what-if output when requested
       - ${{ if and(eq(parameters.action, 'whatif'), eq(parameters.publishWhatIf, true)) }}:
-        - template: steps/publish-artifact.yml@PipelineCommon
-          parameters:
-            displayName: Publish What-If Output
-            artifactName: bicep-whatif-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
-            targetPath: ${{ format('{0}/whatif.txt', parameters.lockedSourcePath) }}
+          - template: steps/publish-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Publish What-If Output
+              artifactName: bicep-whatif-${{ parameters.environmentName }}${{ if ne(parameters.region, '') }}-${{ parameters.region }}
+              targetPath: ${{ format('{0}/whatif.txt', parameters.lockedSourcePath) }}

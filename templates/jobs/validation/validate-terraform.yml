@@ -16,43 +16,37 @@ parameters:
     default: {}
   - name: serviceConnection
     type: string
-    default: ''
+    default: ""
 
 jobs:
   - job: validate_terraform
     displayName: Validate Terraform
     dependsOn: ${{ parameters.dependsOnStages }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-
     steps:
       - checkout: none
       - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-        - ${{ each repo in parameters.additionalRepositories }}:
-          - checkout: ${{ repo.alias }}
+          - ${{ each repo in parameters.additionalRepositories }}:
+              - checkout: ${{ repo.alias }}
       - template: ../../steps/download-artifact.yml@PipelineCommon
         parameters:
           displayName: Download source snapshot
           artifactName: source-snapshot
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
-        - ${{ if gt(length(actionGroup.actions), 0) }}:
-          - ${{ each action in actionGroup.actions }}:
-            - ${{ if eq(action.type, 'terraform') }}:
-              - template: ../../steps/powershell.yml@PipelineCommon
-                parameters:
-                  displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
-                  repoAlias: PipelineCommon
-                  script: terraform_lint.ps1
-                  arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+          - ${{ if gt(length(actionGroup.actions), 0) }}:
+              - ${{ each action in actionGroup.actions }}:
+                  - ${{ if eq(action.type, 'terraform') }}:
+                      - template: ../../steps/powershell.yml@PipelineCommon
+                        parameters:
+                          displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
+                          repoAlias: PipelineCommon
+                          script: terraform_lint.ps1
+                          arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-        - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
-          parameters:
-            displayName: Import Key Vault Secrets
-            azureSubscription: ${{ parameters.serviceConnection }}
-            keyVaultName: ${{ parameters.keyVault.name }}
-            secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+          - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
+            parameters:
+              displayName: Import Key Vault Secrets
+              azureSubscription: ${{ parameters.serviceConnection }}
+              keyVaultName: ${{ parameters.keyVault.name }}
+              secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}

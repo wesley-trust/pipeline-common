@@ -6,10 +6,10 @@ parameters:
     default: setup_bicep
   - name: displayName
     type: string
-    default: Setup: Bicep
+    default: "Setup: Bicep"
   - name: serviceConnection
     type: string
-    default: ''
+    default: ""
   - name: pool
     type: object
     default: {}
@@ -17,12 +17,6 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-
     steps:
       - checkout: PipelineCommon
 

@@ -9,7 +9,7 @@ parameters:
     default: setup_common
   - name: displayName
     type: string
-    default: Setup: Common
+    default: "Setup: Common"
   - name: artifactName
     type: string
     default: source-snapshot
@@ -20,12 +20,6 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-
     steps:
       - checkout: self
       - checkout: PipelineCommon

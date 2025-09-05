@@ -8,22 +8,22 @@ parameters:
     default: PipelineCommon
   - name: script
     type: string
-    default: ''
+    default: ""
   - name: scriptFullPath
     type: string
-    default: ''
+    default: ""
   - name: arguments
     type: string
-    default: ''
+    default: ""
   - name: workingDirectory
     type: string
-    default: ''
+    default: ""
   - name: pwsh
     type: boolean
     default: true
   - name: condition
     type: string
-    default: ''
+    default: ""
 
 steps:
   - task: PowerShell@2

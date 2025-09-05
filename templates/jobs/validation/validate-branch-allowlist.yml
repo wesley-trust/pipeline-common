@@ -16,23 +16,17 @@ jobs:
   - job: validate_branch_allowlist
     displayName: Validate Branch Allow-List
     dependsOn: ${{ parameters.dependsOnStages }}
-    pool:
-      ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
-        name: ${{ parameters.pool.name }}
-      ${{ if and(eq(coalesce(parameters.pool.name, ''), ''), ne(coalesce(parameters.pool.vmImage, ''), '')) }}:
-        vmImage: ${{ parameters.pool.vmImage }}
-
     steps:
       - checkout: none
       - checkout: PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-        - ${{ each r in parameters.additionalRepositories }}:
-          - checkout: ${{ r.alias }}
+          - ${{ each r in parameters.additionalRepositories }}:
+              - checkout: ${{ r.alias }}
       - ${{ each env in parameters.environments }}:
-        - template: ../../steps/powershell.yml@PipelineCommon
-          parameters:
-            displayName: Check allowed branches (${{ env.name }})
-            repoAlias: PipelineCommon
-            script: branch_check.ps1
-            arguments: >-
-              -AllowedBranches @('${{ join(env.allowedBranches, ''',''') }}')
+          - template: ../../steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: Check allowed branches (${{ env.name }})
+              repoAlias: PipelineCommon
+              script: branch_check.ps1
+              arguments: >-
+                -AllowedBranches @('${{ join(env.allowedBranches, ''',''') }}')

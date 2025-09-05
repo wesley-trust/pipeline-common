@@ -13,13 +13,13 @@ parameters:
     default: Setup
   - name: serviceConnection
     type: string
-    default: ''
+    default: ""
   - name: pool
     type: object
     default: {}
   - name: terraformVersion
     type: string
-    default: ''
+    default: ""
   - name: dependsOnStages
     type: object
     default: []
@@ -28,18 +28,24 @@ stages:
   - stage: ${{ parameters.stageName }}
     displayName: ${{ parameters.display }}
     dependsOn: ${{ parameters.dependsOnStages }}
+    ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
+      pool:
+        name: ${{ parameters.pool.name }}
+        ${{ if eq(coalesce(parameters.poolRegionDemand, false), true) }}:
+          demands:
+            - region -equals ${{ parameters.regionName }}
+    ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
+      pool:
+        vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       - template: ../jobs/setup-common.yml@PipelineCommon
         parameters:
-          pool: ${{ parameters.pool }}
 
       # Optional tooling setup jobs
       - template: ../jobs/setup-bicep.yml@PipelineCommon
         parameters:
           serviceConnection: ${{ parameters.serviceConnection }}
-          pool: ${{ parameters.pool }}
 
       - template: ../jobs/setup-terraform.yml@PipelineCommon
         parameters:
           terraformVersion: ${{ parameters.terraformVersion }}
-          pool: ${{ parameters.pool }}

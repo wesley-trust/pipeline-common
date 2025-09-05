@@ -4,27 +4,26 @@ parameters:
     default: Replace tokens
   - name: targetFiles
     type: string
-    default: ''
+    default: ""
   - name: tokenPrefix
     type: string
-    default: '#{'
+    default: "#{"
   - name: tokenSuffix
     type: string
-    default: '}'
+    default: "}"
   - name: actionOnMissing
     type: string
-    default: 'warn'
+    default: "warn"
 
 steps:
   - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     displayName: ${{ parameters.displayName }}
     inputs:
       targetFiles: ${{ parameters.targetFiles }}
-      tokenRegex: 'false'
+      tokenRegex: "false"
       actionOnMissing: ${{ parameters.actionOnMissing }}
       keepToken: false
       enableTransforms: false
       enableTelemetry: false
       tokenPrefix: ${{ parameters.tokenPrefix }}
       tokenSuffix: ${{ parameters.tokenSuffix }}
-

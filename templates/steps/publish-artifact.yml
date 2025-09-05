@@ -8,7 +8,7 @@ parameters:
     type: string
   - name: condition
     type: string
-    default: ''
+    default: ""
 
 steps:
   - task: PublishPipelineArtifact@1
@@ -18,4 +18,3 @@ steps:
       targetPath: ${{ parameters.targetPath }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
-
