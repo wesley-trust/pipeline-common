@@ -89,6 +89,9 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
+              dependsOnStages:
+                - ${{ if ne(env.dependsOn, '') }}:
+                  - ${{ env.dependsOn }}
               # dependsOnStages:
                 #- validation
                 # - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
