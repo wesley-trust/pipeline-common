@@ -97,7 +97,7 @@ stages:
   # 3) Deployment stages – generate a stage per environment region
   # Normal mode (non-DR): run secondaries then primary; next env gates on prior primary
         - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
-          - ${{ if and(eq(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+          - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
             - ${{ each secondaryRegion in env.secondaryRegions }}:
               - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                 parameters:
@@ -165,7 +165,7 @@ stages:
 
     # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
         - ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
-          - ${{ if and(eq(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+          - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
               parameters:
                 environmentName: ${{ env.name }}
