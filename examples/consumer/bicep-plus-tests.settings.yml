@@ -111,8 +111,6 @@ extends:
         enableVariableIncludes: false
       additionalRepositories:
         - alias: Modules
-          name: org/project.modules
-          ref: refs/heads/main
       keyVault:
         name: kv-example
         secretsFilter: "app-*"
