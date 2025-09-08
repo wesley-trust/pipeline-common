@@ -33,7 +33,7 @@ parameters:
 stages:
   - stage: validation
     displayName: Validation
-    dependsOn: ${{ parameters.dependsOnStages }}
+    # dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
         name: ${{ parameters.pool.name }}
