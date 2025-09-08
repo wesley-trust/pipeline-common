@@ -1,6 +1,6 @@
 # Main enforced entry point for all consumer pipelines.
 # This template is intended to be referenced via `extends` from a dispatcher
-# in a consumer repository. Use Azure DevOps “Protect YAML pipelines” / “Enforce extends”
+# in a consumer repository. Use Azure DevOps “Protect YAML pipelines” / "Enforce extends"
 # (project settings) to require that pipelines extend this template from the
 # approved repo and ref.
 
@@ -14,8 +14,11 @@ variables:
       - group: ${{ variableGroup }}
 
 stages:
-  # 0) Optional Setup stages
-  # Global Setup (runs once)
+
+# Setup Stages
+
+## Setup Stage applicable for all environments
+
   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
@@ -23,10 +26,11 @@ stages:
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
+## Setup Stage per environment
+
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
         - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
-    # Per-Environment Setup (optional). If both global and per-env are true, per-env depends on global.
           - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
               - template: stages/setup-stage.yml@PipelineCommon
                 parameters:
@@ -41,7 +45,10 @@ stages:
                     - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
                         - setup_all
 
-  # 1) Validation stage – only depends on Global Setup if present
+# Validate Stage
+
+## Validation Stage applicable for all environments
+
   - template: stages/validation-stage.yml@PipelineCommon
     parameters:
       actionGroups: ${{ parameters.configuration.actionGroups }}
@@ -55,19 +62,10 @@ stages:
         - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
             - setup_all
 
+# Environment Stages
+
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
-  # Per-Environment Setup (optional). If both global and per-env are true, per-env depends on global.
-        - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-            - template: stages/setup-stage.yml@PipelineCommon
-              parameters:
-                environmentName: ${{ env.name }}
-                serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
-                ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
-                  pool: ${{ env.pool }}
-                ${{ else }}:
-                  pool: ${{ parameters.configuration.defaultPool }}
-                terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
   
   # 2) Review gate stages (optional)
         - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:

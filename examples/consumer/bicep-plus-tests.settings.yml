@@ -54,7 +54,6 @@ extends:
           class: test
           #dependsOn: validation
           dependsOnSecondaryRegions: false
-          dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
             - "main"
@@ -67,7 +66,6 @@ extends:
           class: acceptance
           #dependsOn: validation
           dependsOnSecondaryRegions: false
-          dependsOnDRRegion: neu
           primaryRegion: weu
           secondaryRegions:
             - neu
@@ -82,7 +80,6 @@ extends:
           class: production
           #dependsOn: validation
           #dependsOnSecondaryRegions: false
-          dependsOnDRRegion: neu
           primaryRegion: weu
           secondaryRegions:
             - neu
