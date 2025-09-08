@@ -69,6 +69,8 @@ extends:
           dependsOnSecondaryRegions: false
           dependsOnDRRegion: neu
           primaryRegion: weu
+          secondaryRegions:
+            - neu
           allowedBranches:
             - "main"
             - "release/*"
