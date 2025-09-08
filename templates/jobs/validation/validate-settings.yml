@@ -49,6 +49,4 @@ jobs:
               repoAlias: PipelineCommon
               script: validate_environment_model.ps1
               arguments: >-
-                -Name '${{ env.name }}'
-                -Class '${{ env.class }}'
-                -DependsOn '${{ coalesce(env.dependsOn, '') }}'
+                -Environment '${{ env }}'

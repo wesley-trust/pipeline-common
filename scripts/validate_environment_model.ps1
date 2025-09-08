@@ -1,29 +1,29 @@
 param(
-  [Parameter(Mandatory=$true)][Hashtable[]]$Environments
+  [Parameter(
+    Mandatory = $true
+  )]
+  [Hashtable[]]
+  $Environment
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$classes = @('development','test','acceptance','production')
-$preprod = $Environments | Where-Object { $_.class -eq 'acceptance' }
-$prod = $Environments | Where-Object { $_.class -eq 'production' }
+# Allowed Classes
+$classes = @('development', 'test', 'acceptance', 'production')
+
+# Identify Acceptance Environment
+$preprod = $Environment | Where-Object { $_.class -eq 'acceptance' }
+
+# Identify Production Environment
+$prod = $Environment | Where-Object { $_.class -eq 'production' }
+
+# Check environment count
 if ($preprod.Count -gt 1) { throw 'At most one acceptance environment allowed.' }
 if ($prod.Count -gt 1) { throw 'At most one production environment allowed.' }
 
-foreach ($env in $Environments) {
-  if (-not $classes.Contains([string]$env.class)) {
-    throw "Invalid class '$($env.class)' for environment '$($env.name)'."
-  }
-}
-
-# Optional: basic ordering check if dependsOn provided
-foreach ($env in $Environments) {
-  if ($env.dependsOn) {
-    $dep = $Environments | Where-Object { $_.name -eq $env.dependsOn }
-    if (-not $dep) { throw "dependsOn references unknown environment: $($env.dependsOn) for '$($env.name)'" }
-  }
+if ($Environment.class -notin $classes) {
+  throw "Invalid class '$($env.class)' for environment '$($env.name)'."
 }
 
 Write-Host 'Environment model validation passed.'
-
