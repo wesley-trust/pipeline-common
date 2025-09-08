@@ -93,10 +93,8 @@ stages:
                 - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
                   - ${{ if ne(env.dependsOn, '') }}:
                     - validation
-
-              # dependsOnStages:
-              #   - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-              #       - ${{ format('setup_{0}', env.name) }}
+                - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                    - ${{ format('setup_{0}', env.name) }}
 
   # 3) Deployment stages – generate a stage per environment region
   # Normal mode (non-DR): run secondaries then primary; next env gates on prior primary
@@ -131,8 +129,8 @@ stages:
                       - ${{ env.dependsOn }}
                     - ${{ else }}:
                       - validation
-                  #       - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                  #         - ${{ format('setup_{0}', env.name) }}
+                    - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                      - ${{ format('setup_{0}', env.name) }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
@@ -166,8 +164,8 @@ stages:
                   - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
-                #       - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                #         - ${{ format('setup_{0}', env.name) }}
+                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                    - ${{ format('setup_{0}', env.name) }}
 
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
