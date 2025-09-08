@@ -89,6 +89,11 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
+              dependsOnStages:
+                - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
+                  - ${{ if ne(env.dependsOn, '') }}:
+                    - validation
+
               # dependsOnStages:
               #   - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
               #       - ${{ format('setup_{0}', env.name) }}
@@ -121,15 +126,9 @@ stages:
                   poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                   dependsOnStages:
                     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                      - review_${{ env.name }}
-                    # - ${{ else }}:
-                    #   - validation
-                  # dependsOnStages:
-                  #   - ${{ if ne(env.dependsOn, '') }}:
-                  #     - ${{ env.dependsOn }}
-                  #   - ${{ else }}:
-                  #     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                  #       - review_${{ env.name }}
+                        - review_${{ env.name }}
+                    - ${{ elseif ne(env.dependsOn, '') }}:
+                      - ${{ env.dependsOn }}
                   #     - ${{ else }}:
                   #       - validation
                   #       - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
@@ -159,15 +158,9 @@ stages:
                 poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                 dependsOnStages:
                   - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                     - review_${{ env.name }}
-                  # - ${{ else }}:
-                  #     - validation
-                # dependsOnStages:
-                #   - ${{ if ne(env.dependsOn, '') }}:
-                #     - ${{ env.dependsOn }}
-                #   - ${{ else }}:
-                #     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                #       - review_${{ env.name }}
+                      - review_${{ env.name }}
+                  - ${{ elseif ne(env.dependsOn, '') }}:
+                    - ${{ env.dependsOn }}
                 #     - ${{ else }}:
                 #       - validation
                 #       - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
