@@ -105,7 +105,7 @@ stages:
 
           - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
 
-### Secondary Region Deployments
+### Secondary Region Deployments (if applicable)
 
             - ${{ each secondaryRegion in env.secondaryRegions }}:
               - template: stages/environment-region-deploy-stage.yml@PipelineCommon
