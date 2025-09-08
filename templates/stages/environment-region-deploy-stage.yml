@@ -80,6 +80,16 @@ stages:
     ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
+    variables:
+      - template: variables/include.yml@PipelineCommon
+        parameters:
+          variableRoot: ${{ parameters.variableRoot }}
+          environmentName: ${{ parameters.environmentName }}
+          regionName: ${{ parameters.regionName }}
+          includeCommon: ${{ parameters.variableIncludeCommon }}
+          includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+          includeEnv: ${{ parameters.variableIncludeEnv }}
+          includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
     jobs:
       # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
       - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
@@ -107,16 +117,6 @@ stages:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
                 ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), ne(coalesce(actionGroup.runConditions.scheduleOnly, false), true), eq(coalesce(actionGroup.runConditions.prOnly, false), true)) }}:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-                variables:
-                  - template: variables/include.yml@PipelineCommon
-                    parameters:
-                      variableRoot: ${{ parameters.variableRoot }}
-                      environmentName: ${{ parameters.environmentName }}
-                      regionName: ${{ parameters.regionName }}
-                      includeCommon: ${{ parameters.variableIncludeCommon }}
-                      includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
-                      includeEnv: ${{ parameters.variableIncludeEnv }}
-                      includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
                 strategy:
                   runOnce:
                     deploy:

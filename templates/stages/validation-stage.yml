@@ -20,9 +20,6 @@ parameters:
   - name: customValidationScripts
     type: object
     default: []
-  - name: dependsOnStages
-    type: object
-    default: []
   - name: additionalRepositories
     type: object
     default: []
@@ -33,7 +30,6 @@ parameters:
 stages:
   - stage: validation
     displayName: Validation
-    # dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
         name: ${{ parameters.pool.name }}

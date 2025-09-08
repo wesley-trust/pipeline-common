@@ -85,7 +85,7 @@ stages:
                       serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
                       ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
                         pool: ${{ env.pool }}
-                      ${{ elseif eq(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}: # Using elseif due to linting extension error
+                      ${{ elseif eq(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}: # Using elseif instead of else to avoid linter parsing error
                         pool: ${{ parameters.configuration.defaultPool }}
                       runTerraformPlan: ${{ coalesce(parameters.configuration.runTerraformPlan, true) }}
                       runBicepWhatIf: ${{ coalesce(parameters.configuration.runBicepWhatIf, true) }}
