@@ -16,14 +16,14 @@ variables:
 stages:
   # 0) Optional Setup stages
   # Global Setup (runs once)
-  # - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
-  #     - template: stages/setup-stage.yml@PipelineCommon
-  #       parameters:
-  #         stageName: setup_global
-  #         display: "Setup: Global"
-  #         serviceConnection: ${{ parameters.configuration.serviceConnection }}
-  #         pool: ${{ parameters.configuration.defaultPool }}
-  #         terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
+  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+      - template: stages/setup-stage.yml@PipelineCommon
+        parameters:
+          stageName: setup_global
+          display: "Setup: Global"
+          serviceConnection: ${{ parameters.configuration.serviceConnection }}
+          pool: ${{ parameters.configuration.defaultPool }}
+          terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
   # 1) Validation stage – only depends on Global Setup if present
   - template: stages/validation-stage.yml@PipelineCommon
@@ -89,7 +89,6 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-              # ${{ if or(ne(env.dependsOn, ''), eq(coalesce(env.setup.runPerEnvironment, false), true)) }}:
               dependsOnStages:
                 - ${{ if ne(env.dependsOn, '') }}:
                   - ${{ env.dependsOn }}
@@ -127,10 +126,8 @@ stages:
                         - review_${{ env.name }}
                     - ${{ elseif ne(env.dependsOn, '') }}:
                       - ${{ env.dependsOn }}
-                    # - ${{ else }}:
-                    #   - validation
-                    # - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                    #   - ${{ format('setup_{0}', env.name) }}
+                    - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                      - ${{ format('setup_{0}', env.name) }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
@@ -159,13 +156,11 @@ stages:
                       - review_${{ env.name }}
                   - ${{ elseif ne(env.dependsOn, '') }}:
                     - ${{ env.dependsOn }}
-                  # - ${{ else }}:
-                  #   - validation
-                  # - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
-                  #   - ${{ each secondaryRegion in env.secondaryRegions }}:
-                  #       - deploy_${{ env.name }}_${{ secondaryRegion }}
-                  # - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                  #   - ${{ format('setup_{0}', env.name) }}
+                  - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
+                    - ${{ each secondaryRegion in env.secondaryRegions }}:
+                        - deploy_${{ env.name }}_${{ secondaryRegion }}
+                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+                    - ${{ format('setup_{0}', env.name) }}
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
     # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
