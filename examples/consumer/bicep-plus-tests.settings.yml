@@ -39,7 +39,7 @@ extends:
         - name: dev
           class: development
           #dependsOn: validation
-          dependsOnSecondaryRegions: true
+          dependsOnSecondaryRegions: false
           primaryRegion: weu
           secondaryRegions:
             - neu
