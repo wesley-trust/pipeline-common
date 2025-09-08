@@ -16,10 +16,10 @@ variables:
 stages:
   # 0) Optional Setup stages
   # Global Setup (runs once)
-  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
+  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
-          environmentName: "Global"
+          environmentName: "All"
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
@@ -37,7 +37,7 @@ stages:
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
   # Per-Environment Setup (optional). If both global and per-env are true, per-env depends on global.
-        - ${{ if eq(coalesce(env.setup.runPerEnvironment, true), true) }}:
+        - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
             - template: stages/setup-stage.yml@PipelineCommon
               parameters:
                 environmentName: ${{ env.name }}
@@ -47,9 +47,6 @@ stages:
                 ${{ else }}:
                   pool: ${{ parameters.configuration.defaultPool }}
                 terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
-                dependsOnStages:
-                  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
-                      - setup_global
   
   # 2) Review gate stages (optional)
         - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
@@ -86,8 +83,6 @@ stages:
               dependsOnStages:
                 - ${{ if ne(env.dependsOn, '') }}:
                   - ${{ env.dependsOn }}
-                - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                  - ${{ format('setup_{0}', env.name) }}
 
   # 3) Deployment stages – generate a stage per environment region
   # Normal mode (non-DR): run secondaries then primary; next env gates on prior primary
@@ -120,8 +115,6 @@ stages:
                         - review_${{ env.name }}
                     - ${{ elseif ne(env.dependsOn, '') }}:
                       - ${{ env.dependsOn }}
-                    - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                      - ${{ format('setup_{0}', env.name) }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
@@ -153,8 +146,6 @@ stages:
                   - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                     - ${{ each secondaryRegion in env.secondaryRegions }}:
                         - deploy_${{ env.name }}_${{ secondaryRegion }}
-                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                    - ${{ format('setup_{0}', env.name) }}
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
     # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
@@ -182,11 +173,8 @@ stages:
                 keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                 poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                 dependsOnStages:
-                  - validation
                   - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
                       - review_${{ env.name }}
-                  - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                      - ${{ format('setup_{0}', env.name) }}
-                  - ${{ if and(ne(env.dependsOn, ''), eq(coalesce(parameters.configuration.drInvocation, false), true)) }}:
-                      - deploy_${{ env.dependsOn }}_${{ env.dependsOnDRRegion }}
+                  - ${{ elseif ne(env.dependsOn, '') }}:
+                    - ${{ env.dependsOn }}
                 bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
