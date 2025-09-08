@@ -37,7 +37,7 @@ stages:
                   pool: ${{ parameters.configuration.defaultPool }}
                 terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
                 dependsOnStages:
-                  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+                  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
                       - setup_all
 
   # 1) Validation stage – only depends on Global Setup if present
