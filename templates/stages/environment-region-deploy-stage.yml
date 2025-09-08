@@ -81,7 +81,7 @@ stages:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
     variables:
-      - template: variables/include.yml@PipelineCommon
+      - template: ../variables/include.yml@PipelineCommon
         parameters:
           variableRoot: ${{ parameters.variableRoot }}
           environmentName: ${{ parameters.environmentName }}
