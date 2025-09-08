@@ -38,6 +38,7 @@ extends:
       environments:
         - name: dev
           class: development
+          dependsOn: validation
           dependsOnSecondaryRegions: true
           primaryRegion: weu
           secondaryRegions:
