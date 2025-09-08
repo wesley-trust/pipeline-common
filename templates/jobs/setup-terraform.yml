@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout: PipelineCommon
 
-      - template: steps/azurecli.yml@PipelineCommon
+      - template: ../steps/azurecli.yml@PipelineCommon
         parameters:
           displayName: Install Terraform ${{ parameters.terraformVersion }}
           repoAlias: PipelineCommon

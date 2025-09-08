@@ -20,7 +20,7 @@ jobs:
     steps:
       - checkout: PipelineCommon
 
-      - template: steps/azurecli.yml@PipelineCommon
+      - template: ../steps/azurecli.yml@PipelineCommon
         parameters:
           displayName: Install Bicep
           azureSubscription: ${{ parameters.serviceConnection }}
