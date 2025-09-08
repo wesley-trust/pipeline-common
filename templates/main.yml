@@ -19,8 +19,7 @@ stages:
   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
-          stageName: setup_global
-          display: "Setup: Global"
+          environmentName: "Global"
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
@@ -41,8 +40,7 @@ stages:
         - ${{ if eq(coalesce(env.setup.runPerEnvironment, true), true) }}:
             - template: stages/setup-stage.yml@PipelineCommon
               parameters:
-                stageName: ${{ format('setup_{0}', env.name) }}
-                display: "${{ format('Setup: {0}', env.name) }}"
+                environmentName: ${{ env.name }}
                 serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
                 ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
                   pool: ${{ env.pool }}

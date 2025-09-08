@@ -5,12 +5,8 @@
 # - setup_bicep: ensures Bicep CLI is available (only if Bicep task is used)
 
 parameters:
-  - name: stageName
+  - name: environmentName
     type: string
-    default: setup
-  - name: display
-    type: string
-    default: Setup
   - name: serviceConnection
     type: string
     default: ""
@@ -25,8 +21,8 @@ parameters:
     default: []
 
 stages:
-  - stage: ${{ parameters.stageName }}
-    displayName: ${{ parameters.display }}
+  - stage: setup_${{ parameters.environmentName }}
+    displayName: "Setup: ${{ upper(parameters.environmentName) }}"
     ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
       dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
