@@ -65,7 +65,7 @@ extends:
         - name: ppr
           class: acceptance
           #dependsOn: validation
-          dependsOnSecondaryRegions: true
+          dependsOnSecondaryRegions: false
           dependsOnDRRegion: neu
           primaryRegion: weu
           allowedBranches:
