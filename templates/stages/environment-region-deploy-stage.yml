@@ -69,7 +69,7 @@ stages:
     displayName: "Deploy: ${{ upper(parameters.environmentName) }} - ${{ upper(parameters.regionName) }}"
     ${{ if and(eq(parameters.envClass, 'production'), eq(parameters.enableProduction, false)) }}:
       condition: and(succeeded(), false)
-    # dependsOn: ${{ parameters.dependsOnStages }}
+    dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
         name: ${{ parameters.pool.name }}
