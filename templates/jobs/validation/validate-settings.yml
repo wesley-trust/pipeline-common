@@ -18,7 +18,7 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
-        path: PipelineCommon
+        path: s/PipelineCommon
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
