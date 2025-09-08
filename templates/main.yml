@@ -50,6 +50,9 @@ stages:
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
       validation: ${{ coalesce(parameters.configuration.validation, '') }}
       customValidationScripts: ${{ parameters.configuration.customValidationScripts }}
+      dependsOnStages:
+        - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
+            - setup_all
 
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
