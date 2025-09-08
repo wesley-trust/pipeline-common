@@ -19,4 +19,3 @@ foreach ($p in $EnvPools) {
   }
 }
 Write-Host 'Pool configuration validated successfully.'
-

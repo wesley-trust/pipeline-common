@@ -3,12 +3,7 @@ param(
     Mandatory = $true
   )]
   [string]
-  $Name,
-  [Parameter(
-    Mandatory = $true
-  )]
-  [string]
-  $Class
+  $Environments
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,17 +13,24 @@ Set-StrictMode -Version Latest
 $classes = @('development', 'test', 'acceptance', 'production')
 
 # Identify Acceptance Environment
-$preprod = $Class | Where-Object { $_.class -eq 'acceptance' }
+$acceptance = $Environments | Where-Object { $Environments.class -eq 'acceptance' }
 
 # Identify Production Environment
-$prod = $Class | Where-Object { $_.class -eq 'production' }
+$production = $Class | Where-Object { $Environments.class -eq 'production' }
 
-# Check environment count
-if ($preprod.Count -gt 1) { throw 'At most one acceptance environment allowed.' }
-if ($prod.Count -gt 1) { throw 'At most one production environment allowed.' }
+# Check class environment count
+if ($acceptance.Count -gt 1) {
+  throw 'At most one acceptance environment allowed.' 
+}
+if ($production.Count -gt 1) {
+  throw 'At most one production environment allowed.'
+}
 
-if ($Environment.class -notin $classes) {
-  throw "Invalid class '$($Class)' for environment '$Name'."
+# Check for valid class
+foreach ($Environment in $Environments) {
+  if ($Environment.class -notin $classes) {
+    throw "Invalid class '$($Environment.class)' for environment '$($Environment.name)'."
+  }
 }
 
 Write-Host 'Environment model validation passed.'

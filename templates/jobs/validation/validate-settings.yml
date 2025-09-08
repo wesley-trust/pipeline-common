@@ -33,6 +33,14 @@ jobs:
             -DefaultPoolName "${{ coalesce(parameters.pool.name, '') }}"
             -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
 
+      - template: ../../steps/powershell.yml@PipelineCommon
+        parameters:
+          displayName: "Validate environment model"
+          repoAlias: PipelineCommon
+          script: validate_environment_model.ps1
+          arguments: >-
+            -Environments ${{ parameters.environments }}"
+
         # One run per environment
       - ${{ each env in parameters.environments }}:
           - template: ../../steps/powershell.yml@PipelineCommon
@@ -42,12 +50,3 @@ jobs:
               script: validate_pools.ps1
               arguments: >-
                 -EnvPools @{ envName='${{ env.name }}'; name='${{ coalesce(env.pool.name, '') }}'; vmImage='${{ coalesce(env.pool.vmImage, '') }}' }
-
-          - template: ../../steps/powershell.yml@PipelineCommon
-            parameters:
-              displayName: "Validate environment model — ${{ env.name }}"
-              repoAlias: PipelineCommon
-              script: validate_environment_model.ps1
-              arguments: >-
-                -Name '${{ env.name }}'
-                -Class '${{ env.class }}'
