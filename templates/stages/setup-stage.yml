@@ -27,7 +27,8 @@ parameters:
 stages:
   - stage: ${{ parameters.stageName }}
     displayName: ${{ parameters.display }}
-    dependsOn: ${{ parameters.dependsOnStages }}
+    ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
+      dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
         name: ${{ parameters.pool.name }}
@@ -36,8 +37,7 @@ stages:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       - template: ../jobs/setup-common.yml@PipelineCommon
-        parameters:
-
+      
       # Optional tooling setup jobs
       - template: ../jobs/setup-bicep.yml@PipelineCommon
         parameters:
