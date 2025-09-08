@@ -47,9 +47,9 @@ stages:
                 ${{ else }}:
                   pool: ${{ parameters.configuration.defaultPool }}
                 terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
-                # dependsOnStages:
-                #   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
-                #       - setup_global
+                dependsOnStages:
+                  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+                      - setup_global
   
   # 2) Review gate stages (optional)
         - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
