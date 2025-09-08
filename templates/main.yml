@@ -161,6 +161,8 @@ stages:
                       - review_${{ env.name }}
                   - ${{ elseif ne(env.dependsOn, '') }}:
                     - ${{ env.dependsOn }}
+                  - ${{ else }}:
+                    - validation
                 #     - ${{ else }}:
                 #       - validation
                 #       - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
