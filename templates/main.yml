@@ -122,8 +122,8 @@ stages:
                   dependsOnStages:
                     - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
                       - review_${{ env.name }}
-                    - ${{ else }}:
-                      - validation
+                    # - ${{ else }}:
+                    #   - validation
                   # dependsOnStages:
                   #   - ${{ if ne(env.dependsOn, '') }}:
                   #     - ${{ env.dependsOn }}
@@ -160,8 +160,8 @@ stages:
                 dependsOnStages:
                   - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
                      - review_${{ env.name }}
-                  - ${{ else }}:
-                      - validation
+                  # - ${{ else }}:
+                  #     - validation
                 # dependsOnStages:
                 #   - ${{ if ne(env.dependsOn, '') }}:
                 #     - ${{ env.dependsOn }}
