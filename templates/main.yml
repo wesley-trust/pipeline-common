@@ -15,7 +15,7 @@ variables:
 
 stages:
 
-# Setup Stages
+# Setup Stages (optional)
 
 ## Setup Stage applicable for all environments
 
@@ -58,18 +58,15 @@ stages:
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
       validation: ${{ coalesce(parameters.configuration.validation, '') }}
       customValidationScripts: ${{ parameters.configuration.customValidationScripts }}
-      dependsOnStages:
-        - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
-            - setup_all
 
 # Environment Stages
 
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
-  
-  # 2) Review gate stages (optional)
-        - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-          - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+        - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+
+## Review Stage (optional)
+          - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
             - template: stages/review-stage.yml@PipelineCommon
               parameters:
                 environmentName: ${{ env.name }}
@@ -104,10 +101,12 @@ stages:
                   - ${{ if ne(env.dependsOn, '') }}:
                     - ${{ env.dependsOn }}
 
-  # 3) Deployment stages – generate a stage per environment region
-  # Normal mode (non-DR): run secondaries then primary; next env gates on prior primary
-        - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
-          - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+## Regional Deployment Stages (non-DrInvocation)
+
+          - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
+
+### Secondary Region Deployments
+
             - ${{ each secondaryRegion in env.secondaryRegions }}:
               - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                 parameters:
@@ -137,64 +136,67 @@ stages:
                       - ${{ env.dependsOn }}
                   bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
-            - template: stages/environment-region-deploy-stage.yml@PipelineCommon
-              parameters:
-                environmentName: ${{ env.name }}
-                regionName: ${{ env.primaryRegion }}
-                envClass: ${{ env.class }}
-                enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
-                variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
-                allowedBranches: ${{ env.allowedBranches }}
-                actionGroups: ${{ parameters.configuration.actionGroups }}
-                ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
-                  pool: ${{ env.pool }}
-                ${{ else }}:
-                  pool: ${{ parameters.configuration.defaultPool }}
-                serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
-                variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
-                variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
-                variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-                additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
-                keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
-                poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-                dependsOnStages:
-                  - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                      - review_${{ env.name }}
-                  - ${{ elseif ne(env.dependsOn, '') }}:
-                    - ${{ env.dependsOn }}
-                  - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
-                    - ${{ each secondaryRegion in env.secondaryRegions }}:
-                        - deploy_${{ env.name }}_${{ secondaryRegion }}
-                bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
+### Primary Region Deployment
 
-    # DR invocation mode: deploy only to DR region (effective primary); next env gates on prior DR region
-        - ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
-          - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
             - template: stages/environment-region-deploy-stage.yml@PipelineCommon
-              parameters:
-                environmentName: ${{ env.name }}
-                regionName: ${{ coalesce(env.drRegion, env.primaryRegion) }}
-                envClass: ${{ env.class }}
-                enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
-                variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
-                allowedBranches: ${{ env.allowedBranches }}
-                actionGroups: ${{ parameters.configuration.actionGroups }}
-                ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
-                  pool: ${{ env.pool }}
-                ${{ else }}:
-                  pool: ${{ parameters.configuration.defaultPool }}
-                serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
-                variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
-                variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
-                variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
-                additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
-                keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
-                poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-                dependsOnStages:
-                  - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
-                      - review_${{ env.name }}
-                  - ${{ elseif ne(env.dependsOn, '') }}:
-                    - ${{ env.dependsOn }}
-                bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
+                parameters:
+                  environmentName: ${{ env.name }}
+                  regionName: ${{ env.primaryRegion }}
+                  envClass: ${{ env.class }}
+                  enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
+                  variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
+                  allowedBranches: ${{ env.allowedBranches }}
+                  actionGroups: ${{ parameters.configuration.actionGroups }}
+                  ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
+                    pool: ${{ env.pool }}
+                  ${{ else }}:
+                    pool: ${{ parameters.configuration.defaultPool }}
+                  serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
+                  variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
+                  variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
+                  variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
+                  variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                  additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+                  keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
+                  poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
+                  dependsOnStages:
+                    - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
+                        - review_${{ env.name }}
+                    - ${{ elseif ne(env.dependsOn, '') }}:
+                      - ${{ env.dependsOn }}
+                    - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
+                      - ${{ each secondaryRegion in env.secondaryRegions }}:
+                          - deploy_${{ env.name }}_${{ secondaryRegion }}
+                  bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
+
+## Regional Deployment Stages (DrInvocation)
+
+          - ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
+            - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+              - template: stages/environment-region-deploy-stage.yml@PipelineCommon
+                parameters:
+                  environmentName: ${{ env.name }}
+                  regionName: ${{ coalesce(env.drRegion, env.primaryRegion) }}
+                  envClass: ${{ env.class }}
+                  enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
+                  variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
+                  allowedBranches: ${{ env.allowedBranches }}
+                  actionGroups: ${{ parameters.configuration.actionGroups }}
+                  ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
+                    pool: ${{ env.pool }}
+                  ${{ else }}:
+                    pool: ${{ parameters.configuration.defaultPool }}
+                  serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
+                  variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
+                  variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
+                  variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
+                  variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                  additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
+                  keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
+                  poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
+                  dependsOnStages:
+                    - ${{ if eq(coalesce(parameters.configuration.runReviewStage, parameters.runReviewStage, true), true) }}:
+                        - review_${{ env.name }}
+                    - ${{ elseif ne(env.dependsOn, '') }}:
+                      - ${{ env.dependsOn }}
+                  bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
