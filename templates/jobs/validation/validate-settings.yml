@@ -49,4 +49,5 @@ jobs:
               repoAlias: PipelineCommon
               script: validate_environment_model.ps1
               arguments: >-
-                -Environment '${{ env }}'
+                -Name '${{ env.name }}'
+                -Class '${{ env.class }}'
