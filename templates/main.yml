@@ -16,12 +16,26 @@ variables:
 stages:
   # 0) Optional Setup stages
   # Global Setup (runs once)
-  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
           environmentName: "All"
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
+
+  - ${{ each env in parameters.configuration.environments }}:
+      - ${{ if ne(env.skipEnvironment, true) }}:
+  # Per-Environment Setup (optional). If both global and per-env are true, per-env depends on global.
+        - ${{ if eq(coalesce(env.setup.runPerEnvironment, true), true) }}:
+            - template: stages/setup-stage.yml@PipelineCommon
+              parameters:
+                environmentName: ${{ env.name }}
+                serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}
+                ${{ if ne(coalesce(env.pool.vmImage, env.pool.name, ''), '') }}:
+                  pool: ${{ env.pool }}
+                ${{ else }}:
+                  pool: ${{ parameters.configuration.defaultPool }}
+                terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
   # 1) Validation stage – only depends on Global Setup if present
   - template: stages/validation-stage.yml@PipelineCommon
