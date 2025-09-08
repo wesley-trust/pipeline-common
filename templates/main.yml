@@ -16,7 +16,7 @@ variables:
 stages:
   # 0) Optional Setup stages
   # Global Setup (runs once)
-  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
           environmentName: "Global"
