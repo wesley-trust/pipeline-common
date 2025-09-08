@@ -89,10 +89,11 @@ stages:
               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
-              dependsOnStages:
-                - ${{ if ne(env.dependsOn, '') }}:
-                  - ${{ env.dependsOn }}
-                - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+              ${{ if or(ne(env.dependsOn, ''), eq(coalesce(env.setup.runPerEnvironment, false), true)) }}:
+                dependsOnStages:
+                  ${{ if ne(env.dependsOn, '') }}:
+                    - ${{ env.dependsOn }}
+                  ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
                     - ${{ format('setup_{0}', env.name) }}
 
   # 3) Deployment stages – generate a stage per environment region
