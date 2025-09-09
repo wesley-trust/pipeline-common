@@ -24,7 +24,7 @@ jobs:
       - checkout: self
       - checkout: PipelineCommon
 
-      - template: ../steps/publish-artifact.yml@PipelineCommon
+      - template: ../../steps/publish-artifact.yml@PipelineCommon
         parameters:
           displayName: Publish Source Snapshot
           artifactName: ${{ parameters.artifactName }}

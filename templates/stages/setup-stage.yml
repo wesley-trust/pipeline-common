@@ -32,13 +32,13 @@ stages:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
-      - template: ../jobs/setup-common.yml@PipelineCommon
+      - template: ../jobs/setup/setup-common.yml@PipelineCommon
       
       # Optional tooling setup jobs
-      - template: ../jobs/setup-bicep.yml@PipelineCommon
-        parameters:
-          serviceConnection: ${{ parameters.serviceConnection }}
+      # - template: ../jobs/setup/setup-bicep.yml@PipelineCommon
+      #   parameters:
+      #     serviceConnection: ${{ parameters.serviceConnection }}
 
-      - template: ../jobs/setup-terraform.yml@PipelineCommon
-        parameters:
-          terraformVersion: ${{ parameters.terraformVersion }}
+      # - template: ../jobs/setup/setup-terraform.yml@PipelineCommon
+      #   parameters:
+      #     terraformVersion: ${{ parameters.terraformVersion }}

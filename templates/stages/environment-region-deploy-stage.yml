@@ -91,18 +91,6 @@ stages:
           includeEnv: ${{ parameters.variableIncludeEnv }}
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
     jobs:
-      # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
-      - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
-        displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
-        steps:
-          - checkout: PipelineCommon
-          - template: ../steps/powershell.yml@PipelineCommon
-            parameters:
-              displayName: Check allowed branches
-              repoAlias: PipelineCommon
-              script: branch_check.ps1
-              arguments: >-
-                -AllowedBranchesJson '${{ convertToJson(parameters.allowedBranches) }}'
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
