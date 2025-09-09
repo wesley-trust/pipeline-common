@@ -12,8 +12,12 @@ Set-StrictMode -Version Latest
 # Allowed Classes
 $classes = @('development', 'test', 'acceptance', 'production')
 
+$EnvironmentsJson
+
 # Convert back to object
-$Environments = $EnvironmentsJson | ConvertFrom-Json
+$Environments = $EnvironmentsJson | ConvertFrom-Json | ConvertTo
+
+$Environments
 
 # Identify Acceptance Environment
 $acceptance = $Environments | Where-Object { $Environments.class -eq 'acceptance' }
