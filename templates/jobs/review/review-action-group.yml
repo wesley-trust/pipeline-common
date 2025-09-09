@@ -55,7 +55,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     variables:
-      - template: ../variables/include.yml@PipelineCommon
+      - template: ../../variables/include.yml@PipelineCommon
         parameters:
           variableRoot: ${{ parameters.variableRoot }}
           environmentName: ${{ parameters.environmentName }}
@@ -70,7 +70,7 @@ jobs:
       - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
-      - template: ../steps/download-artifact.yml@PipelineCommon
+      - template: ../../steps/download-artifact.yml@PipelineCommon
         parameters:
           displayName: Download source snapshot
           artifactName: source-snapshot
@@ -78,7 +78,7 @@ jobs:
 
       # Optional Key Vault secret import
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-          - template: ../steps/import-keyvault-secrets.yml@PipelineCommon
+          - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:
               displayName: Import Key Vault Secrets
               azureSubscription: ${{ parameters.serviceConnection }}
@@ -90,20 +90,20 @@ jobs:
           - ${{ if and(eq(action.type, 'terraform'), eq(parameters.runTerraformPlan, true)) }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                      - template: ../steps/replace-tokens.yml@PipelineCommon
+                      - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: Terraform token replacement (${ tokenPattern })
                           targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                           tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                           tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
               - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                  - template: ../steps/replace-tokens.yml@PipelineCommon
+                  - template: ../../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: Terraform token replacement
                       targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
                       tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                       tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-              - template: ../steps/azurecli.yml@PipelineCommon
+              - template: ../../steps/azurecli.yml@PipelineCommon
                 parameters:
                   displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }} (Plan ${{ parameters.region }})
                   azureSubscription: ${{ parameters.serviceConnection }}
@@ -132,20 +132,20 @@ jobs:
           - ${{ if and(eq(action.type, 'bicep'), eq(parameters.runBicepWhatIf, true)) }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                      - template: ../steps/replace-tokens.yml@PipelineCommon
+                      - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: Bicep token replacement (${ tokenPattern })
                           targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                           tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                           tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
               - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                  - template: ../steps/replace-tokens.yml@PipelineCommon
+                  - template: ../../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: Bicep token replacement
                       targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
                       tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                       tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-              - template: ../steps/azurecli.yml@PipelineCommon
+              - template: ../../steps/azurecli.yml@PipelineCommon
                 parameters:
                   displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }} (What-If ${{ parameters.region }})
                   azureSubscription: ${{ parameters.serviceConnection }}
@@ -172,7 +172,7 @@ jobs:
                     condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
                   ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
                     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-              - template: ../steps/publish-artifact.yml@PipelineCommon
+              - template: ../../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish What-If Output (${{ coalesce(action.name, 'bicep') }})
                   artifactName: bicep-whatif-${{ parameters.environmentName }}-${{ parameters.region }}
@@ -192,7 +192,7 @@ jobs:
                   - task: Delay@1
                     inputs:
                       delayForMinutes: ${{ action.delayMinutes }}
-              - template: ../steps/powershell.yml@PipelineCommon
+              - template: ../../steps/powershell.yml@PipelineCommon
                 parameters:
                   displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review ${{ parameters.region }})
                   scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
