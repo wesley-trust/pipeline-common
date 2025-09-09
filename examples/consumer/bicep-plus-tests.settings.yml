@@ -70,6 +70,7 @@ extends:
           secondaryRegions:
             - neu
           allowedBranches:
+            - "main"
             - "release/*"
           pool:
             vmImage: "ubuntu-latest"
