@@ -30,8 +30,9 @@ jobs:
           repoAlias: PipelineCommon
           script: validate_pools.ps1
           arguments: >-
-            -DefaultPoolName "${{ coalesce(parameters.pool.name, '') }}"
-            -DefaultPoolVmImage "${{ coalesce(parameters.pool.vmImage, '') }}"
+            -DefaultPoolName '${{ coalesce(parameters.pool.name, '') }}'
+            -DefaultPoolVmImage '${{ coalesce(parameters.pool.vmImage, '') }}'
+
 
       - template: ../../steps/powershell.yml@PipelineCommon
         parameters:

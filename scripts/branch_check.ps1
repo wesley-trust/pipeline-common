@@ -9,6 +9,16 @@ $branchFull = $env:BUILD_SOURCEBRANCH
 $branchName = $env:BUILD_SOURCEBRANCHNAME
 if (-not $branchFull) { Write-Host 'No branch variable found'; exit 0 }
 
+function Normalize-List([object[]]$items) {
+  if (-not $items) { return @() }
+  return $items |
+    ForEach-Object { if ($null -eq $_) { '' } else { $_.ToString() } } |
+    ForEach-Object { $_.Trim() } |
+    Where-Object { $_ -ne '' }
+}
+
+$AllowedBranches = Normalize-List -items $AllowedBranches
+
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
   Write-Host 'No branch restrictions configured.'
   exit 0
@@ -20,8 +30,14 @@ function Match-Pattern($text, $pattern) {
 }
 
 $allowed = $false
-foreach ($p in $AllowedBranches) {
-  if (Match-Pattern $branchName $p) { $allowed = $true; break }
+
+# Immediate allow if wildcard present
+if ($AllowedBranches -contains '*') {
+  $allowed = $true
+} else {
+  foreach ($p in $AllowedBranches) {
+    if (Match-Pattern $branchName $p -or Match-Pattern $branchFull $p) { $allowed = $true; break }
+  }
 }
 
 if (-not $allowed) {
@@ -30,4 +46,3 @@ if (-not $allowed) {
 } else {
   Write-Host "Branch '$branchName' permitted."
 }
-
