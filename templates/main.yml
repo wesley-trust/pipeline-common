@@ -18,7 +18,7 @@ stages:
 
   ## Setup Stage applicable for all environments
 
-  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
           environmentName: "all"
