@@ -70,7 +70,6 @@ extends:
           secondaryRegions:
             - neu
           allowedBranches:
-            - "main"
             - "release/*"
           pool:
             vmImage: "ubuntu-latest"
@@ -85,7 +84,6 @@ extends:
             - neu
           drRegion: neu
           allowedBranches:
-            - "main"
             - "release/*"
           pool:
             vmImage: "ubuntu-latest"
