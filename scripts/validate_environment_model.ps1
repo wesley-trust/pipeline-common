@@ -19,7 +19,7 @@ $Environments = $EnvironmentsJson | ConvertFrom-Json
 $acceptance = $Environments | Where-Object { $Environments.class -eq 'acceptance' }
 
 # Identify Production Environment
-$production = $Class | Where-Object { $Environments.class -eq 'production' }
+$production = $Environments | Where-Object { $Environments.class -eq 'production' }
 
 # Check class environment count
 if ($acceptance.Count -gt 1) {
