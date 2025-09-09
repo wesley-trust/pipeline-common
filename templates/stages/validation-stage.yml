@@ -26,6 +26,9 @@ parameters:
   - name: keyVault
     type: object
     default: {}
+  - name: enableProduction
+    type: bool
+    default: false
 
 stages:
   - stage: validation
@@ -49,6 +52,7 @@ stages:
               environments: ${{ parameters.environments }}
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
+              enableProduction: ${{ parameters.enableProduction }}
 
       - ${{ if ne(coalesce(parameters.validation.enableVariableIncludes, true), false) }}:
           - template: ../jobs/validation/validate-variable-includes.yml@PipelineCommon

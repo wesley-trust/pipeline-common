@@ -57,6 +57,7 @@ stages:
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
       validation: ${{ coalesce(parameters.configuration.validation, '') }}
       customValidationScripts: ${{ parameters.configuration.customValidationScripts }}
+      enableProduction: ${{ parameters.configuration.enableProduction }}
 
   # Environment Stages
 
