@@ -102,7 +102,7 @@ stages:
               repoAlias: PipelineCommon
               script: branch_check.ps1
               arguments: >-
-                -AllowedBranches @('${{ join(parameters.allowedBranches, ''',''') }}')
+                -AllowedBranchesCsv '${{ join(parameters.allowedBranches, ',') }}'
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}

@@ -1,5 +1,6 @@
 param(
-  [string[]]$AllowedBranches = @()
+  [string[]]$AllowedBranches = @(),
+  [string]$AllowedBranchesCsv = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,7 +18,12 @@ function Normalize-List([object[]]$items) {
     Where-Object { $_ -ne '' }
 }
 
-$AllowedBranches = Normalize-List -items $AllowedBranches
+$fromCsv = @()
+if ((-not $AllowedBranches) -and -not [string]::IsNullOrWhiteSpace($AllowedBranchesCsv)) {
+  $fromCsv = $AllowedBranchesCsv -split ',' | ForEach-Object { ($_ ?? '').Trim().Trim('\'',''\"') }
+}
+
+$AllowedBranches = Normalize-List -items @($AllowedBranches + $fromCsv)
 
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
   Write-Host 'No branch restrictions configured.'
