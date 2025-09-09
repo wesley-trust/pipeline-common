@@ -39,7 +39,7 @@ jobs:
           repoAlias: PipelineCommon
           script: validate_environment_model.ps1
           arguments: >-
-            -EnvironmentsJson "${{ convertToJson(parameters.environments) }}"
+            -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
 
         # One run per environment
       - ${{ each env in parameters.environments }}:

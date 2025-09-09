@@ -16,10 +16,10 @@ $classes = @('development', 'test', 'acceptance', 'production')
 $Environments = $EnvironmentsJson | ConvertFrom-Json
 
 # Identify Acceptance Environment
-$acceptance = $Environments | Where-Object { $Environments.class -eq 'acceptance' }
+$acceptance = $Environments | Where-Object { $_.class -eq 'acceptance' }
 
 # Identify Production Environment
-$production = $Environments | Where-Object { $Environments.class -eq 'production' }
+$production = $Environments | Where-Object { $_.class -eq 'production' }
 
 # Check class environment count
 if ($acceptance.Count -gt 1) {
