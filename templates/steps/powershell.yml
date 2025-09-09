@@ -36,7 +36,7 @@ steps:
       ${{ if eq(parameters.scriptFullPath, '') }}:
         filePath: $(Build.SourcesDirectory)/scripts/${{ parameters.script }}
       ${{ if ne(parameters.arguments, '') }}:
-        arguments: ${{ parameters.arguments }}
+        arguments: "${{ parameters.arguments }}"
       ${{ if ne(parameters.workingDirectory, '') }}:
         workingDirectory: ${{ parameters.workingDirectory }}
     ${{ if ne(parameters.condition, '') }}:
