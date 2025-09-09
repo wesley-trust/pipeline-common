@@ -28,4 +28,4 @@ jobs:
               repoAlias: PipelineCommon
               script: branch_check.ps1
               arguments: >-
-                -AllowedBranchesCsv '${{ join(env.allowedBranches, ',') }}'
+                -AllowedBranchesJson '${{ convertToJson(env.allowedBranches) }}'

@@ -1,6 +1,7 @@
 param(
   [string[]]$AllowedBranches = @(),
-  [string]$AllowedBranchesCsv = ''
+  [string]$AllowedBranchesCsv = '',
+  [string]$AllowedBranchesJson = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,7 +24,21 @@ if ((-not $AllowedBranches) -and -not [string]::IsNullOrWhiteSpace($AllowedBranc
   $fromCsv = $AllowedBranchesCsv -split ',' | ForEach-Object { ($_ ?? '').Trim().Trim('\'',''\"') }
 }
 
-$AllowedBranches = Normalize-List -items @($AllowedBranches + $fromCsv)
+$fromJson = @()
+if ((-not $AllowedBranches) -and (-not $fromCsv) -and -not [string]::IsNullOrWhiteSpace($AllowedBranchesJson)) {
+  try {
+    $parsed = $AllowedBranchesJson | ConvertFrom-Json -ErrorAction Stop
+    if ($parsed -is [Array]) {
+      $fromJson = $parsed | ForEach-Object { ($_ ?? '').ToString() }
+    } elseif ($parsed) {
+      $fromJson = @($parsed.ToString())
+    }
+  } catch {
+    Write-Host "Warning: Failed to parse AllowedBranchesJson: $($_.Exception.Message)"
+  }
+}
+
+$AllowedBranches = Normalize-List -items @($AllowedBranches + $fromCsv + $fromJson)
 
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
   Write-Host 'No branch restrictions configured.'
