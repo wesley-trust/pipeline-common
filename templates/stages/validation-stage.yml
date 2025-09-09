@@ -27,7 +27,7 @@ parameters:
     type: object
     default: {}
   - name: enableProduction
-    type: bool
+    type: boolean
     default: false
 
 stages:
