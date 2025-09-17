@@ -104,7 +104,7 @@ stages:
       #         arguments: >-
       #           -AllowedBranchesJson '${{ convertToJson(parameters.allowedBranches) }}'
       - ${{ each actionGroup in parameters.actionGroups }}:
-          - ${{ if and(ne(actionGroup.enabled, false), contains(actionGroup.environments, parameters.environmentName)) }}:
+          - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName), eq(coalesce(actionGroup.environments, ''), ''))) }}:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
                 dependsOn:
