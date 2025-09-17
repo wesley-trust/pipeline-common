@@ -21,7 +21,7 @@ stages:
   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
       - template: stages/setup-stage.yml@PipelineCommon
         parameters:
-          environmentName: "all"
+          environmentName: "global"
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
