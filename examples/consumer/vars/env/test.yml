@@ -1,5 +1,0 @@
-variables:
-  Environment: test
-  location: westeurope
-  sku: test-sku
-
