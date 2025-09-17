@@ -1,6 +1,6 @@
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('validate','plan','apply')][string]$Action,
-  [Parameter(Mandatory=$true)][string]$WorkDir,
+  [Parameter(Mandatory = $true)][ValidateSet('validate', 'plan', 'apply')][string]$Action,
+  [Parameter(Mandatory = $true)][string]$WorkDir,
   [string]$EnvironmentName = '',
   [string]$VarFilesString = '',
   [string]$PlanFile = 'tfplan'
@@ -32,6 +32,6 @@ foreach ($f in $VarFiles) {
 }
 
 switch ($Action) {
-  'plan'  { terraform plan -out=$PlanFile @tfArgs }
+  'plan' { terraform plan -out=$PlanFile @tfArgs }
   'apply' { terraform apply -auto-approve @tfArgs }
 }

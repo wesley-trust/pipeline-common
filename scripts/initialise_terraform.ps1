@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Version)
+param([Parameter(Mandatory = $true)][string]$Version)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -16,7 +16,8 @@ $dest = if ($IsWindows) { 'C:/hostedtoolcache/terraform' } else { '/usr/local/bi
 if ($IsWindows) {
   Expand-Archive -Path $zip -DestinationPath $env:Agent_TempDirectory -Force
   Copy-Item -Path (Join-Path $env:Agent_TempDirectory 'terraform.exe') -Destination $dest -Force
-} else {
+}
+else {
   Expand-Archive -Path $zip -DestinationPath $env:Agent_TempDirectory -Force
   sudo cp "$env:Agent_TempDirectory/terraform" "$dest/terraform"
   sudo chmod +x "$dest/terraform"
