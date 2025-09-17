@@ -4,10 +4,11 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 
 ## Overview
 
+- Reference implementations live in `wesley-trust/pipeline-examples` under `examples/consumer`.
 - You keep two consumer-side files per example:
   - `<example>.pipeline.yml` (top-level): declares standard triggers, individual parameters (e.g., enableProduction, runReviewStage, per-environment skip booleans), and an `actionGroups` object in the unified main-group/child model.
   - `<example>.settings.yml`: composes a single `configuration` object from the pipeline parameters, actionGroups, and defaults. It extends the shared dispatcher and passes only `configuration` through.
-  - The shared dispatcher lives at `examples/dispatcher/pipeline-dispatcher.yml` and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
+  - The shared dispatcher lives in the dispatcher repo (`wesley-trust/pipeline-dispatcher/templates/pipeline-dispatcher.yml`) and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
 - All scripts run PowerShell 7 (pwsh) from a central `pipeline-common/scripts/` folder via reusable task templates. Inline scripts are not allowed.
 - The setup stage locks sources by publishing a snapshot artifact; every later stage downloads and uses the same snapshot.
 
@@ -41,7 +42,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 ```
 <example>.pipeline.yml (parameters + actionGroups) →
 <example>.settings.yml (compose `configuration`) →
-examples/dispatcher/pipeline-dispatcher.yml (pass `configuration`) →
+pipeline-dispatcher/templates/pipeline-dispatcher.yml (pass `configuration`) →
 templates/main.yml@PipelineCommon (consume `configuration`)
 ```
 
@@ -253,7 +254,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Terraform Params (single file)
 
-- Use a single tfvars file for all environments (e.g., `examples/assets/terraform/vars.tfvars`) and drive differences via Replace Tokens.
+- Use a single tfvars file for all environments (e.g., `wesley-trust/pipeline-examples/examples/assets/terraform/vars.tfvars`) and drive differences via Replace Tokens.
 
 ## PipelineCommon Ref Override
 
@@ -261,28 +262,28 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Examples
 
-- Shared dispatcher: `examples/dispatcher/pipeline-dispatcher.yml` (all examples extend and pass one `configuration`).
+- Shared dispatcher: `wesley-trust/pipeline-dispatcher/templates/pipeline-dispatcher.yml` (all examples extend and pass one `configuration`).
 - Consumer pipelines:
-  - `examples/consumer/bicep.pipeline.yml`
-  - `examples/consumer/terraform.pipeline.yml`
-  - `examples/consumer/pester.pipeline.yml`
-  - `examples/consumer/powershell.pipeline.yml`
-  - `examples/consumer/bicep-plus-tests.pipeline.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/bicep.pipeline.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/terraform.pipeline.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/pester.pipeline.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/powershell.pipeline.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/bicep-plus-tests.pipeline.yml`
 - Variables folder layout under consumer examples:
-  - `examples/consumer/vars/common.yml`
-  - `examples/consumer/vars/env/<env>.yml`
-  - `examples/consumer/vars/<env>/region/<region>.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/common.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/env/<env>.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/<env>/region/<region>.yml`
   - If you don’t use env or env/region files, set the include flags in settings instead of creating empty files.
 - Secure files: use `templates/steps/download-secure-file.yml` and pass `$(downloadSecureFile.secureFilePath)` to scripts.
 - Artifact publish/download: see `templates/steps/publish-artifact.yml` and `templates/steps/download-artifact.yml`.
 
 ## Pester via PowerShell Action
 
-- See `examples/consumer/pester.pipeline.yml` for a Pester-only pipeline using PowerShell actions.
+- See `wesley-trust/pipeline-examples/examples/consumer/pester.pipeline.yml` for a Pester-only pipeline using PowerShell actions.
   - Four test types: unit, integration, regression, smoke (functional).
   - Triggers: `trigger` for unit (CI), `pr` for integration; regression/smoke on-demand.
   - Each selected test type becomes a separate action executed via PowerShell (concurrent across actionGroups).
-  - The legacy `templates/jobs/run-pester.yml` is archived under `archive/`.
+
 
 ## Notes
 

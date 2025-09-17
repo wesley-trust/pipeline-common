@@ -1,37 +1,36 @@
 pipeline-common
 ================
 
-Reusable Azure DevOps YAML pipeline templates to standardize validation and deployment workflows across repositories. Consumers extend the main template via a dispatcher pipeline to keep task selection and configuration modular.
+Reusable Azure DevOps YAML pipeline templates to standardize validation and deployment workflows across repositories. Consumers extend the main template via the dispatcher pipeline to keep task selection and configuration modular.
 
 Highlights
 - Enforced entry via `templates/main.yml` (use Azure DevOps “Protect YAML pipelines” to enforce extends from this repo/ref).
-- Modular stages/jobs/tasks for Bicep, Terraform, Pester, and PowerShell.
+- Modular stages/jobs/tasks for Bicep, Terraform, and PowerShell.
 - Automatic variable loading from common/env/region files.
 - Route-to-live orchestration with optional per-environment review artifacts (Terraform plan / Bicep what-if).
 - Pre/Post deploy hooks.
 - No inline scripts — all execution goes through `scripts/` + reusable task templates.
 
 Structure
-- `templates/main.yml` – enforced entry. Composes validation, optional review, and environment deploy stages.
-- `templates/stages/*` – validation, review, environment deploy.
-- `templates/jobs/*` – task-specific jobs (bicep, terraform, pester, powershell, pre/post hooks).
-- `templates/steps/*` – reusable single-step templates (AzureCLI, PowerShell, publish/download artifacts, publish test results).
-- `templates/steps/download-secure-file.yml` – reusable secure file download.
+- `templates/main.yml` – enforced entry. Composes validation, optional review, initialise, and environment deploy stages.
+- `templates/stages/*` – stage-level wiring for validation, review, initialise, and environment deploy.
+- `templates/jobs/*` – task-specific jobs (terraform, bicep, powershell, initialise helpers).
+- `templates/steps/*` – reusable single-step templates (AzureCLI, PowerShell, publish/download artifacts, import Key Vault secrets, Replace Tokens).
 - `templates/variables/include.yml` – compile-time variable includes (common/region-only/env/env+region) with include flags.
-- `examples/` – copy-paste consumer samples (top-level pipeline, settings, dispatcher, vars/).
-- `scripts/` – centralized script implementations used by tasks (terraform, bicep, pester, examples).
+- `scripts/` – centralized script implementations used by tasks (terraform, bicep, platform initialise, validation helpers).
+- `archive/` – reserved for deprecated templates; currently empty.
 
-Dispatcher and Tagging
-- The dispatcher declares `resources.repositories` for this repo and sets the `ref` to a default (e.g., `refs/tags/v1.0.0` or a branch).
-- You can override the `ref` by setting the `pipelineCommonRef` parameter in your settings file.
+Dispatcher and Examples
+- The dispatcher repo (`wesley-trust/pipeline-dispatcher`) declares `resources.repositories` for this repo and sets the `ref` to a default (e.g., `refs/tags/v1.0.0` or a branch). You can override the `ref` by setting the `pipelineCommonRef` parameter in your settings file.
+- Consumer-ready samples now live in `wesley-trust/pipeline-examples`. Each example pairs a pipeline definition with matching settings that extend the dispatcher.
 - Azure DevOps supports using template expressions for `resources.repositories[*].ref` at compile time; variables are not allowed here.
 
 Enforce Extends
 - In Azure DevOps project settings, enable “Protect YAML pipelines” and configure template enforcement, limiting pipelines to extend from this repository/ref.
 
 Usage
-- See `examples/consumer/*` for a ready-to-copy set of files for a consumer repo.
-- Example schedule snippet is included in `examples/consumer/azure-pipelines.yml` (commented).
+- Copy the patterns in `wesley-trust/pipeline-examples` when onboarding a new consumer repo.
+- Example schedule snippets and action group definitions are documented in the examples repo and `docs/CONFIGURE.md` here.
 
 Global scripting
 - PowerShell Core everywhere (pwsh). No bash or inline scripts.
@@ -50,7 +49,7 @@ Deployment & RTL integrity
 - Allowed branches per environment enforced via `scripts/branch_check.ps1`.
 
 Validation
-- Built-in validation includes: environment model checks, Bicep lint, Terraform fmt/validate, PSScriptAnalyzer, Pester.
+- Built-in validation includes: environment model checks, Bicep lint, Terraform fmt/validate, PSScriptAnalyzer.
 - Consumers can add custom validation scripts that run against the locked source snapshot.
 
 Additional integrations
@@ -71,6 +70,7 @@ Reusable task templates
 - PowerShell: `templates/steps/powershell.yml` (scriptPath + args + pwsh)
 - Publish artifact: `templates/steps/publish-artifact.yml`
 - Download artifact: `templates/steps/download-artifact.yml`
+- Import Key Vault secrets: `templates/steps/import-keyvault-secrets.yml`
 - Publish test results: `templates/steps/publish-test-results.yml`
 
 Notes
