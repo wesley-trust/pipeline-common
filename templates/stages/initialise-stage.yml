@@ -26,8 +26,8 @@ stages:
       displayName: "Initialise: ${{ upper(parameters.environmentName) }}"
     ${{ else }}:
       displayName: "Initialise"
-    ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
-      dependsOn: ${{ parameters.dependsOnStages }}
+    # ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
+    #   dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
       pool:
         name: ${{ parameters.pool.name }}

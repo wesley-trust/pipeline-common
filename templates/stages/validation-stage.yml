@@ -108,12 +108,12 @@ stages:
                   displayName: Download source snapshot
                   artifactName: source-snapshot
                   downloadPath: $(Pipeline.Workspace)/locked-sources
-              - ${{ each s in parameters.customValidationScripts }}:
+              - ${{ each script in parameters.customValidationScripts }}:
                   - template: steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: Custom Validation
-                      scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ s.path }}
-                      arguments: ${{ s.arguments }}
+                      scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.path }}
+                      arguments: ${{ script.arguments }}
 
       # Invoke PowerShell actions in Validation when requested
       - ${{ each actionGroup in parameters.actionGroups }}:

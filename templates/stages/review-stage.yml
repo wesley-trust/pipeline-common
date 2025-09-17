@@ -1,5 +1,3 @@
-# Review stage per environment. Generates review artifacts (Terraform plan / Bicep what-if)
-# and publishes them for manual inspection before deployment.
 parameters:
   - name: environmentName
     type: string
@@ -62,7 +60,6 @@ stages:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
-      # Fan-out by regions if provided; otherwise single set without region.
       - ${{ each region in parameters.regions }}:
           - ${{ each actionGroup in parameters.actionGroups }}:
               - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName), eq(coalesce(actionGroup.environments, ''), ''))) }}:
