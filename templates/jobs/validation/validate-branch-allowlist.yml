@@ -29,7 +29,7 @@ jobs:
               - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
                   - template: ../../steps/powershell.yml@PipelineCommon
                     parameters:
-                      displayName: Check allowed branches (${{ env.name }})
+                      displayName: "Check allowed branches: ${{ upper(env.name) }}"
                       repoAlias: PipelineCommon
                       script: branch_check.ps1
                       arguments: >-

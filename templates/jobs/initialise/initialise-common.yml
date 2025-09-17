@@ -9,7 +9,7 @@ parameters:
     default: initialise_common
   - name: displayName
     type: string
-    default: "Initialise: Common"
+    default: "Initialise Common"
   - name: artifactName
     type: string
     default: source-snapshot
