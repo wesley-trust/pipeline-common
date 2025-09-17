@@ -108,7 +108,7 @@ stages:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
                 dependsOn:
-                  - precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
+                  # - precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
                 ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:
