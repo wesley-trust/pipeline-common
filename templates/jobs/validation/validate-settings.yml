@@ -36,14 +36,26 @@ jobs:
             -DefaultPoolName '${{ coalesce(parameters.pool.name, '') }}'
             -DefaultPoolVmImage '${{ coalesce(parameters.pool.vmImage, '') }}'
 
-      - template: ../../steps/powershell.yml@PipelineCommon
-        parameters:
-          displayName: "Validate environment model"
-          repoAlias: PipelineCommon
-          script: validate_environment_model.ps1
-          arguments: >-
-            -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
-            -EnableProduction ${{ if eq(parameters.enableProduction, true) }}$true${{ else }}$false
+      - ${{ if eq(parameters.enableProduction, true) }}:
+          - template: ../../steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: "Validate environment model"
+              repoAlias: PipelineCommon
+              script: validate_environment_model.ps1
+              arguments: >-
+                -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
+                -EnableProduction $true
+
+      # when enableProduction == false
+      - ${{ if ne(parameters.enableProduction, true) }}:
+        - template: ../../steps/powershell.yml@PipelineCommon
+          parameters:
+            displayName: "Validate environment model"
+            repoAlias: PipelineCommon
+            script: validate_environment_model.ps1
+            arguments: >-
+              -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
+              -EnableProduction $false
 
         # One run per environment
       - ${{ each env in parameters.environments }}:
