@@ -66,7 +66,7 @@ stages:
                   - template: ../jobs/review/review-action-group.yml@PipelineCommon
                     parameters:
                       name: ${{ coalesce(actionGroup.name, 'review') }}_${{ region }}
-                      displayName: ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'REVIEW'), '_', ' '))) }} - ${{ supper(region) }}
+                      displayName: ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'REVIEW'), '_', ' '))) }} - ${{ upper(region) }}
                       environmentName: ${{ parameters.environmentName }}
                       region: ${{ region }}
                       actionGroup: ${{ actionGroup }}
