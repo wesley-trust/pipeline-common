@@ -117,6 +117,7 @@ stages:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
                 ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), ne(coalesce(actionGroup.runConditions.scheduleOnly, false), true), eq(coalesce(actionGroup.runConditions.prOnly, false), true)) }}:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                environment: ${{ upper(parameters.environmentName) }}
                 strategy:
                   runOnce:
                     deploy:
