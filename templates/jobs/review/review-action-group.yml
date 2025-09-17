@@ -66,6 +66,7 @@ jobs:
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
 
     steps:
+      - checkout: self
       - checkout: PipelineCommon
         path: s/PipelineCommon
         
