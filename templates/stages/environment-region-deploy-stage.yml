@@ -141,130 +141,127 @@ stages:
                                 keyVaultName: ${{ parameters.keyVault.name }}
                                 secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
-                        - ${{ if contains(actionGroup, 'preDeploy') }}:
-                            - ${{ if contains(actionGroup.preDeploy, 'scripts') }}:
-                                - ${{ each script in actionGroup.preDeploy.scripts }}:
-                                    - template: ../steps/powershell.yml@PipelineCommon
-                                      parameters:
-                                        displayName: Pre-Deploy (script)
-                                        scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
-                                        arguments: ${{ script.arguments }}
+                        - ${{ each script in actionGroup.preDeploy.scripts }}:
+                            - template: ../steps/powershell.yml@PipelineCommon
+                              parameters:
+                                displayName: Pre-Deploy (script)
+                                scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                                arguments: ${{ script.arguments }}
 
-                        - ${{ if contains(actionGroup, 'actions') }}:
-                            - ${{ each action in actionGroup.actions }}:
-                                - ${{ if eq(action.type, 'terraform') }}:
-                                    - ${{ if contains(action, 'tokenTargetPatterns') }}:
-                                        - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
-                                            - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                                                - template: ../steps/replace-tokens.yml@PipelineCommon
-                                                  parameters:
-                                                    displayName: Terraform token replacement (${ tokenPattern })
-                                                    targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
-                                                    tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
-                                                    tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                        - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+                        - ${{ each action in actionGroup.actions }}:
+                            - ${{ if eq(action.type, 'terraform') }}:
+                                - ${{ if contains(action, 'tokenTargetPatterns') }}:
+                                    - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                                        - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                             - template: ../steps/replace-tokens.yml@PipelineCommon
                                               parameters:
-                                                displayName: Terraform token replacement
-                                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
+                                                displayName: Terraform token replacement (${ tokenPattern })
+                                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                                                 tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                                 tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                    - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
                                             displayName: Terraform token replacement
                                             targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
                                             tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                             tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - template: ../steps/azurecli.yml@PipelineCommon
+                                - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                    - template: ../steps/replace-tokens.yml@PipelineCommon
                                       parameters:
-                                        displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }}
-                                        azureSubscription: ${{ parameters.serviceConnection }}
-                                        repoAlias: PipelineCommon
-                                        script: terraform_run.ps1
-                                        arguments: >-
-                                          -Action apply
-                                          -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
-                                          -EnvironmentName "${{ parameters.environmentName }}"
-                                          -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
-                                        ${{ if ne(action.condition, '') }}:
-                                          condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        displayName: Terraform token replacement
+                                        targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
+                                        tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                        tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                                - template: ../steps/azurecli.yml@PipelineCommon
+                                  parameters:
+                                    displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }}
+                                    azureSubscription: ${{ parameters.serviceConnection }}
+                                    repoAlias: PipelineCommon
+                                    script: terraform_run.ps1
+                                    arguments: >-
+                                      -Action apply
+                                      -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+                                      -EnvironmentName "${{ parameters.environmentName }}"
+                                      -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
+                                    ${{ if ne(action.condition, '') }}:
+                                      condition: ${{ action.condition }}
+                                    ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
-                                - ${{ if eq(action.type, 'bicep') }}:
-                                    - ${{ if contains(action, 'tokenTargetPatterns') }}:
-                                        - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
-                                            - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                                                - template: ../steps/replace-tokens.yml@PipelineCommon
-                                                  parameters:
-                                                    displayName: Bicep token replacement (${ tokenPattern })
-                                                    targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
-                                                    tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
-                                                    tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                        - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
-                                            - template: steps/replace-tokens.yml@PipelineCommon
+                            - ${{ if eq(action.type, 'bicep') }}:
+                                - ${{ if contains(action, 'tokenTargetPatterns') }}:
+                                    - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                                        - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                                            - template: ../steps/replace-tokens.yml@PipelineCommon
                                               parameters:
-                                                displayName: Bicep token replacement
-                                                targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
+                                                displayName: Bicep token replacement (${ tokenPattern })
+                                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                                                 tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                                 tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                    - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
                                         - template: steps/replace-tokens.yml@PipelineCommon
                                           parameters:
                                             displayName: Bicep token replacement
                                             targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
                                             tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                             tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - template: ../steps/azurecli.yml@PipelineCommon
+                                - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                    - template: steps/replace-tokens.yml@PipelineCommon
                                       parameters:
-                                        displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }}
-                                        azureSubscription: ${{ parameters.serviceConnection }}
-                                        repoAlias: PipelineCommon
-                                        script: bicep_run.ps1
-                                        arguments: >-
-                                          -Action deploy
-                                          -Scope ${{ action.scope }}
-                                          -ResourceGroupName ${{ action.resourceGroupName }}
-                                          -Location ${{ action.location }}
-                                          -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
-                                          -ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"
-                                          -AdditionalParameters "${{ action.additionalParameters }}"
-                                          -ManagementGroupId ${{ action.managementGroupId }}
-                                          -SubscriptionId ${{ action.subscriptionId }}
-                                          -ModeOverride ${{ parameters.bicepModeOverride }}
-                                          -Mode ${{ action.mode }}
-                                        ${{ if ne(action.condition, '') }}:
-                                          condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        displayName: Bicep token replacement
+                                        targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
+                                        tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                        tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                                - template: ../steps/azurecli.yml@PipelineCommon
+                                  parameters:
+                                    displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }}
+                                    azureSubscription: ${{ parameters.serviceConnection }}
+                                    repoAlias: PipelineCommon
+                                    script: bicep_run.ps1
+                                    arguments: >-
+                                      -Action deploy
+                                      -Scope ${{ action.scope }}
+                                      -ResourceGroupName ${{ action.resourceGroupName }}
+                                      -Location ${{ action.location }}
+                                      -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
+                                      -ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"
+                                      -AdditionalParameters "${{ action.additionalParameters }}"
+                                      -ManagementGroupId ${{ action.managementGroupId }}
+                                      -SubscriptionId ${{ action.subscriptionId }}
+                                      -ModeOverride ${{ parameters.bicepModeOverride }}
+                                      -Mode ${{ action.mode }}
+                                    ${{ if ne(action.condition, '') }}:
+                                      condition: ${{ action.condition }}
+                                    ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
-                                - ${{ if eq(action.type, 'powershell') }}:
-                                    - ${{ if gt(coalesce(action.delayMinutes, 0), 0) }}:
-                                        - task: Delay@1
-                                          inputs:
-                                            delayForMinutes: ${{ action.delayMinutes }}
-                                    - template: ../steps/powershell.yml@PipelineCommon
-                                      parameters:
-                                        displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
-                                        scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
-                                        arguments: ${{ action.arguments }}
-                                        ${{ if ne(action.condition, '') }}:
-                                          condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                            - ${{ if eq(action.type, 'powershell') }}:
+                                - ${{ if gt(coalesce(action.delayMinutes, 0), 0) }}:
+                                    - task: Delay@1
+                                      inputs:
+                                        delayForMinutes: ${{ action.delayMinutes }}
+                                - template: ../steps/powershell.yml@PipelineCommon
+                                  parameters:
+                                    displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
+                                    scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
+                                    arguments: ${{ action.arguments }}
+                                    ${{ if ne(action.condition, '') }}:
+                                      condition: ${{ action.condition }}
+                                    ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                                    ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                         # Enforce actions model: no group-level fallbacks
 
