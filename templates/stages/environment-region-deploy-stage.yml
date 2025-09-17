@@ -108,7 +108,9 @@ stages:
                   runOnce:
                     deploy:
                       steps:
+                        - checkout: self
                         - checkout: PipelineCommon
+                          path: s/PipelineCommon
 
                         # Optional checkout additional repositories
                         - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
