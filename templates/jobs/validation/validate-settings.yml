@@ -11,6 +11,9 @@ parameters:
   - name: additionalRepositories
     type: object
     default: []
+  - name: enableProduction
+    type: boolean
+    default: false
 
 jobs:
   - job: validate_settings
@@ -44,7 +47,7 @@ jobs:
         # One run per environment
       - ${{ each env in parameters.environments }}:
           - ${{ if ne(env.skipEnvironment, true) }}:
-              - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+              - ${{ if or(ne(env.class, 'production'), eq(parameters.enableProduction, true)) }}:
                   - template: ../../steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: "Validate pool config: ${{ upper(env.name) }}"

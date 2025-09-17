@@ -84,3 +84,6 @@
 2. Use the examples to reproduce consumer setups; copy the settings structure when introducing new features.
 3. Any change to scripts/templates should be accompanied by notes in AGENTS.md (this file) and, when appropriate, `docs/CONFIGURE.md`.
 4. Coordinate dispatcher updates alongside template changes to keep consumers pinned to compatible versions.
+
+## Agent Notes
+- Normalised validation/deploy templates to use supported Azure DevOps expressions, fixed relative template paths, and plumbed JSON-based arguments into the variable/token validators so compile-time evaluation no longer fails when looping.

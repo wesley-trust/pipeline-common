@@ -45,6 +45,7 @@ stages:
           environments: ${{ parameters.environments }}
           dependsOnStages: []
           additionalRepositories: ${{ parameters.additionalRepositories }}
+          enableProduction: ${{ parameters.enableProduction }}
 
       - ${{ if ne(coalesce(parameters.validation.enableBranchAllowlist, true), false) }}:
           - template: ../jobs/validation/validate-branch-allowlist.yml@PipelineCommon
@@ -103,13 +104,13 @@ stages:
             displayName: Custom Validation Scripts
             steps:
               - checkout: PipelineCommon
-              - template: steps/download-artifact.yml@PipelineCommon
+              - template: ../steps/download-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Download source snapshot
                   artifactName: source-snapshot
                   downloadPath: $(Pipeline.Workspace)/locked-sources
               - ${{ each script in parameters.customValidationScripts }}:
-                  - template: steps/powershell.yml@PipelineCommon
+                  - template: ../steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: Custom Validation
                       scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.path }}

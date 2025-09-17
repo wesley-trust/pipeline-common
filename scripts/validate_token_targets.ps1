@@ -14,9 +14,10 @@ foreach ($p in $Patterns) {
   $matches = Get-ChildItem -Path $glob -File -Recurse -ErrorAction SilentlyContinue
   if (-not $matches) {
     throw "No files matched token target pattern: $p under $RootPath"
-  } else {
-    Write-Host "Pattern '$p' matched $($matches.Count) file(s)."
+  }
+  else {
+    $matchCount = ($matches | Measure-Object).Count
+    Write-Host "Pattern '$p' matched $matchCount file(s)."
   }
 }
 Write-Host 'Token target patterns validated.'
-

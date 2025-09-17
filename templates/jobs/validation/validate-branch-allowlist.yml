@@ -26,7 +26,7 @@ jobs:
               - checkout: ${{ repo.alias }}
       - ${{ each env in parameters.environments }}:
           - ${{ if ne(env.skipEnvironment, true) }}:
-              - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+              - ${{ if or(ne(env.class, 'production'), eq(parameters.enableProduction, true)) }}:
                   - template: ../../steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: "Check allowed branches: ${{ upper(env.name) }}"

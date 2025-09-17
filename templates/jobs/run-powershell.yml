@@ -51,6 +51,9 @@ parameters:
   - name: keyVault
     type: object
     default: {}
+  - name: additionalRepositories
+    type: object
+    default: []
   - name: variableIncludeCommon
     type: boolean
     default: true
@@ -84,7 +87,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     dependsOn: ${{ parameters.dependsOn }}
     variables:
-      - template: variables/include.yml@PipelineCommon
+      - template: ../variables/include.yml@PipelineCommon
         parameters:
           variableRoot: ${{ parameters.variableRoot }}
           environmentName: ${{ parameters.environmentName }}
@@ -98,7 +101,7 @@ jobs:
       # Use locked sources for RTL integrity
       - ${{ if eq(parameters.useLockedSources, true) }}:
           - checkout: PipelineCommon
-          - template: steps/download-artifact.yml@PipelineCommon
+          - template: ../steps/download-artifact.yml@PipelineCommon
             parameters:
               displayName: Download source snapshot
               artifactName: ${{ parameters.lockedArtifactName }}
@@ -113,7 +116,7 @@ jobs:
 
       # Optional Key Vault secret import
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-          - template: steps/import-keyvault-secrets.yml@PipelineCommon
+          - template: ../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:
               displayName: Import Key Vault Secrets
               azureSubscription: ${{ parameters.serviceConnection }}
@@ -124,7 +127,7 @@ jobs:
       - ${{ if eq(parameters.tokenReplaceEnabled, true) }}:
           - ${{ if gt(length(parameters.tokenTargetPatterns), 0) }}:
               - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
-                  - template: steps/replace-tokens.yml@PipelineCommon
+                  - template: ../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: PowerShell token replacement (${ tokenPattern })
                       targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
@@ -138,7 +141,7 @@ jobs:
             inputs:
               delayForMinutes: ${{ parameters.delayMinutes }}
 
-      - template: steps/powershell.yml@PipelineCommon
+      - template: ../steps/powershell.yml@PipelineCommon
         parameters:
           displayName: Run Script
           repoAlias: PipelineCommon
