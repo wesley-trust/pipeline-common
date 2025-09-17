@@ -21,9 +21,9 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
-      - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
-          - ${{ each r in parameters.additionalRepositories }}:
-              - checkout: ${{ r.alias }}
+      - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
+          - ${{ each repo in parameters.additionalRepositories }}:
+              - checkout: ${{ repo.alias }}
       - ${{ each env in parameters.environments }}:
           - ${{ if ne(env.skipEnvironment, true) }}:
               - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:

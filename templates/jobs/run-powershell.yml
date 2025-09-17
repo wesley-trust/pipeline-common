@@ -106,7 +106,7 @@ jobs:
       - ${{ if eq(parameters.useLockedSources, false) }}:
           - checkout: self
           - checkout: PipelineCommon
-      - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+      - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
 

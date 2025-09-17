@@ -24,7 +24,7 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
-      - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+      - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
@@ -40,12 +40,11 @@ jobs:
           artifactName: source-snapshot
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
-          - ${{ if gt(length(actionGroup.actions), 0) }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - ${{ if eq(action.type, 'bicep') }}:
-                      - template: ../../steps/azurecli.yml@PipelineCommon
-                        parameters:
-                          displayName: Bicep Lint (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
-                          repoAlias: PipelineCommon
-                          script: bicep_lint.ps1
-                          arguments: -SearchPath "$(Pipeline.Workspace)/locked-sources"
+          - ${{ each action in actionGroup.actions }}:
+              - ${{ if eq(action.type, 'bicep') }}:
+                  - template: ../../steps/azurecli.yml@PipelineCommon
+                    parameters:
+                      displayName: Bicep Lint (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
+                      repoAlias: PipelineCommon
+                      script: bicep_lint.ps1
+                      arguments: -SearchPath "$(Pipeline.Workspace)/locked-sources"

@@ -38,9 +38,9 @@ stages:
       - template: ../jobs/initialise/initialise-common.yml@PipelineCommon
 
       # Optional tooling setup jobs
-      - template: ../jobs/initialise/initialise-bicep.yml@PipelineCommon
-        parameters:
-          serviceConnection: ${{ parameters.serviceConnection }}
+      # - template: ../jobs/initialise/initialise-bicep.yml@PipelineCommon
+      #   parameters:
+      #     serviceConnection: ${{ parameters.serviceConnection }}
 
       # - template: ../jobs/initialise/initialise-terraform.yml@PipelineCommon
       #   parameters:
