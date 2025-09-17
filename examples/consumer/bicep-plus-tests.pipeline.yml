@@ -33,9 +33,9 @@ extends:
     skip_qa: ${{ parameters.skip_qa }}
     skip_preprod: ${{ parameters.skip_preprod }}
     actionGroups:
-      - name: bicep_deploy
+      - name: bicep_action
         type: bicep
-        #displayName: Bicep Deploy
+        displayName: Bicep Action
         tokenReplaceEnabled: true
         tokenTargetPatterns:
           - examples/assets/bicep/**/*.bicepparam
