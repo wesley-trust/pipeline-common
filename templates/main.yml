@@ -1,9 +1,3 @@
-# Main enforced entry point for all consumer pipelines.
-# This template is intended to be referenced via `extends` from a dispatcher
-# in a consumer repository. Use Azure DevOps “Protect YAML pipelines” / "Enforce extends"
-# (project settings) to require that pipelines extend this template from the
-# approved repo and ref.
-
 parameters:
   - name: configuration
     type: object
@@ -14,9 +8,7 @@ variables:
       - group: ${{ variableGroup }}
 
 stages:
-  # Initialise Stages (optional)
-
-  ## Initialise Stage applicable for all environments
+  # Optional Global Initialise Stage
 
   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
       - template: stages/initialise-stage.yml@PipelineCommon
@@ -25,7 +17,7 @@ stages:
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
-  ## Initialise Stage per environment
+  # Optional Per Environment Initialise Stage
 
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
@@ -44,9 +36,7 @@ stages:
                         - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
                             - initialise_global
 
-  # Validate Stage
-
-  ## Validation Stage applicable for all environments
+  # Global Validate Stage
 
   - template: stages/validation-stage.yml@PipelineCommon
     parameters:
@@ -63,11 +53,10 @@ stages:
 
   # Environment Stages
 
-  ## Review Stage (optional)
-
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
           - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
+              ## Optional Review Stage
               - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
                   - template: stages/review-stage.yml@PipelineCommon
                     parameters:
@@ -103,11 +92,10 @@ stages:
                         - ${{ if ne(env.dependsOn, '') }}:
                             - ${{ env.dependsOn }}
 
-              ## Regional Deployment Stages (non-DrInvocation)
-
-              ### Secondary Region Deployments (if applicable)
+              ## Non-DR Invocation)
 
               - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
+                  ### Optional Secondary Region Deployment (non DR-invocation)
                   - ${{ each secondaryRegion in env.secondaryRegions }}:
                       - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                         parameters:
@@ -137,7 +125,7 @@ stages:
                                 - ${{ env.dependsOn }}
                           bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
-                  ### Primary Region Deployment
+                  ### Primary Region Deployment (non DR-invocation)
 
                   - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                     parameters:
@@ -170,7 +158,7 @@ stages:
                                 - deploy_${{ env.name }}_${{ secondaryRegion }}
                       bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
-              ## Regional Deployment Stages (DrInvocation)
+              ## DR Invocation)
 
               - ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
                   - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:

@@ -1,14 +1,3 @@
-# Environment regional deploy stage using deployment job and Azure DevOps Environments
-# Parameters
-# - environmentName: logical environment name
-# - regionName: region code displayed in stage name
-# - envClass: development|test|acceptance|production
-# - enableProduction: bool flag to allow running production
-# - variableRoot: root folder for variable files (default: vars)
-# - allowedBranches: list of allowed branches (wildcards)
-# - actionGroups: unified main action groups array; each may have optional 'actions'
-# - pool, serviceConnection
-
 parameters:
   - name: environmentName
     type: string

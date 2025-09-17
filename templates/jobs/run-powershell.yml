@@ -1,4 +1,3 @@
-# Run general PowerShell script(s) from the common scripts directory
 parameters:
   - name: name
     type: string

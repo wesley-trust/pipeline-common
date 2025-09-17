@@ -1,4 +1,3 @@
-# Reusable AzureCLI step template (pscore)
 parameters:
   - name: displayName
     type: string

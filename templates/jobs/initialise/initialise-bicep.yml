@@ -1,5 +1,3 @@
-# Initialise: Bicep installation using Azure CLI
-
 parameters:
   - name: name
     type: string

@@ -1,9 +1,3 @@
-# Compile-time variable inclusion, controlled by include flags so missing files can be safely omitted.
-# Parameters:
-# - variableRoot: root folder for variables (default 'vars')
-# - environmentName: env name (e.g., dev)
-# - regionName: region code (optional)
-
 parameters:
   - name: variableRoot
     type: string
@@ -28,18 +22,18 @@ parameters:
     default: true
 
 variables:
-  # 1) Common/shared variables
+  # Common/shared variables
   - ${{ if eq(parameters.includeCommon, true) }}:
       - template: ${{ format('{0}/common.yml', parameters.variableRoot) }}
 
-  # 2) Region-only variables (applies across all environments)
+  # Region-only variables (applies across all environments)
   - ${{ if and(eq(parameters.includeRegionOnly, true), ne(parameters.regionName, '')) }}:
       - template: ${{ format('{0}/region/{1}.yml', parameters.variableRoot, parameters.regionName) }}
 
-  # 3) Per-environment variables
+  # Per-environment variables
   - ${{ if and(eq(parameters.includeEnv, true), ne(parameters.environmentName, '')) }}:
       - template: ${{ format('{0}/env/{1}.yml', parameters.variableRoot, parameters.environmentName) }}
 
-  # 4) Per-environment per-region variables
+  # Per-environment per-region variables
   - ${{ if and(eq(parameters.includeEnvRegion, true), ne(parameters.environmentName, ''), ne(parameters.regionName, '')) }}:
       - template: ${{ format('{0}/{1}/region/{2}.yml', parameters.variableRoot, parameters.environmentName, parameters.regionName) }}

@@ -1,4 +1,3 @@
-# Reusable PowerShell Core step template
 parameters:
   - name: displayName
     type: string

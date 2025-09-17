@@ -1,5 +1,3 @@
-# Initialise: Terraform installation
-
 parameters:
   - name: name
     type: string
