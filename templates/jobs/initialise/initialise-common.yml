@@ -22,6 +22,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     steps:
       - checkout: self
+        path: s/self
       - checkout: PipelineCommon
         path: s/PipelineCommon
 
@@ -29,4 +30,4 @@ jobs:
         parameters:
           displayName: Publish Source Snapshot
           artifactName: ${{ parameters.artifactName }}
-          targetPath: $(Build.SourcesDirectory)
+          targetPath: $(Build.SourcesDirectory)/self

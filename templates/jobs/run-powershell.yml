@@ -105,6 +105,7 @@ jobs:
               downloadPath: ${{ parameters.lockedSourcePath }}
       - ${{ if eq(parameters.useLockedSources, false) }}:
           - checkout: self
+            path: s/self
           - checkout: PipelineCommon
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:

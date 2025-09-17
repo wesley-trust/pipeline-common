@@ -109,6 +109,7 @@ stages:
                     deploy:
                       steps:
                         - checkout: self
+                          path: s/self
                         - checkout: PipelineCommon
                           path: s/PipelineCommon
 
