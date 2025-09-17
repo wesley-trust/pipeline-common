@@ -194,23 +194,15 @@ stages:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                             - ${{ if eq(action.type, 'bicep') }}:
-                                - ${{ if contains(action, 'tokenTargetPatterns') }}:
-                                    - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
-                                        - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                                            - template: ../steps/replace-tokens.yml@PipelineCommon
-                                              parameters:
-                                                displayName: Bicep token replacement (${ tokenPattern })
-                                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
-                                                tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
-                                                tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
-                                        - template: steps/replace-tokens.yml@PipelineCommon
+                                - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                                    - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                                        - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
-                                            displayName: Bicep token replacement
-                                            targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
+                                            displayName: Bicep token replacement (${ tokenPattern })
+                                            targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                                             tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                             tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
                                     - template: steps/replace-tokens.yml@PipelineCommon
                                       parameters:
                                         displayName: Bicep token replacement
@@ -265,11 +257,9 @@ stages:
 
                         # Enforce actions model: no group-level fallbacks
 
-                        - ${{ if contains(actionGroup, 'postDeploy') }}:
-                            - ${{ if contains(actionGroup.postDeploy, 'scripts') }}:
-                                - ${{ each script in actionGroup.postDeploy.scripts }}:
-                                    - template: ../steps/powershell.yml@PipelineCommon
-                                      parameters:
-                                        displayName: Post-Deploy (script)
-                                        scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
-                                        arguments: ${{ script.arguments }}
+                        - ${{ each script in actionGroup.postDeploy.scripts }}:
+                            - template: ../steps/powershell.yml@PipelineCommon
+                              parameters:
+                                displayName: Post-Deploy (script)
+                                scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                                arguments: ${{ script.arguments }}
