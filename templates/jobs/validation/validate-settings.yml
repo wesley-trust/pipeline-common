@@ -43,7 +43,7 @@ jobs:
           script: validate_environment_model.ps1
           arguments: >-
             -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
-            -EnableProduction ${{ parameters.enableProduction }}
+            -EnableProduction ${{ if eq(parameters.enableProduction, true) }}$true${{ else }}$false
 
         # One run per environment
       - ${{ each env in parameters.environments }}:
