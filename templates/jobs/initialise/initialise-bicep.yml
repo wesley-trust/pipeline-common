@@ -18,6 +18,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     steps:
+      - checkout: self
       - checkout: PipelineCommon
 
       - template: ../../steps/azurecli.yml@PipelineCommon
