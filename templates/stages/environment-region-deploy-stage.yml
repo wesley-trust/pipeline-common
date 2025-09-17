@@ -91,24 +91,11 @@ stages:
           includeEnv: ${{ parameters.variableIncludeEnv }}
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
     jobs:
-      # Pre-check: enforce branch allow-list before any deployment job (no approvals here)
-      # - job: precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
-      #   displayName: "Precheck: ${{ parameters.environmentName }} - (${{ parameters.regionName }})"
-      #   steps:
-      #     - checkout: PipelineCommon
-      #     - template: ../steps/powershell.yml@PipelineCommon
-      #       parameters:
-      #         displayName: Check allowed branches
-      #         repoAlias: PipelineCommon
-      #         script: branch_check.ps1
-      #         arguments: >-
-      #           -AllowedBranchesJson '${{ convertToJson(parameters.allowedBranches) }}'
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName), eq(coalesce(actionGroup.environments, ''), ''))) }}:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
-                dependsOn:
-                  # - precheck_${{ parameters.environmentName }}_${{ parameters.regionName }}
+                environment: ${{ upper(parameters.environmentName) }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
                 ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:
@@ -117,22 +104,24 @@ stages:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
                 ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), ne(coalesce(actionGroup.runConditions.scheduleOnly, false), true), eq(coalesce(actionGroup.runConditions.prOnly, false), true)) }}:
                   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-                environment: ${{ upper(parameters.environmentName) }}
                 strategy:
                   runOnce:
                     deploy:
                       steps:
                         - checkout: PipelineCommon
-                        - ${{ if gt(length(parameters.additionalRepositories), 0) }}:
+
+                        # Optional checkout additional repositories
+                        - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
                             - ${{ each repo in parameters.additionalRepositories }}:
                                 - checkout: ${{ repo.alias }}
+
+                        # Download Artifact of source code
                         - template: ../steps/download-artifact.yml@PipelineCommon
                           parameters:
                             displayName: Download source snapshot
                             artifactName: source-snapshot
                             downloadPath: $(Pipeline.Workspace)/locked-sources
 
-                        # Branch allow-list is enforced in a precheck job; do not repeat here
                         # Optional Key Vault secret import
                         - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
                             - template: ../steps/import-keyvault-secrets.yml@PipelineCommon
@@ -142,15 +131,20 @@ stages:
                                 keyVaultName: ${{ parameters.keyVault.name }}
                                 secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
-                        - ${{ each script in actionGroup.preDeploy.scripts }}:
-                            - template: ../steps/powershell.yml@PipelineCommon
-                              parameters:
-                                displayName: Pre-Deploy (script)
-                                scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
-                                arguments: ${{ script.arguments }}
+                        # Optional Pre Deployment Scripts
+                        - ${{ if ne(coalesce(actionGroup.preDeploy.scripts, ''), '') }}:
+                            - ${{ each script in actionGroup.preDeploy.scripts }}:
+                                - template: ../steps/powershell.yml@PipelineCommon
+                                  parameters:
+                                    displayName: Pre-Deploy (script)
+                                    scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                                    arguments: ${{ script.arguments }}
 
+                        # Mandatory Action per Action Group
                         - ${{ each action in actionGroup.actions }}:
+                            # Terraform Action
                             - ${{ if eq(action.type, 'terraform') }}:
+                                # Replace Tokens
                                 - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
@@ -166,6 +160,8 @@ stages:
                                         targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
                                         tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                         tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+
+                                # Execute Terraform
                                 - template: ../steps/azurecli.yml@PipelineCommon
                                   parameters:
                                     displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }}
@@ -186,7 +182,9 @@ stages:
                                     ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
+                            # Bicep Action
                             - ${{ if eq(action.type, 'bicep') }}:
+                                # Replace Tokens
                                 - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
@@ -202,6 +200,8 @@ stages:
                                         targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
                                         tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                         tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+
+                                # Execute Bicep
                                 - template: ../steps/azurecli.yml@PipelineCommon
                                   parameters:
                                     displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }}
@@ -229,11 +229,25 @@ stages:
                                     ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
+                            # PowerShell Action
                             - ${{ if eq(action.type, 'powershell') }}:
+                                # Optional Delay
                                 - ${{ if gt(coalesce(action.delayMinutes, 0), 0) }}:
                                     - task: Delay@1
                                       inputs:
                                         delayForMinutes: ${{ action.delayMinutes }}
+
+                                # Optional Replace Tokens
+                                - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                                    - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                                        - template: ../steps/replace-tokens.yml@PipelineCommon
+                                          parameters:
+                                            displayName: Bicep token replacement (${ tokenPattern })
+                                            targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                            tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
+                                            tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+
+                                # Execute PowerShell
                                 - template: ../steps/powershell.yml@PipelineCommon
                                   parameters:
                                     displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
@@ -248,7 +262,7 @@ stages:
                                     ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
-                        # Enforce actions model: no group-level fallbacks
+                        # Optional Post Deployment Scripts
                         - ${{ if ne(coalesce(actionGroup.postDeploy.scripts, ''), '') }}:
                             - ${{ each script in actionGroup.postDeploy.scripts }}:
                                 - template: ../steps/powershell.yml@PipelineCommon
