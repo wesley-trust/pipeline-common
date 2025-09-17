@@ -49,7 +49,7 @@ parameters:
 
 stages:
   - stage: review_${{ parameters.environmentName }}
-    displayName: "Review: ${{ upper(parameters.environmentName) }}"
+    displayName: "Review - ${{ upper(parameters.environmentName) }}"
     ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
       dependsOn: ${{ parameters.dependsOnStages }}
     condition: succeeded()

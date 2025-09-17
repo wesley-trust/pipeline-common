@@ -3,7 +3,9 @@ param(
     Mandatory = $true
   )]
   [string]
-  $EnvironmentsJson
+  $EnvironmentsJson,
+  [bool]
+  $EnableProduction = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,6 +35,25 @@ if ($production.Count -gt 1) {
 foreach ($Environment in $Environments) {
   if ($Environment.class -notin $classes) {
     throw "Invalid class '$($Environment.class)' for environment '$($Environment.name)'."
+  }
+}
+
+# Enforce acceptance when production is enabled
+if ($EnableProduction) {
+  if ($production.Count -eq 0) {
+    throw 'enableProduction is true but no production environment is defined.'
+  }
+
+  if ([System.Convert]::ToBoolean($production[0].skipEnvironment)) {
+    throw "Production environment '$($production[0].name)' cannot be skipped when enableProduction is true."
+  }
+
+  if ($acceptance.Count -eq 0) {
+    throw 'An acceptance environment must be defined when enableProduction is true.'
+  }
+
+  if ([System.Convert]::ToBoolean($acceptance[0].skipEnvironment)) {
+    throw "Acceptance environment '$($acceptance[0].name)' cannot be skipped when enableProduction is true."
   }
 }
 

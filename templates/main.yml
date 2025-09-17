@@ -57,7 +57,7 @@ stages:
       - ${{ if ne(env.skipEnvironment, true) }}:
           - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
               ## Optional Review Stage
-              - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
+              - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
                   - template: stages/review-stage.yml@PipelineCommon
                     parameters:
                       environmentName: ${{ env.name }}
@@ -89,7 +89,7 @@ stages:
                       keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                       poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                       dependsOnStages:
-                        - ${{ if ne(env.dependsOn, '') }}:
+                        - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                             - ${{ env.dependsOn }}
 
               ## Non-DR Invocation)
@@ -119,9 +119,9 @@ stages:
                           keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                           poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                           dependsOnStages:
-                            - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
+                            - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
                                 - review_${{ env.name }}
-                            - ${{ elseif ne(env.dependsOn, '') }}:
+                            - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                                 - ${{ env.dependsOn }}
                           bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
@@ -149,9 +149,9 @@ stages:
                       keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                       poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                       dependsOnStages:
-                        - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
+                        - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
                             - review_${{ env.name }}
-                        - ${{ elseif ne(env.dependsOn, '') }}:
+                        - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                             - ${{ env.dependsOn }}
                         - ${{ if eq(coalesce(env.dependsOnSecondaryRegions, false), true) }}:
                             - ${{ each secondaryRegion in env.secondaryRegions }}:
@@ -184,8 +184,8 @@ stages:
                           keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                           poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                           dependsOnStages:
-                            - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
+                            - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
                                 - review_${{ env.name }}
-                            - ${{ elseif ne(env.dependsOn, '') }}:
+                            - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                                 - ${{ env.dependsOn }}
                           bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}

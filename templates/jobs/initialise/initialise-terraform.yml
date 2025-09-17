@@ -4,7 +4,7 @@ parameters:
     default: initialise_terraform
   - name: displayName
     type: string
-    default: "Initialise: Terraform"
+    default: "Initialise - Terraform"
   - name: terraformVersion
     type: string
     default: ""

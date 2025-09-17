@@ -17,7 +17,7 @@ parameters:
 stages:
   - stage: initialise_${{ parameters.environmentName }}
     ${{ if ne(parameters.environmentName, 'global') }}:
-      displayName: "Initialise: ${{ upper(parameters.environmentName) }}"
+      displayName: "Initialise - ${{ upper(parameters.environmentName) }}"
     ${{ else }}:
       displayName: "Initialise"
     # ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:

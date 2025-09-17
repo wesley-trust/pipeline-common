@@ -26,14 +26,14 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 ## Environment Model
 
 - Environments have a `class`: `development`, `test`, `acceptance`, `production`.
-- Multiple `development` and `test` allowed; at most one `acceptance` and one `production` (not mandatory).
+- Multiple `development` and `test` allowed; at most one `acceptance` and one `production`. When `enableProduction` is true, an `acceptance` (pre-production) environment must exist and cannot be skipped.
 - Each env can define:
   - `primaryRegion: '<code>'` (singular)
   - `secondaryRegions: [ ... ]` (zero or more)
   - `allowedBranches: [ 'main', 'release/*', '*' ]`
   - `pool`: agent pool selection
   - `serviceConnection`: Azure service connection override
-  - `skipEnvironment: true|false` (skip this environment)
+  - `skipEnvironment: true|false` (skip this environment; ignored for `acceptance` when `enableProduction` is true)
   - `dependsOn: 'previousEnvName'`
   - `dependsOnRegion: 'weu'` (optional; helps gate next env on the prior env primary)
 
@@ -118,7 +118,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Optional per‑technology toggles (default true when omitted):
   - `configuration.runTerraformPlan`
   - `configuration.runBicepWhatIf`
-- When `runReviewStage` is false, the Review stage is skipped and the pipeline proceeds directly to deployments.
+- When `runReviewStage` is false, the Review stage is skipped for non-production environments. Production deployments always run the Review stage.
 
 ## Token Replacement
 

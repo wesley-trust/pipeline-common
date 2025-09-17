@@ -4,7 +4,7 @@ parameters:
     default: initialise_bicep
   - name: displayName
     type: string
-    default: "Initialise: Bicep"
+    default: "Initialise - Bicep"
   - name: serviceConnection
     type: string
     default: ""
