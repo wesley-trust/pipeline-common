@@ -45,7 +45,7 @@
 - `scripts/initialise_terraform.ps1` – downloads a pinned Terraform version suitable for Hosted agents (uses platform sniffing + unzip).
 - `scripts/bicep_run.ps1` – drives validate/what-if/deploy for RG, subscription, management group, or tenant scopes; supports mode overrides.
 - `scripts/initialise_bicep.ps1` – installs/updates Azure CLI Bicep tooling.
-- `scripts/ps_analyze.ps1` – executes PSScriptAnalyzer for PowerShell actions.
+- `scripts/ps_analyse.ps1` – executes PSScriptAnalyzer for PowerShell actions.
 - `scripts/branch_check.ps1` – enforces runtime branch allow-list per environment.
 - `scripts/validate_variable_includes.ps1`, `scripts/validate_token_targets.ps1`, `scripts/validate_environment_model.ps1`, `scripts/validate_pools.ps1` – static validation helpers invoked during the Validation stage.
 
@@ -60,7 +60,7 @@
 
 ## Testing & Validation Guidance
 - No automated unit tests live in this repo; validation occurs via pipeline runs. When editing templates/scripts:
-  - Run `pwsh` linting locally where feasible (`pwsh -File scripts/ps_analyze.ps1` etc.).
+  - Run `pwsh` linting locally where feasible (`pwsh -File scripts/ps_analyse.ps1` etc.).
   - For YAML templates, rely on Azure DevOps pipeline validation (`az pipelines validate` or Draft runs) – document expected compile-time behaviour if you cannot execute it.
   - Ensure documentation (this file and `docs/CONFIGURE.md`) reflects behavioural changes.
 - Ensure Replace Tokens extension (`qetza.replacetokens`) and Azure Key Vault task are available in target organisations; templates assume v5 of Replace Tokens.

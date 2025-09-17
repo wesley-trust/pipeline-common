@@ -11,7 +11,7 @@ $branchFull = $env:BUILD_SOURCEBRANCH
 $branchName = $env:BUILD_SOURCEBRANCHNAME
 if (-not $branchFull) { Write-Host 'No branch variable found'; exit 0 }
 
-function Normalize-List([object[]]$items) {
+function Normalise-List([object[]]$items) {
   if (-not $items) { return @() }
   return $items |
     ForEach-Object { if ($null -eq $_) { '' } else { $_.ToString() } } |
@@ -38,7 +38,7 @@ if ((-not $AllowedBranches) -and (-not $fromCsv) -and -not [string]::IsNullOrWhi
   }
 }
 
-$AllowedBranches = Normalize-List -items @($AllowedBranches + $fromCsv + $fromJson)
+$AllowedBranches = Normalise-List -items @($AllowedBranches + $fromCsv + $fromJson)
 
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
   Write-Host 'No branch restrictions configured.'

@@ -39,8 +39,8 @@ jobs:
                     parameters:
                       displayName: PSScriptAnalyzer (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
                       repoAlias: PipelineCommon
-                      script: ps_analyze.ps1
-                      arguments: -Path "$(Pipeline.Workspace)/locked-sources/${{ coalesce(action.analyzePath, 'scripts') }}"
+                      script: ps_analyse.ps1
+                      arguments: -Path "$(Pipeline.Workspace)/locked-sources/${{ coalesce(action.analysePath, 'scripts') }}"
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:

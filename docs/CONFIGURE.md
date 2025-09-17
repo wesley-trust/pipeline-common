@@ -122,7 +122,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Token Replacement
 
-- Centralized via `templates/steps/replace-tokens.yml` (requires Qetza Replace Tokens extension).
+- Centralised via `templates/steps/replace-tokens.yml` (requires Qetza Replace Tokens extension).
 - Multiple targets supported per task via `tokenTargetPatterns` array.
 - Defaults if not specified:
   - Terraform: `**/*.tfvars` under a task’s working directory.

@@ -1,7 +1,7 @@
 pipeline-common
 ================
 
-Reusable Azure DevOps YAML pipeline templates to standardize validation and deployment workflows across repositories. Consumers extend the main template via the dispatcher pipeline to keep task selection and configuration modular.
+Reusable Azure DevOps YAML pipeline templates to standardise validation and deployment workflows across repositories. Consumers extend the main template via the dispatcher pipeline to keep task selection and configuration modular.
 
 Highlights
 - Enforced entry via `templates/main.yml` (use Azure DevOps “Protect YAML pipelines” to enforce extends from this repo/ref).
@@ -17,7 +17,7 @@ Structure
 - `templates/jobs/*` – task-specific jobs (terraform, bicep, powershell, initialise helpers).
 - `templates/steps/*` – reusable single-step templates (AzureCLI, PowerShell, publish/download artifacts, import Key Vault secrets, Replace Tokens).
 - `templates/variables/include.yml` – compile-time variable includes (common/region-only/env/env+region) with include flags.
-- `scripts/` – centralized script implementations used by tasks (terraform, bicep, platform initialise, validation helpers).
+- `scripts/` – centralised script implementations used by tasks (terraform, bicep, platform initialise, validation helpers).
 - `archive/` – reserved for deprecated templates; currently empty.
 
 Dispatcher and Examples
