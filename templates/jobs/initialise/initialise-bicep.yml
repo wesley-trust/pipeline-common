@@ -1,4 +1,4 @@
-# Setup: Bicep installation using Azure CLI
+# Initialise: Bicep installation using Azure CLI
 
 parameters:
   - name: name
@@ -6,7 +6,7 @@ parameters:
     default: setup_bicep
   - name: displayName
     type: string
-    default: "Setup: Bicep"
+    default: "Initialise: Bicep"
   - name: serviceConnection
     type: string
     default: ""

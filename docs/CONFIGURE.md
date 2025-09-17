@@ -194,20 +194,20 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - The next environment depends only on the previous environment’s primary region stage. Specify `env.dependsOn` and optionally `env.dependsOnRegion` to make the dependency explicit.
 - Each regional task runs as a deployment job bound to the environment (`environment: <env>`), so Azure DevOps Environment approvals/checks apply.
 
-## Setup (Global vs Per-Environment)
+## Initialise (Global vs Per-Environment)
 
 - Controls (in settings → configuration):
-  - `setup.runGlobal: bool` — runs a single Setup stage before Validation/Review/Deploy.
-  - `setup.runPerEnvironment: bool` — runs a Setup stage for each environment.
+  - `setup.runGlobal: bool` — runs a single Initialise stage before Validation/Review/Deploy.
+  - `setup.runPerEnvironment: bool` — runs a Initialise stage for each environment.
   - Per environment override: `env.setupRequired: bool` — force run when true, force skip when false.
-- Defaults: If both are false or omitted, no Setup stages are created.
+- Defaults: If both are false or omitted, no Initialise stages are created.
 - Ordering & dependencies:
-  - Global Setup (if enabled) runs first and gates Validation.
-  - Per-Environment Setup (if enabled or `setupRequired` true) runs before that environment’s Review/Deploy and uses the environment’s pool.
-  - Validation has no dependency on Setup when no Global Setup is enabled.
+  - Global Initialise (if enabled) runs first and gates Validation.
+  - Per-Environment Initialise (if enabled or `setupRequired` true) runs before that environment’s Review/Deploy and uses the environment’s pool.
+  - Validation has no dependency on Initialise when no Global Initialise is enabled.
 
 - Outcomes (truth table):
-  - runGlobal=false, env.setup.runPerEnvironment=false → no Setup for that env.
+  - runGlobal=false, env.setup.runPerEnvironment=false → no Initialise for that env.
   - runGlobal=true, env.setup.runPerEnvironment=false → Global gates all; no per‑env stage.
   - runGlobal=false, env.setup.runPerEnvironment=true → Per‑env stage gates that env only.
   - runGlobal=true, env.setup.runPerEnvironment=true → Global first, then per‑env stage gates that env.

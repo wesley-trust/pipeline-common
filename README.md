@@ -43,7 +43,7 @@ Pools & Variables
 - Variables are loaded at compile-time from common/env/region YAML files with deterministic order. Include flags allow safely omitting layers (no blank files required).
 
 Deployment & RTL integrity
-- Setup stage publishes source snapshot as an artifact; all later jobs download it to ensure identical inputs.
+- Initialise stage publishes source snapshot as an artifact; all later jobs download it to ensure identical inputs.
 - Deployment uses `deployment` jobs bound to Azure DevOps Environments for approvals/checks.
 - Regional rollouts per environment are supported (primary/secondary); stages include region in the display name.
 - Optional production gate (`enableProduction`) and skip-environments list enforced in templates.

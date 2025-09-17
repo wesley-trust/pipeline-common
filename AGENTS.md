@@ -11,8 +11,8 @@
 - `docs/CONFIGURE.md` – deep-dive consumer guide (parameter flow, action model, environment design, review controls, DR mode, token replacement, etc.). Treat this as the canonical reference for behaviour.
 - `templates/` – main templates split by grain:
   - `main.yml` – enforced entry point; wires setup, validation, review, deploy stages.
-  - `stages/` – stage-level composition (`validation-stage.yml`, `review-stage.yml`, `environment-region-deploy-stage.yml`, `setup-stage.yml`).
-  - `jobs/` – job-level templates organised by concern (`validation/`, `review/`, `setup/`). Jobs consume scripts exclusively.
+  - `stages/` – stage-level composition (`validation-stage.yml`, `review-stage.yml`, `environment-region-deploy-stage.yml`, `initialise-stage.yml`).
+  - `jobs/` – job-level templates organised by concern (`validation/`, `review/`, `initialise/`). Jobs consume scripts exclusively.
   - `steps/` – single-step building blocks (AzureCLI, PowerShell, artifact publish/download, Replace Tokens, Key Vault import, secure file download).
   - `variables/include.yml` – compile-time include matrix controlling `common`, `region`, `env`, and `env-region` variable files via flags.
 - `scripts/` – PowerShell implementations called by templates (Terraform/Bicep runners, setup installers, branch/variable/token validators, Pester harness, etc.). All scripts assume pwsh and are meant to run inside the locked snapshot path when invoked from pipelines.
@@ -26,7 +26,7 @@
 2. **Consumer settings (`*.settings.yml`)** declares the dispatcher resource (`wesley-trust/pipeline-dispatcher`) and passes a single `configuration` object (environments, pools, variables, actionGroups, flags, etc.).
 3. **Dispatcher (external repo)** extends `/templates/pipeline-dispatcher.yml`, which fetches this repo as resource `PipelineCommon` and re-extends `templates/main.yml` with the same `configuration`. A historical copy lives at `archive/dispatcher/dispatcher.yml`.
 4. **Main template** materialises stages:
-   - Optional **Setup** (global + per-environment) – publishes source snapshot, installs tooling (Terraform/Bicep) driven by `setup-*` jobs.
+   - Optional **Initialise** (global + per-environment) – publishes source snapshot, installs tooling (Terraform/Bicep) driven by `initialise-*` jobs.
    - **Validation** – only emits jobs that are relevant based on `configuration.validation` flags and detected action types. Enforces environment model, branch allow-list, variable include sanity, token target existence, and technology linting (Terraform fmt/validate, Bicep build, PSScriptAnalyzer).
    - Optional **Review** – runs Terraform plan / Bicep what-if / PowerShell preview jobs based on `runReviewStage`, `runTerraformPlan`, `runBicepWhatIf`, and action metadata. Outputs artifacts for manual inspection.
    - **Deploy** – per-environment deployment stages split by region (secondary first, primary last). Uses deployment jobs bound to Azure DevOps Environments for approvals. Supports DR invocation (`drInvocation`), per-action pre/post deploy hooks, token replacement, additional repo checkout, Key Vault import, manual/schedule/PR gating, and regional agent capability demands.

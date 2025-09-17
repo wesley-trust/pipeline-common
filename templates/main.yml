@@ -14,24 +14,24 @@ variables:
       - group: ${{ variableGroup }}
 
 stages:
-  # Setup Stages (optional)
+  # Initialise Stages (optional)
 
-  ## Setup Stage applicable for all environments
+  ## Initialise Stage applicable for all environments
 
   - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
-      - template: stages/setup-stage.yml@PipelineCommon
+      - template: stages/initialise-stage.yml@PipelineCommon
         parameters:
           environmentName: "global"
           serviceConnection: ${{ parameters.configuration.serviceConnection }}
           terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
 
-  ## Setup Stage per environment
+  ## Initialise Stage per environment
 
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
           - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
               - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
-                  - template: stages/setup-stage.yml@PipelineCommon
+                  - template: stages/initialise-stage.yml@PipelineCommon
                     parameters:
                       environmentName: ${{ env.name }}
                       serviceConnection: ${{ coalesce(env.serviceConnection, parameters.configuration.serviceConnection) }}

@@ -1,4 +1,4 @@
-# Setup: Terraform installation
+# Initialise: Terraform installation
 
 parameters:
   - name: name
@@ -6,7 +6,7 @@ parameters:
     default: setup_terraform
   - name: displayName
     type: string
-    default: "Setup: Terraform"
+    default: "Initialise: Terraform"
   - name: terraformVersion
     type: string
     default: ""

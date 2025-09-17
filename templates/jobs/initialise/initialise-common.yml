@@ -1,4 +1,4 @@
-# Setup: common preparation
+# Initialise: common preparation
 # - Publishes a snapshot of the self repository as a pipeline artifact for
 #   route-to-live integrity. All later jobs download this snapshot instead of
 #   re-checking out fresh sources.
@@ -9,7 +9,7 @@ parameters:
     default: setup_common
   - name: displayName
     type: string
-    default: "Setup: Common"
+    default: "Initialise: Common"
   - name: artifactName
     type: string
     default: source-snapshot

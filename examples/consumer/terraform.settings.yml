@@ -47,7 +47,7 @@ extends:
           allowedBranches: [ '*' ]
           pool: { vmImage: 'ubuntu-latest' }
           skipEnvironment: ${{ parameters.skip_dev }}
-          setup:
+          initialise:
             runPerEnvironment: true
           poolRegionDemand: false
         - name: test
@@ -59,7 +59,7 @@ extends:
           allowedBranches: [ 'main', 'release/*' ]
           pool: { vmImage: 'ubuntu-latest' }
           skipEnvironment: ${{ parameters.skip_qa }}
-          setup:
+          initialise:
             runPerEnvironment: false
           poolRegionDemand: false
         - name: preprod
@@ -103,5 +103,5 @@ extends:
       keyVault:
         name: kv-example
         secretsFilter: 'app-*'
-      setup:
+      initialise:
         runGlobal: false
