@@ -20,6 +20,7 @@ jobs:
     condition: and(succeeded(), ne('${{ parameters.terraformVersion }}',''))
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
 
       - template: ../../steps/azurecli.yml@PipelineCommon
         parameters:

@@ -23,6 +23,7 @@ jobs:
     steps:
       - checkout: self
       - checkout: PipelineCommon
+        path: s/PipelineCommon
 
       - template: ../../steps/publish-artifact.yml@PipelineCommon
         parameters:
