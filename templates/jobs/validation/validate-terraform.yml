@@ -33,15 +33,14 @@ jobs:
           artifactName: source-snapshot
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
-          - ${{ if gt(length(actionGroup.actions), 0) }}:
+          - ${{ if and(eq(actionGroup.type, 'terraform'), ne(coalesce(actionGroup.actions, ''), '')) }}:
               - ${{ each action in actionGroup.actions }}:
-                  - ${{ if eq(action.type, 'terraform') }}:
-                      - template: ../../steps/powershell.yml@PipelineCommon
-                        parameters:
-                          displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
-                          repoAlias: PipelineCommon
-                          script: terraform_lint.ps1
-                          arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+                  - template: ../../steps/powershell.yml@PipelineCommon
+                    parameters:
+                      displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
+                      repoAlias: PipelineCommon
+                      script: terraform_lint.ps1
+                      arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:

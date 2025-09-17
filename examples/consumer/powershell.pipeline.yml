@@ -41,7 +41,6 @@ extends:
           manualOnly: true
         actions:
           - name: single
-            type: powershell
             scriptPath: examples/assets/scripts/example_pre.ps1
             arguments: "-EnvName $(Environment)"
       - name: ps_task_2
@@ -49,13 +48,11 @@ extends:
         displayName: PowerShell Grouped
         actions:
           - name: one
-            type: powershell
             scriptPath: examples/assets/scripts/example_pre.ps1
             arguments: "-EnvName $(Environment)"
             delayMinutes: 1
             runInValidation: true
             runInReview: true
           - name: two
-            type: powershell
             scriptPath: examples/assets/scripts/example_post.ps1
             arguments: "-EnvName $(Environment)"

@@ -89,8 +89,8 @@ jobs:
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
       # Execute each action sequentially within the action group
-      - ${{ each action in parameters.actionGroup.actions }}:
-          - ${{ if and(eq(action.type, 'terraform'), eq(parameters.runTerraformPlan, true)) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), eq(parameters.runTerraformPlan, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+          - ${{ each action in parameters.actionGroup.actions }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
@@ -132,7 +132,8 @@ jobs:
                   artifactName: terraform-plan-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
-          - ${{ if and(eq(action.type, 'bicep'), eq(parameters.runBicepWhatIf, true)) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), eq(parameters.runBicepWhatIf, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+          - ${{ each action in parameters.actionGroup.actions }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                   - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon

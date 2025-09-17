@@ -84,12 +84,13 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   scriptPath: scripts/custom.ps1
   arguments: '-Env $(Environment)'
 
-  # Optional actions (same shape as an actionGroup entry, but no further nesting):
+  # Optional actions (same shape as an actionGroup entry, but no further nesting and they inherit the parent type):
   actions:
     - name: part1
-      type: bicep
       ... (fields same as above) ...
 ```
+
+> Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group.
 
 ## Validation (auto-discovered)
 
@@ -98,16 +99,16 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   - Branch Allow-List: checks `allowedBranches` per environment.
   - Variable Includes: preflight compile-time variable includes for `variableRoot`.
   - Token Targets: preflight that token replacement patterns resolve to at least one file.
-  - Bicep: lint analysis for discovered actions of type `bicep`.
-  - Terraform: `fmt`/`validate` for discovered actions of type `terraform`.
-  - PowerShell: PSScriptAnalyzer for discovered actions of type `powershell`.
+  - Bicep: lint analysis for action groups declared as type `bicep`.
+  - Terraform: `fmt`/`validate` for action groups declared as type `terraform`.
+  - PowerShell: PSScriptAnalyzer for action groups declared as type `powershell`.
   - Custom validation scripts: consumer-provided, run against the locked source snapshot.
 
 - Flags (in settings: `configuration.validation`), defaults true unless stated:
   - `enableBranchAllowlist`
   - `enableVariableIncludes`
   - `enableTokenTargets`
-  - (tech-specific jobs are auto-included if corresponding actions exist)
+  - (tech-specific jobs are auto-included when matching actionGroups exist)
 
 ## Review Stage Control
 

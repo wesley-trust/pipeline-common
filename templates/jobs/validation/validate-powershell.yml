@@ -33,8 +33,8 @@ jobs:
           artifactName: source-snapshot
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
-          - ${{ each action in actionGroup.actions }}:
-              - ${{ if eq(action.type, 'powershell') }}:
+          - ${{ if and(eq(actionGroup.type, 'powershell'), ne(coalesce(actionGroup.actions, ''), '')) }}:
+              - ${{ each action in actionGroup.actions }}:
                   - template: ../../steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: PSScriptAnalyzer (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})

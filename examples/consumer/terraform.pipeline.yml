@@ -42,7 +42,6 @@ extends:
           - examples/assets/terraform/**/*.tfvars
         actions:
           - name: one
-            type: terraform
             workingDirectory: examples/assets/terraform/one
             varFilesString: examples/assets/terraform/vars.tfvars
       - name: tf_task_2
@@ -53,10 +52,8 @@ extends:
           - examples/assets/terraform/**/*.tfvars
         actions:
           - name: two
-            type: terraform
             workingDirectory: examples/assets/terraform/two
             varFilesString: examples/assets/terraform/vars.tfvars
           - name: three
-            type: terraform
             workingDirectory: examples/assets/terraform/three
             varFilesString: examples/assets/terraform/vars.tfvars

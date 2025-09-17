@@ -145,7 +145,7 @@ stages:
                         # Mandatory Action per Action Group
                         - ${{ each action in actionGroup.actions }}:
                             # Terraform Action
-                            - ${{ if eq(action.type, 'terraform') }}:
+                            - ${{ if eq(actionGroup.type, 'terraform') }}:
                                 # Replace Tokens
                                 - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - ${{ each tokenPattern in action.tokenTargetPatterns }}:
@@ -185,7 +185,7 @@ stages:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                             # Bicep Action
-                            - ${{ if eq(action.type, 'bicep') }}:
+                            - ${{ if eq(actionGroup.type, 'bicep') }}:
                                 # Replace Tokens
                                 - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - ${{ each tokenPattern in action.tokenTargetPatterns }}:
@@ -232,7 +232,7 @@ stages:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                             # PowerShell Action
-                            - ${{ if eq(action.type, 'powershell') }}:
+                            - ${{ if eq(actionGroup.type, 'powershell') }}:
                                 # Optional Delay
                                 - ${{ if gt(coalesce(action.delayMinutes, 0), 0) }}:
                                     - task: Delay@1

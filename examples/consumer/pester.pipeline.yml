@@ -35,7 +35,6 @@ extends:
         enabled: ${{ parameters.runUnit }}
         actions:
           - name: unit
-            type: powershell
             scriptPath: scripts/pester_run.ps1
             arguments: "-TestsPath examples/assets/tests/pester/unit -ResultsFile TestResults/pester.unit.xml"
       - name: integration
@@ -43,7 +42,6 @@ extends:
         enabled: ${{ parameters.runIntegration }}
         actions:
           - name: integration
-            type: powershell
             scriptPath: scripts/pester_run.ps1
             arguments: "-TestsPath examples/assets/tests/pester/integration -ResultsFile TestResults/pester.integration.xml"
       - name: regression
@@ -51,7 +49,6 @@ extends:
         enabled: ${{ parameters.runRegression }}
         actions:
           - name: regression
-            type: powershell
             scriptPath: scripts/pester_run.ps1
             arguments: "-TestsPath examples/assets/tests/pester/regression -ResultsFile TestResults/pester.regression.xml"
       - name: smoke
@@ -59,7 +56,6 @@ extends:
         enabled: ${{ parameters.runSmoke }}
         actions:
           - name: smoke
-            type: powershell
             scriptPath: scripts/pester_run.ps1
             arguments: "-TestsPath examples/assets/tests/pester/smoke -ResultsFile TestResults/pester.smoke.xml"
 
