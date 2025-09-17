@@ -150,23 +150,15 @@ stages:
 
                         - ${{ each action in actionGroup.actions }}:
                             - ${{ if eq(action.type, 'terraform') }}:
-                                - ${{ if contains(action, 'tokenTargetPatterns') }}:
-                                    - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
-                                        - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                                            - template: ../steps/replace-tokens.yml@PipelineCommon
-                                              parameters:
-                                                displayName: Terraform token replacement (${ tokenPattern })
-                                                targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
-                                                tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
-                                                tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                    - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
+                                - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                                    - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
-                                            displayName: Terraform token replacement
-                                            targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
+                                            displayName: Terraform token replacement (${ tokenPattern })
+                                            targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                                             tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                             tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                - ${{ if not(contains(action, 'tokenTargetPatterns')) }}:
+                                - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - template: ../steps/replace-tokens.yml@PipelineCommon
                                       parameters:
                                         displayName: Terraform token replacement
@@ -194,7 +186,7 @@ stages:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                             - ${{ if eq(action.type, 'bicep') }}:
-                                - ${{ if gt(length(action.tokenTargetPatterns), 0) }}:
+                                - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
                                     - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
@@ -202,10 +194,10 @@ stages:
                                             targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
                                             tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                             tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
-                                - ${{ if eq(length(action.tokenTargetPatterns), 0) }}:
-                                    - template: steps/replace-tokens.yml@PipelineCommon
+                                - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                                    - template: ../steps/replace-tokens.yml@PipelineCommon
                                       parameters:
-                                        displayName: Bicep token replacement
+                                        displayName: Bicep token replacement (default)
                                         targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
                                         tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
                                         tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
@@ -256,10 +248,10 @@ stages:
                                       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                         # Enforce actions model: no group-level fallbacks
-
-                        - ${{ each script in actionGroup.postDeploy.scripts }}:
-                            - template: ../steps/powershell.yml@PipelineCommon
-                              parameters:
-                                displayName: Post-Deploy (script)
-                                scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
-                                arguments: ${{ script.arguments }}
+                        - ${{ if ne(coalesce(actionGroup.postDeploy.scripts, ''), '') }}:
+                            - ${{ each script in actionGroup.postDeploy.scripts }}:
+                                - template: ../steps/powershell.yml@PipelineCommon
+                                  parameters:
+                                    displayName: Post-Deploy (script)
+                                    scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
+                                    arguments: ${{ script.arguments }}
