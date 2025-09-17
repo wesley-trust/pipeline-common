@@ -6,7 +6,7 @@
 parameters:
   - name: name
     type: string
-    default: setup_common
+    default: initialise_common
   - name: displayName
     type: string
     default: "Initialise: Common"

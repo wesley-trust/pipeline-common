@@ -44,9 +44,9 @@
 
 ## Script Inventory (highlights)
 - `scripts/terraform_run.ps1` – wraps `terraform init/plan/apply` with workspace selection and tfvars support.
-- `scripts/setup_terraform.ps1` – downloads a pinned Terraform version suitable for Hosted agents (uses platform sniffing + unzip).
+- `scripts/initialise_terraform.ps1` – downloads a pinned Terraform version suitable for Hosted agents (uses platform sniffing + unzip).
 - `scripts/bicep_run.ps1` – drives validate/what-if/deploy for RG, subscription, management group, or tenant scopes; supports mode overrides.
-- `scripts/setup_bicep.ps1` – installs/updates Azure CLI Bicep tooling.
+- `scripts/initialise_bicep.ps1` – installs/updates Azure CLI Bicep tooling.
 - `scripts/pester_run.ps1` – orchestrates Pester test suites (unit/integration/regression/smoke) with output for publishing.
 - `scripts/ps_analyze.ps1` – executes PSScriptAnalyzer for PowerShell actions.
 - `scripts/branch_check.ps1` – enforces runtime branch allow-list per environment.

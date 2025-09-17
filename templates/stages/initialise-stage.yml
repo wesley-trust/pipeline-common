@@ -1,8 +1,8 @@
 # Initialise stage: prepares shared tooling and source snapshot for RTL integrity.
 # Jobs:
-# - setup_common: always publishes the self repo snapshot
-# - setup_terraform: installs Terraform (when version specified)
-# - setup_bicep: ensures Bicep CLI is available (only if Bicep task is used)
+# - initialise_common: always publishes the self repo snapshot
+# - initialise_terraform: installs Terraform (when version specified)
+# - initialise_bicep: ensures Bicep CLI is available (only if Bicep task is used)
 
 parameters:
   - name: environmentName
@@ -21,8 +21,11 @@ parameters:
     default: []
 
 stages:
-  - stage: setup_${{ parameters.environmentName }}
-    displayName: "Initialise: ${{ upper(parameters.environmentName) }}"
+  - stage: initialise_${{ parameters.environmentName }}
+    ${{ if ne(parameters.environmentName, 'global') }}:
+      displayName: "Initialise: ${{ upper(parameters.environmentName) }}"
+    ${{ else }}:
+      displayName: "Initialise"
     ${{ if gt(length(coalesce(parameters.dependsOnStages, '')), 0) }}:
       dependsOn: ${{ parameters.dependsOnStages }}
     ${{ if ne(coalesce(parameters.pool.name, ''), '') }}:
@@ -33,7 +36,7 @@ stages:
         vmImage: ${{ parameters.pool.vmImage }}
     jobs:
       - template: ../jobs/initialise/initialise-common.yml@PipelineCommon
-      
+
       # Optional tooling setup jobs
       # - template: ../jobs/initialise/initialise-bicep.yml@PipelineCommon
       #   parameters:

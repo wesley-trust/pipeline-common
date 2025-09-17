@@ -3,7 +3,7 @@
 parameters:
   - name: name
     type: string
-    default: setup_terraform
+    default: initialise_terraform
   - name: displayName
     type: string
     default: "Initialise: Terraform"
@@ -25,5 +25,5 @@ jobs:
         parameters:
           displayName: Install Terraform ${{ parameters.terraformVersion }}
           repoAlias: PipelineCommon
-          script: setup_terraform.ps1
+          script: initialise_terraform.ps1
           arguments: -Version ${{ parameters.terraformVersion }}

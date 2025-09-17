@@ -42,7 +42,7 @@ stages:
                       terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
                       dependsOnStages:
                         - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
-                            - setup_all
+                            - initialise_global
 
   # Validate Stage
 
