@@ -187,7 +187,7 @@ jobs:
                     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
               - template: ../../steps/publish-artifact.yml@PipelineCommon
                 parameters:
-                  displayName: Publish What-If Output (${{ coalesce(action.name, 'bicep') }})
+                  displayName: Publish What-If Output (${{ upper(coalesce(action.name, 'bicep')) }})
                   artifactName: bicep-whatif-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
 
