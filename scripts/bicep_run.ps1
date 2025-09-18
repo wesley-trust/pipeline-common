@@ -28,17 +28,17 @@ if ($ModeOverride) {
 }
 
 $paramArgs = @()
-if ($ParametersFile) { $paramArgs += '-p'; $paramArgs += "@$ParametersFile" }
+if ($ParametersFile) {$paramArgs += '--parameters'; $paramArgs += "@$ParametersFile" }
 
 switch ($Scope) {
   'resourceGroup' {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
-      az deployment group what-if -g $ResourceGroupName -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
     else {
       $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment group create -g $ResourceGroupName -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
+      az deployment group create --resource-group $ResourceGroupName -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
     }
   }
   'subscription' {
