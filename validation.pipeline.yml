@@ -1,0 +1,39 @@
+# Pipeline to execute local validation suite using shared templates
+
+parameters:
+  - name: pipelineCommonRef
+    type: string
+    default: 'refs/heads/main'
+  - name: pipelineDispatcherRef
+    type: string
+    default: 'refs/heads/main'
+  - name: examplesBranch
+    type: string
+    default: 'refs/heads/main'
+  - name: previewPipelineId
+    type: int
+    default: 132
+
+variables:
+  AZDO_ORG_SERVICE_URL: https://dev.azure.com/wesleytrust
+  AZDO_PROJECT: cloud-platform-public
+  AZDO_PREVIEW_PIPELINE_ID: ${{ parameters.previewPipelineId }}
+
+extends:
+  template: validation.settings.yml
+  parameters:
+    pipelineCommonRef: ${{ parameters.pipelineCommonRef }}
+    pipelineDispatcherRef: ${{ parameters.pipelineDispatcherRef }}
+    examplesBranch: ${{ parameters.examplesBranch }}
+    previewPipelineId: ${{ parameters.previewPipelineId }}
+    actionGroups:
+      - name: run_local_validation
+        type: powershell
+        displayName: Local Validation Suite
+        actions:
+          - name: execute_suite
+            displayName: Run validation tests
+            scriptPath: scripts/invoke_local_tests.ps1
+            arguments: ''
+            runInValidation: true
+            tokenReplaceEnabled: false

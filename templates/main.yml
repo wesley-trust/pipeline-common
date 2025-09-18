@@ -10,7 +10,7 @@ variables:
 stages:
   # Optional Global Initialise Stage
 
-  - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, true), true) }}:
+  - ${{ if eq(coalesce(parameters.configuration.initialise.runGlobal, true), true) }}:
       - template: stages/initialise-stage.yml@PipelineCommon
         parameters:
           environmentName: "global"
@@ -22,7 +22,7 @@ stages:
   - ${{ each env in parameters.configuration.environments }}:
       - ${{ if ne(env.skipEnvironment, true) }}:
           - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
-              - ${{ if eq(coalesce(env.setup.runPerEnvironment, false), true) }}:
+              - ${{ if eq(coalesce(env.initialise.runPerEnvironment, false), true) }}:
                   - template: stages/initialise-stage.yml@PipelineCommon
                     parameters:
                       environmentName: ${{ env.name }}
@@ -33,7 +33,7 @@ stages:
                         pool: ${{ parameters.configuration.defaultPool }}
                       terraformVersion: ${{ coalesce(parameters.configuration.terraformVersion, '') }}
                       dependsOnStages:
-                        - ${{ if eq(coalesce(parameters.configuration.setup.runGlobal, false), true) }}:
+                        - ${{ if eq(coalesce(parameters.configuration.initialise.runGlobal, false), true) }}:
                             - initialise_global
 
   # Global Validate Stage

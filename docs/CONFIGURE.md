@@ -10,7 +10,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
   - `<example>.settings.yml`: composes a single `configuration` object from the pipeline parameters, actionGroups, and defaults. It extends the shared dispatcher and passes only `configuration` through.
   - The shared dispatcher lives in the dispatcher repo (`wesley-trust/pipeline-dispatcher/templates/pipeline-dispatcher.yml`) and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
 - All scripts run PowerShell 7 (pwsh) from a central `pipeline-common/scripts/` folder via reusable task templates. Inline scripts are not allowed.
-- The setup stage locks sources by publishing a snapshot artifact; every later stage downloads and uses the same snapshot.
+- The initialise stage locks sources by publishing a snapshot artifact; every later stage downloads and uses the same snapshot.
 
 ## Defaults vs. Overrides
 
@@ -200,20 +200,20 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 ## Initialise (Global vs Per-Environment)
 
 - Controls (in settings → configuration):
-  - `setup.runGlobal: bool` — runs a single Initialise stage before Validation/Review/Deploy.
-  - `setup.runPerEnvironment: bool` — runs a Initialise stage for each environment.
-  - Per environment override: `env.setupRequired: bool` — force run when true, force skip when false.
+  - `initialise.runGlobal: bool` — runs a single Initialise stage before Validation/Review/Deploy.
+  - `initialise.runPerEnvironment: bool` — runs a Initialise stage for each environment.
+  - Per environment override: `env.initialiseRequired: bool` — force run when true, force skip when false.
 - Defaults: If both are false or omitted, no Initialise stages are created.
 - Ordering & dependencies:
   - Global Initialise (if enabled) runs first and gates Validation.
-  - Per-Environment Initialise (if enabled or `setupRequired` true) runs before that environment’s Review/Deploy and uses the environment’s pool.
+  - Per-Environment Initialise (if enabled or `initialiseRequired` true) runs before that environment’s Review/Deploy and uses the environment’s pool.
   - Validation has no dependency on Initialise when no Global Initialise is enabled.
 
 - Outcomes (truth table):
-  - runGlobal=false, env.setup.runPerEnvironment=false → no Initialise for that env.
-  - runGlobal=true, env.setup.runPerEnvironment=false → Global gates all; no per‑env stage.
-  - runGlobal=false, env.setup.runPerEnvironment=true → Per‑env stage gates that env only.
-  - runGlobal=true, env.setup.runPerEnvironment=true → Global first, then per‑env stage gates that env.
+  - runGlobal=false, env.initialise.runPerEnvironment=false → no Initialise for that env.
+  - runGlobal=true, env.initialise.runPerEnvironment=false → Global gates all; no per‑env stage.
+  - runGlobal=false, env.initialise.runPerEnvironment=true → Per‑env stage gates that env only.
+  - runGlobal=true, env.initialise.runPerEnvironment=true → Global first, then per‑env stage gates that env.
 
 ## Pools (Hosted vs Self‑Hosted)
 

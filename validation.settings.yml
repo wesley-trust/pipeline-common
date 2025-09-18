@@ -1,0 +1,51 @@
+parameters:
+  - name: actionGroups
+    type: object
+    default: []
+  - name: pipelineCommonRef
+    type: string
+    default: 'refs/heads/main'
+  - name: pipelineDispatcherRef
+    type: string
+    default: 'refs/heads/main'
+  - name: examplesBranch
+    type: string
+    default: 'refs/heads/main'
+  - name: previewPipelineId
+    type: int
+    default: 132
+
+resources:
+  repositories:
+    - repository: PipelineDispatcher
+      type: github
+      endpoint: wesley-trust
+      name: wesley-trust/pipeline-dispatcher
+      ref: ${{ parameters.pipelineDispatcherRef }}
+
+extends:
+  template: /templates/pipeline-dispatcher.yml@PipelineDispatcher
+  parameters:
+    configuration:
+      initialise:
+        runGlobal: true
+      defaultPool:
+        vmImage: ubuntu-latest
+      additionalRepositories:
+        - alias: pipelineExamples
+          type: github
+          endpoint: wesley-trust
+          name: wesley-trust/pipeline-examples
+          ref: ${{ parameters.examplesBranch }}
+      actionGroups: ${{ parameters.actionGroups }}
+      validation:
+        enableBranchAllowlist: false
+        enableVariableIncludes: false
+        enableTokenTargets: false
+      variables:
+        includeCommon: false
+        includeEnv: false
+        includeEnvRegion: false
+        includeRegionOnly: false
+      environments: []
+      customValidationScripts: []

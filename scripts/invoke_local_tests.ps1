@@ -63,3 +63,7 @@ $results = Invoke-Pester @invokeParams
 if ($Passthru) {
     return $results
 }
+
+if ($env:TF_BUILD -and (Test-Path -Path $resultsPath)) {
+    Write-Host "##vso[results.publish type=NUnit;runTitle=PipelineCommon Validation;resultFiles=$resultsPath]"
+}

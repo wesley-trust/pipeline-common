@@ -3,19 +3,19 @@
 ## Mission Overview
 - **Repository scope:** Shared Azure DevOps pipeline templates (`pipeline-common`) consumed via the dispatcher repo (`wesley-trust/pipeline-dispatcher`). Everything here is PowerShell-first (no inline bash) and is designed to be extended through the dispatcher.
 - **Primary entry point:** `templates/main.yml` – all consumer pipelines must extend this template through the dispatcher to stay compliant with the consistency rules noted in `README.md`.
-- **Key philosophy:** lock sources early (setup stage publishes a snapshot), run validation before review/deploy, and reuse scripts/tasks across all technologies (Terraform, Bicep, PowerShell).
+- **Key philosophy:** lock sources early (initialise stage publishes a snapshot), run validation before review/deploy, and reuse scripts/tasks across all technologies (Terraform, Bicep, PowerShell).
 - **License:** MIT (`LICENSE`).
 
 ## Directory Map (current as of repo snapshot)
 - `README.md` – high-level purpose and highlights.
 - `docs/CONFIGURE.md` – deep-dive consumer guide (parameter flow, action model, environment design, review controls, DR mode, token replacement, etc.). Treat this as the canonical reference for behaviour.
 - `templates/` – main templates split by grain:
-  - `main.yml` – enforced entry point; wires setup, validation, review, deploy stages.
+  - `main.yml` – enforced entry point; wires initialise, validation, review, deploy stages.
   - `stages/` – stage-level composition (`validation-stage.yml`, `review-stage.yml`, `environment-region-deploy-stage.yml`, `initialise-stage.yml`).
   - `jobs/` – job-level templates organised by concern (`validation/`, `review/`, `initialise/`). Jobs consume scripts exclusively.
   - `steps/` – single-step building blocks (AzureCLI, PowerShell, artifact publish/download, Replace Tokens, Key Vault import, secure file download).
   - `variables/include.yml` – compile-time include matrix controlling `common`, `region`, `env`, and `env-region` variable files via flags.
-- `scripts/` – PowerShell implementations called by templates (Terraform/Bicep runners, setup installers, branch/variable/token validators, etc.). All scripts assume pwsh and are meant to run inside the locked snapshot path when invoked from pipelines.
+- `scripts/` – PowerShell implementations called by templates (Terraform/Bicep runners, initialise installers, branch/variable/token validators, etc.). All scripts assume pwsh and are meant to run inside the locked snapshot path when invoked from pipelines.
 - `docs/` – supporting documentation.
 - `archive/` – reserved for deprecated assets. Move files no longer part of the solution to this directory, maintaining structure as required.
 
@@ -37,7 +37,7 @@
 - **Additional integrations:**
   - `configuration.additionalRepositories` → adds repo resources to dispatcher and checks them out automatically in jobs.
   - `configuration.keyVault` (`name`, `secretsFilter`) → pulls secrets via `AzureKeyVault@2` before steps.
-  - `configuration.setup` (`runGlobal`, per-env `env.setup.runPerEnvironment`) → controls setup stage generation.
+  - `configuration.initialise` (`runGlobal`, per-env `env.initialise.runPerEnvironment`) → controls initialise stage generation.
   - `configuration.pipelineCommonRef` → forces dispatcher to reference a specific branch/tag of this repo.
 
 ## Script Inventory (highlights)
@@ -145,6 +145,10 @@ Use the `-PipelineCommonRef`, `-PipelineDispatcherRef`, or `-ExamplesBranch` swi
 If you prefer to avoid setting environment variables, run `az devops login` once (paste your PAT when prompted). The CLI caches the token securely and the preview scripts will reuse it until it expires.
 
 To avoid exporting the same non-sensitive values repeatedly, store them in `config/azdo-preview.config.psd1` (already seeded with the wesleytrust defaults). The harness loads that file automatically; you only need to supply a PAT via `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN`.
+
+### Azure DevOps CI Pipeline
+- `azure-pipelines.yml` runs the same validation suite on `ubuntu-latest`, publishes the NUnit results, and expects a secret variable `AzureDevOpsPat` in the pipeline.
+- `validation.pipeline.yml` / `validation.settings.yml` provide an alternative pipeline definition that extends the shared templates via the dispatcher. Add a secret variable named `AZURE_DEVOPS_EXT_PAT` (or run `scripts/set_azdo_pat.ps1` locally) and queue the pipeline to execute the validation stage through the shared action model.
 
 ### Adding New Tests
 When a regression slips through, add a targeted assertion to `tests/Templates.Tests.ps1` (or create a new file under `tests/`). Keep the checks fast (< 30 seconds) so they can run before every PR.

@@ -61,7 +61,7 @@ Token replacement
 - Integrates Replace Tokens extension with `templates/steps/replace-tokens.yml` for review/apply phases.
 
 Route-to-live integrity
-- A `setup` stage publishes a snapshot of the self repository as a pipeline artifact.
+- A `initialise` stage publishes a snapshot of the self repository as a pipeline artifact.
 - Every subsequent job downloads that exact snapshot and uses it as its working copy (no fresh checkouts of `self`).
 - This guarantees the same files/versions are used throughout validation, review, and deployment stages.
 

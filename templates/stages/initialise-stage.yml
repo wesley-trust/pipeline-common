@@ -31,7 +31,7 @@ stages:
     jobs:
       - template: ../jobs/initialise/initialise-common.yml@PipelineCommon
 
-      # Optional tooling setup jobs
+      # Optional tooling initialise jobs
       # - template: ../jobs/initialise/initialise-bicep.yml@PipelineCommon
       #   parameters:
       #     serviceConnection: ${{ parameters.serviceConnection }}
