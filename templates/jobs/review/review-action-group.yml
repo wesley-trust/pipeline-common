@@ -175,7 +175,7 @@ jobs:
                     -ManagementGroupId "${{ action.managementGroupId }}"
                     -SubscriptionId "${{ action.subscriptionId }}"
                     -ModeOverride "${{ parameters.bicepModeOverride }}"
-                    -Mode "${{ coalesce(action.mode, 'incremental' }}"
+                    -Mode "${{ coalesce(action.mode, 'incremental') }}"
                   workingDirectory: $(Pipeline.Workspace)/locked-sources
                   ${{ if ne(action.condition, '') }}:
                     condition: ${{ action.condition }}
