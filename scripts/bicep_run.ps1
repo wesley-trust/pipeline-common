@@ -28,7 +28,7 @@ if ($ModeOverride) {
 }
 
 $paramArgs = @()
-if ($ParametersFile) {$paramArgs += '--parameters'; $paramArgs += "@$ParametersFile" }
+if ($ParametersFile) {$paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 
 switch ($Scope) {
   'resourceGroup' {
