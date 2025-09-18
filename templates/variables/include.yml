@@ -28,12 +28,12 @@ variables:
 
   # Region-only variables (applies across all environments)
   - ${{ if and(eq(parameters.includeRegionOnly, true), ne(parameters.regionName, '')) }}:
-      - template: ${{ format('{0}/region/{1}.yml', parameters.variableRoot, parameters.regionName) }}
+      - template: ${{ format('{0}/region/{1}.yml', parameters.variableRoot, parameters.regionName) }}@self
 
   # Per-environment variables
   - ${{ if and(eq(parameters.includeEnv, true), ne(parameters.environmentName, '')) }}:
-      - template: ${{ format('{0}/env/{1}.yml', parameters.variableRoot, parameters.environmentName) }}
+      - template: ${{ format('{0}/env/{1}.yml', parameters.variableRoot, parameters.environmentName) }}@self
 
   # Per-environment per-region variables
   - ${{ if and(eq(parameters.includeEnvRegion, true), ne(parameters.environmentName, ''), ne(parameters.regionName, '')) }}:
-      - template: ${{ format('{0}/{1}/region/{2}.yml', parameters.variableRoot, parameters.environmentName, parameters.regionName) }}
+      - template: ${{ format('{0}/{1}/region/{2}.yml', parameters.variableRoot, parameters.environmentName, parameters.regionName) }}@self
