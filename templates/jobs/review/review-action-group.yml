@@ -172,7 +172,7 @@ jobs:
                     -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
                     -ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"
                     -AdditionalParameters "${{ action.additionalParameters }}"
-                    -ManagementGroupId ${{ action.managementGroupId }}
+                    -ManagementGroupId ${{ coalesce(action.managementGroupId, '') }}
                     -SubscriptionId ${{ action.subscriptionId }}
                     -ModeOverride ${{ parameters.bicepModeOverride }}
                     -Mode ${{ action.mode }}
@@ -190,7 +190,7 @@ jobs:
                   displayName: Publish What-If Output (${{ coalesce(action.name, 'bicep') }})
                   artifactName: bicep-whatif-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
-      
+
       # PowerShell Action
       # - ${{ if eq(parameters.actionGroup.type, 'powershell') }}:
       #     - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
