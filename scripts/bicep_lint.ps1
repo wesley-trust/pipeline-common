@@ -7,8 +7,8 @@ az bicep install | Out-Null
 az bicep version | Out-Null
 $files = Get-ChildItem -Path $SearchPath -Recurse -Include *.bicep
 foreach ($f in $files) {
-  Write-Host "Linting $($f.FullName)"
+  Write-Information -InformationAction Continue -MessageData "Linting $($f.FullName)"
   az bicep build --file "$($f.FullName)" | Out-Null
 }
-Write-Host 'Bicep lint passed.'
+Write-Information -InformationAction Continue -MessageData "Bicep lint passed."
 

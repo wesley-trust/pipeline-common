@@ -18,4 +18,4 @@ foreach ($p in $EnvPools) {
     throw "Environment '$envName' pool cannot define both name and vmImage. Choose one."
   }
 }
-Write-Host 'Pool configuration validated successfully.'
+Write-Information -InformationAction Continue -MessageData "Pool configuration validated successfully."

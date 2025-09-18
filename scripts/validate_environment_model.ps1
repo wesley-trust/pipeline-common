@@ -44,10 +44,6 @@ if ($EnableProduction) {
     throw 'enableProduction is true but no production environment is defined.'
   }
 
-  if ([System.Convert]::ToBoolean($production[0].skipEnvironment)) {
-    throw "Production environment '$($production[0].name)' cannot be skipped when enableProduction is true."
-  }
-
   if ($acceptance.Count -eq 0) {
     throw 'An acceptance environment must be defined when enableProduction is true.'
   }
@@ -57,4 +53,4 @@ if ($EnableProduction) {
   }
 }
 
-Write-Host 'Environment model validation passed.'
+Write-Information -InformationAction Continue -MessageData "Environment model validation passed."

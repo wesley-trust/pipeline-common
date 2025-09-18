@@ -9,7 +9,7 @@ Set-StrictMode -Version Latest
 
 $branchFull = $env:BUILD_SOURCEBRANCH
 $branchName = $env:BUILD_SOURCEBRANCHNAME
-if (-not $branchFull) { Write-Host 'No branch variable found'; exit 0 }
+if (-not $branchFull) { Write-Information -InformationAction Continue -MessageData 'No branch variable found'; exit 0 }
 
 function Normalise-List([object[]]$items) {
   if (-not $items) { return @() }
@@ -36,14 +36,14 @@ if ((-not $AllowedBranches) -and (-not $fromCsv) -and -not [string]::IsNullOrWhi
     }
   }
   catch {
-    Write-Host "Warning: Failed to parse AllowedBranchesJson: $($_.Exception.Message)"
+    Write-Warning -Message "Failed to parse AllowedBranchesJson: $($_.Exception.Message)"
   }
 }
 
 $AllowedBranches = Normalise-List -items @($AllowedBranches + $fromCsv + $fromJson)
 
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
-  Write-Host 'No branch restrictions configured.'
+  Write-Information -InformationAction Continue -MessageData "No branch restrictions configured."
   exit 0
 }
 
@@ -69,5 +69,5 @@ if (-not $allowed) {
   exit 1
 }
 else {
-  Write-Host "Branch '$branchName' permitted."
+  Write-Information -InformationAction Continue -MessageData "Branch '$branchName' permitted."
 }

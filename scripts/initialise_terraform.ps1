@@ -3,7 +3,7 @@ param([Parameter(Mandatory = $true)][string]$Version)
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-Write-Host "Installing Terraform $Version"
+Write-Information -InformationAction Continue -MessageData "Installing Terraform $Version"
 $os = $PSStyle.Platform
 if ($IsWindows) { $platform = 'windows_amd64' }
 elseif ($IsLinux) { $platform = 'linux_amd64' }

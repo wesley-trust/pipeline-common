@@ -17,7 +17,7 @@ foreach ($p in $Patterns) {
   }
   else {
     $matchCount = ($matches | Measure-Object).Count
-    Write-Host "Pattern '$p' matched $matchCount file(s)."
+    Write-Information -InformationAction Continue -MessageData "Pattern '$p' matched $matchCount file(s)."
   }
 }
-Write-Host 'Token target patterns validated.'
+Write-Information -InformationAction Continue -MessageData "Token target patterns validated."

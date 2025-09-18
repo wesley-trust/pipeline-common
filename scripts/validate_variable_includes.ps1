@@ -7,10 +7,10 @@ Set-StrictMode -Version Latest
 
 $common = Join-Path -Path $VariableRoot -ChildPath 'common.yml'
 if (-not (Test-Path -Path $common)) {
-  Write-Warning "variables file not found: $common"
+  Write-Warning -Message "variables file not found: $common"
 }
 else {
-  Write-Host "Found: $common"
+  Write-Information -InformationAction Continue -MessageData "Found: $common"
 }
 
 foreach ($env in $Environments) {
@@ -19,7 +19,7 @@ foreach ($env in $Environments) {
     Write-Warning "variables file not found for environment '$($env.name)': $envFile"
   }
   else {
-    Write-Host "Found: $envFile"
+    Write-Information -InformationAction Continue -MessageData "Found: $envFile"
   }
 }
-Write-Host 'Variable include preflight completed.'
+Write-Information -InformationAction Continue -MessageData "Variable include preflight completed."
