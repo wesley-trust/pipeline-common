@@ -24,7 +24,7 @@ parameters:
 variables:
   # Common/shared variables
   - ${{ if eq(parameters.includeCommon, true) }}:
-      - template: ${{ format('{0}/common.yml', parameters.variableRoot) }}
+      - template: ${{ format('../../self/{0}/common.yml', parameters.variableRoot) }}
 
   # Region-only variables (applies across all environments)
   - ${{ if and(eq(parameters.includeRegionOnly, true), ne(parameters.regionName, '')) }}:
