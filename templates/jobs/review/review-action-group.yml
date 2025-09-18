@@ -165,17 +165,17 @@ jobs:
                   repoAlias: PipelineCommon
                   script: bicep_run.ps1
                   arguments: >-
-                    -Action whatif
-                    -Scope ${{ action.scope }}
-                    -ResourceGroupName ${{ action.resourceGroupName }}
-                    -Location ${{ action.location }}
+                    -Action "whatif"
+                    -Scope "${{ action.scope }}"
+                    -ResourceGroupName "${{ action.resourceGroupName }}"
+                    -Location "${{ action.location }}"
                     -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
                     -ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"
                     -AdditionalParameters "${{ action.additionalParameters }}"
-                    -ManagementGroupId ${{ coalesce(action.managementGroupId, '') }}
-                    -SubscriptionId ${{ action.subscriptionId }}
-                    -ModeOverride ${{ parameters.bicepModeOverride }}
-                    -Mode ${{ action.mode }}
+                    -ManagementGroupId "${{ action.managementGroupId }}"
+                    -SubscriptionId "${{ action.subscriptionId }}"
+                    -ModeOverride "${{ parameters.bicepModeOverride }}"
+                    -Mode "${{ coalesce(action.mode, 'incremental' }}"
                   workingDirectory: $(Pipeline.Workspace)/locked-sources
                   ${{ if ne(action.condition, '') }}:
                     condition: ${{ action.condition }}
