@@ -80,7 +80,7 @@ stages:
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
-      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=bicep') }}:
+      - ${{ if contains(join(format('{0}', parameters.actionGroups.type), ''), 'bicep') }}:
           - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
             parameters:
               actionGroups: ${{ parameters.actionGroups }}
