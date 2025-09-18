@@ -81,4 +81,4 @@ stages:
                           keyVault: ${{ parameters.keyVault }}
                           runTerraformPlan: ${{ parameters.runTerraformPlan }}
                           runBicepWhatIf: ${{ parameters.runBicepWhatIf }}
-                          dependsOnActionGroups: ${{ coalesce(actionGroup.dependsOn, []) }}
+                          dependsOnActionGroups: ${{ coalesce(actionGroup.dependsOn, '') }}
