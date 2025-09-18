@@ -50,7 +50,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - One actionGroup = one deployment job per environment-region.
 - Actions (optional) run sequentially within that job.
-- Multiple actionGroups at the same level run as separate jobs (parallel when permitted).
+- Multiple actionGroups at the same level run as separate jobs (parallel when permitted) and can be chained with `dependsOn` for ordered execution.
 - Each actionGroup has the same structure (default displayName = upper(replace(name, '_', ' ')) unless overridden):
 
 ```
@@ -58,6 +58,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   displayName: Terraform Apply     # optional; defaults to name with `_` → ` `
   enabled: true                    # optional; default true
   environments: ['dev','prod']     # optional scoping; default all
+  dependsOn: ['bicep_deploy']      # optional; waits for listed actionGroup names in the same env/region
   type: terraform|bicep|powershell
 
   # Common optional:
@@ -91,7 +92,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
       ... (fields same as above) ...
 ```
 
-> Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group.
+> Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group. Use `dependsOn` when you need sequential execution across actionGroups for a given environment/region — the dispatcher resolves the names you list into the underlying job dependencies, so keep `actionGroups[*].name` unique within each environment/region.
 
 ## Validation (auto-discovered)
 

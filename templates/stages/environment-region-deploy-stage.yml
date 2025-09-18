@@ -85,6 +85,10 @@ stages:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
                 environment: ${{ upper(parameters.environmentName) }}
+                ${{ if gt(length(coalesce(actionGroup.dependsOn, '')), 0) }}:
+                  dependsOn:
+                    - ${{ each dependency in actionGroup.dependsOn }}:
+                        - ${{ format('deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, dependency) }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
                 ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:

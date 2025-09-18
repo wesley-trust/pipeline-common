@@ -50,10 +50,17 @@ parameters:
   - name: runBicepWhatIf
     type: boolean
     default: true
+  - name: dependsOnActionGroups
+    type: object
+    default: []
 
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
+    ${{ if gt(length(parameters.dependsOnActionGroups), 0) }}:
+      dependsOn:
+        - ${{ each dependency in parameters.dependsOnActionGroups }}:
+            - ${{ format('{0}_{1}', dependency, parameters.region) }}
     variables:
       - template: ../../variables/include.yml@PipelineCommon
         parameters:
