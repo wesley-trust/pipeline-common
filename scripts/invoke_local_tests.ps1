@@ -11,6 +11,7 @@ $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDirectory
 $testsPath = Join-Path $repoRoot 'tests'
 $configPath = Join-Path $repoRoot 'config/azdo-preview.config.psd1'
+$resultsPath = Join-Path $repoRoot 'testResults.xml'
 
 if (-not (Test-Path -Path $testsPath)) {
     throw "Tests folder not found at $testsPath"
@@ -46,6 +47,13 @@ if (-not $moduleCandidates -or ([version]$moduleCandidates[0].Version -lt [versi
 Import-Module Pester -MinimumVersion 5.0.0 -ErrorAction Stop
 
 $invokeParams = @{ Path = $testsPath; CI = $true }
+if (Test-Path -Path $resultsPath) {
+    Remove-Item -Path $resultsPath -Force
+}
+if ($env:TF_BUILD) {
+    $invokeParams.OutputFormat = 'NUnitXml'
+    $invokeParams.OutputFile = $resultsPath
+}
 if ($Passthru) {
     $invokeParams.PassThru = $true
 }

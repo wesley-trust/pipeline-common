@@ -1,0 +1,46 @@
+trigger:
+  branches:
+    include:
+      - main
+pr:
+  branches:
+    include:
+      - "*"
+
+resources:
+  repositories:
+    - repository: pipelineExamples
+      type: git
+      name: wesley-trust/pipeline-examples
+      ref: refs/heads/main
+
+variables:
+  AZDO_ORG_SERVICE_URL: https://dev.azure.com/wesleytrust
+  AZDO_PROJECT: cloud-platform-public
+  AZDO_PREVIEW_PIPELINE_ID: 132
+
+jobs:
+  - job: validate
+    displayName: Run local validation suite
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+        persistCredentials: "true"
+      - checkout: pipelineExamples
+        path: pipeline-examples
+      - pwsh: ./scripts/invoke_local_tests.ps1
+        displayName: Execute tests
+        workingDirectory: $(Pipeline.Workspace)/s
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(AzureDevOpsPat)
+          AZDO_ORG_SERVICE_URL: $(AZDO_ORG_SERVICE_URL)
+          AZDO_PROJECT: $(AZDO_PROJECT)
+          AZDO_PREVIEW_PIPELINE_ID: $(AZDO_PREVIEW_PIPELINE_ID)
+      - task: PublishTestResults@2
+        displayName: Publish Pester results
+        condition: always()
+        inputs:
+          testResultsFormat: NUnit
+          testResultsFiles: $(Pipeline.Workspace)/s/testResults.xml
+          failTaskOnFailedTests: true
