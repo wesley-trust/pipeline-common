@@ -47,6 +47,12 @@ stages:
         parameters:
           variableRoot: ${{ parameters.variableRoot }}
           includeCommon: ${{ parameters.variableIncludeCommon }}
+      - name: runBicepValidation
+        value: ${{ lower(format('{0}', contains(lower(convertToJson(parameters.actionGroups)), '"type":"bicep"'))) }}
+      - name: runTerraformValidation
+        value: ${{ lower(format('{0}', contains(lower(convertToJson(parameters.actionGroups)), '"type":"terraform"'))) }}
+      - name: runPowershellValidation
+        value: ${{ lower(format('{0}', contains(lower(convertToJson(parameters.actionGroups)), '"type":"powershell"'))) }}
     jobs:
       - template: ../jobs/validation/validate-settings.yml@PipelineCommon
         parameters:
@@ -80,7 +86,7 @@ stages:
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
-      - ${{ if contains(join(format('{0}', parameters.actionGroups.type), ''), 'bicep') }}:
+      - ${{ if eq(variables['runBicepValidation'], 'true') }}:
           - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
             parameters:
               actionGroups: ${{ parameters.actionGroups }}
@@ -89,7 +95,7 @@ stages:
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
-      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=terraform') }}:
+      - ${{ if eq(variables['runTerraformValidation'], 'true') }}:
           - template: ../jobs/validation/validate-terraform.yml@PipelineCommon
             parameters:
               actionGroups: ${{ parameters.actionGroups }}
@@ -98,7 +104,7 @@ stages:
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
-      - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=powershell') }}:
+      - ${{ if eq(variables['runPowershellValidation'], 'true') }}:
           - template: ../jobs/validation/validate-powershell.yml@PipelineCommon
             parameters:
               actionGroups: ${{ parameters.actionGroups }}
