@@ -14,6 +14,9 @@ parameters:
   - name: variableRoot
     type: string
     default: "vars"
+  # - name: variableIncludeCommon
+  #   type: boolean
+  #   default: true
   - name: validation
     type: object
     default: {}
@@ -39,6 +42,11 @@ stages:
     ${{ elseif ne(coalesce(parameters.pool.vmImage, ''), '') }}:
       pool:
         vmImage: ${{ parameters.pool.vmImage }}
+    # variables:
+    #   - template: ../variables/include.yml@PipelineCommon
+    #     parameters:
+    #       variableRoot: ${{ parameters.variableRoot }}
+    #       includeCommon: ${{ parameters.variableIncludeCommon }}
     jobs:
       - template: ../jobs/validation/validate-settings.yml@PipelineCommon
         parameters:
