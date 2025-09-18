@@ -45,6 +45,7 @@ stages:
       environments: ${{ parameters.configuration.environments }}
       pool: ${{ parameters.configuration.defaultPool }}
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
+      variableIncludeCommon: ${{ coalesce(parameters.configuration.variables.includeCommon, true) }}
       validation: ${{ coalesce(parameters.configuration.validation, '') }}
       customValidationScripts: ${{ parameters.configuration.customValidationScripts }}
       enableProduction: ${{ parameters.configuration.enableProduction }}
