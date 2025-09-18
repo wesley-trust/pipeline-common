@@ -1,0 +1,4 @@
+.cache/
+testResults.xml
+tmppayload.json
+body.json

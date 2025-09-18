@@ -78,3 +78,78 @@
 2. Clone or reference `wesley-trust/pipeline-examples` to reproduce consumer setups; copy the settings structure when introducing new features.
 3. Document any template/script changes in this file and, when appropriate, `docs/CONFIGURE.md`.
 4. Coordinate dispatcher updates alongside template changes to keep consumers pinned to compatible versions.
+
+## Local Validation Guide
+
+### Why
+Maintaining the pipeline templates without immediate access to Azure DevOps validation proved risky. The local test harness allows you to exercise the most failure-prone parts before raising PRs or queueing a pipeline. The suite catches syntax problems, missing template/script references, and PowerShell lint issues up front.
+
+### Prerequisites
+- PowerShell 7.x (`pwsh` is bundled in this repo's dev container).
+- Git (used to fetch `wesley-trust/pipeline-dispatcher` into `.cache/pipeline-dispatcher`).
+- Internet access on first run so the harness can install the `Pester` (>= 5.0.0) and `powershell-yaml` modules, and to hydrate the dispatcher/pipeline repositories.
+- The `wesley-trust/pipeline-examples` repository checked out next to this repo (`../pipeline-examples`). The consumer YAML there is used as live compile targets.
+- (Optional) Azure CLI with the `azure-devops` extension for live preview checks.
+- (Optional) Populate `config/azdo-preview.config.psd1` with non-sensitive defaults (organisation URL, project name, branch refs, pipeline IDs). Secrets such as PATs stay out of source control.
+- Authenticate once with the Azure DevOps CLI (`az devops login`) so preview commands can use the cached credential.
+
+### Running the Tests
+```powershell
+pwsh -File scripts/invoke_local_tests.ps1
+```
+What the runner does:
+- Loads `tests/Templates.Tests.ps1`, which drives `Pester`.
+- Parses every template in `templates/` to confirm the YAML is well-formed.
+- Verifies every static `template:` include resolves to a file inside this repo.
+- Verifies every static `script:` reference resolves to a file under `scripts/`.
+- Parses every consumer example in `../pipeline-examples/examples/consumer` to ensure the dispatcher contracts remain valid.
+- Clones or refreshes `wesley-trust/pipeline-dispatcher` into `.cache/pipeline-dispatcher` and asserts the dispatcher template extends `templates/main.yml@PipelineCommon`.
+- Executes `scripts/ps_analyse.ps1` so PSScriptAnalyzer runs across the `scripts/` directory (warnings are reported but only errors fail the suite).
+- (Optional) Triggers Azure DevOps previews when the required CLI tooling and environment variables are present (otherwise this step is reported as skipped).
+
+The command exits non-zero on any failure, which is what we should rely on before marking work complete.
+
+### Azure DevOps Preview (Optional)
+The test suite automatically exposes Azure DevOps preview checks when the following environment variables are set and the Azure CLI is available:
+
+- `AZDO_ORG_SERVICE_URL` – your organisation URL (e.g. `https://dev.azure.com/<org>`)
+- `AZDO_PROJECT` – the target project
+- `AZURE_DEVOPS_EXT_PAT` **or** `AZDO_PERSONAL_ACCESS_TOKEN` – a PAT with at least `Read & execute` permissions for Pipelines
+- (Definition preview only) `AZDO_PIPELINE_IDS` – comma-separated pipeline IDs (e.g. `132`)
+
+When these are present, `tests/Templates.Tests.ps1` runs two optional checks:
+
+1. `scripts/preview_examples.ps1`
+   - Ensures the `azure-devops` CLI extension is installed.
+   - Calls the `pipelines/preview` REST endpoint for every example `*.pipeline.yml`, injecting repository overrides for `wesley-trust/pipeline-common` and `wesley-trust/pipeline-dispatcher`.
+   - Fails the run if Azure DevOps returns validation or compilation errors.
+
+2. `scripts/preview_pipeline_definitions.ps1`
+   - Uses the `run-pipeline` REST API with `previewRun = true` for each configured pipeline ID (e.g. definition 132).
+   - Overrides the repository refs so Azure DevOps compiles the pipeline using the current branch of `pipeline-common`/`pipeline-dispatcher` before you queue a real run.
+   - Surfaces validation issues returned from the service as test failures.
+
+You can trigger the previews manually as well:
+
+```bash
+export AZURE_DEVOPS_EXT_PAT=<pat>
+export AZDO_ORG_SERVICE_URL=https://dev.azure.com/<organisation>
+export AZDO_PROJECT=<project>
+export AZDO_PIPELINE_IDS=132
+pwsh -File scripts/preview_examples.ps1
+pwsh -File scripts/preview_pipeline_definitions.ps1
+```
+
+Use the `-PipelineCommonRef`, `-PipelineDispatcherRef`, or `-ExamplesBranch` switches to align the preview with a feature branch.
+
+If you prefer to avoid setting environment variables, run `az devops login` once (paste your PAT when prompted). The CLI caches the token securely and the preview scripts will reuse it until it expires.
+
+To avoid exporting the same non-sensitive values repeatedly, store them in `config/azdo-preview.config.psd1` (already seeded with the wesleytrust defaults). The harness loads that file automatically; you only need to supply a PAT via `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN`.
+
+### Adding New Tests
+When a regression slips through, add a targeted assertion to `tests/Templates.Tests.ps1` (or create a new file under `tests/`). Keep the checks fast (< 30 seconds) so they can run before every PR.
+
+### Habit Checklist
+- Run `pwsh -File scripts/invoke_local_tests.ps1` before pushing.
+- If the suite fails, fix the template/script first; do not ignore warnings without converting them into explicit excludes.
+- Update this document whenever the validation flow changes so the team stays aligned.
