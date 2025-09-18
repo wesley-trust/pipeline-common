@@ -78,7 +78,7 @@ stages:
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
-              serviceConnection: ${{ parameters.serviceConnection }}
+              serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
       - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=bicep') }}:
           - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
@@ -87,7 +87,7 @@ stages:
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
-              serviceConnection: ${{ parameters.serviceConnection }}
+              serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
       - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=terraform') }}:
           - template: ../jobs/validation/validate-terraform.yml@PipelineCommon
@@ -96,7 +96,7 @@ stages:
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
-              serviceConnection: ${{ parameters.serviceConnection }}
+              serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
       - ${{ if contains(join(format('{0}', parameters.actionGroups), ''), 'type=powershell') }}:
           - template: ../jobs/validation/validate-powershell.yml@PipelineCommon
@@ -105,7 +105,7 @@ stages:
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
-              serviceConnection: ${{ parameters.serviceConnection }}
+              serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
 
       - ${{ if gt(length(parameters.customValidationScripts), 0) }}:
           - job: Custom_Validation
@@ -149,4 +149,4 @@ stages:
                           delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
                           additionalRepositories: ${{ parameters.additionalRepositories }}
                           keyVault: ${{ parameters.keyVault }}
-                          serviceConnection: ${{ parameters.serviceConnection }}
+                          serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
