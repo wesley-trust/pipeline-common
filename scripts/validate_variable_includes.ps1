@@ -1,6 +1,11 @@
 param(
-  [string]$VariableRoot = 'vars',
-  [Parameter()][Hashtable[]]$Environments = @()
+  [string]
+  $VariableRoot = 'vars',
+  [Parameter(
+    Mandatory = $true
+  )]
+  [string]
+  $EnvironmentsJson
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -12,6 +17,9 @@ if (-not (Test-Path -Path $common)) {
 else {
   Write-Information -InformationAction Continue -MessageData "Found: $common"
 }
+
+# Convert back to object
+$Environments = $EnvironmentsJson | ConvertFrom-Json
 
 foreach ($env in $Environments) {
   $envFile = Join-Path -Path $VariableRoot -ChildPath ("env/{0}.yml" -f $env.name)

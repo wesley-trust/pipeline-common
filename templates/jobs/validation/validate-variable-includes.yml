@@ -31,4 +31,4 @@ jobs:
           script: validate_variable_includes.ps1
           arguments: >-
             -VariableRoot "${{ parameters.variableRoot }}"
-            -Environments ${{ each env in parameters.environments }}:@{ name='${{ env.name }}' }
+            -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
