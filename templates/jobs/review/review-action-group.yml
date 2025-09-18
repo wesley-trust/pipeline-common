@@ -96,7 +96,7 @@ jobs:
               keyVaultName: ${{ parameters.keyVault.name }}
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
-      # Execute each action sequentially within the action group
+      # Terraform Action
       - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), eq(parameters.runTerraformPlan, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           - ${{ each action in parameters.actionGroup.actions }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
@@ -140,6 +140,7 @@ jobs:
                   artifactName: terraform-plan-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
+      # Bicep Action
       - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), eq(parameters.runBicepWhatIf, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           - ${{ each action in parameters.actionGroup.actions }}:
               - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
@@ -189,7 +190,8 @@ jobs:
                   displayName: Publish What-If Output (${{ coalesce(action.name, 'bicep') }})
                   artifactName: bicep-whatif-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
-
+      
+      # PowerShell Action
       # - ${{ if eq(parameters.actionGroup.type, 'powershell') }}:
       #     - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
       #         - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
