@@ -134,7 +134,7 @@ jobs:
                     condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
                   ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
                     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-              - template: ../steps/publish-artifact.yml@PipelineCommon
+              - template: ../../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish Terraform Plan (${{ coalesce(action.name, 'terraform') }})
                   artifactName: terraform-plan-${{ parameters.environmentName }}-${{ parameters.region }}
