@@ -119,7 +119,7 @@ stages:
                             - template: ../steps/import-keyvault-secrets.yml@PipelineCommon
                               parameters:
                                 displayName: Import Key Vault Secrets
-                                azureSubscription: ${{ parameters.serviceConnection }}
+                                azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
                                 keyVaultName: ${{ parameters.keyVault.name }}
                                 secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
@@ -157,7 +157,7 @@ stages:
                                 - template: ../steps/azurecli.yml@PipelineCommon
                                   parameters:
                                     displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }}
-                                    azureSubscription: ${{ parameters.serviceConnection }}
+                                    azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
                                     repoAlias: PipelineCommon
                                     script: terraform_run.ps1
                                     arguments: >-
@@ -197,7 +197,7 @@ stages:
                                 - template: ../steps/azurecli.yml@PipelineCommon
                                   parameters:
                                     displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }}
-                                    azureSubscription: ${{ parameters.serviceConnection }}
+                                    azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
                                     repoAlias: PipelineCommon
                                     script: bicep_run.ps1
                                     arguments: >-

@@ -45,6 +45,6 @@ jobs:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:
               displayName: Import Key Vault Secrets
-              azureSubscription: ${{ parameters.serviceConnection }}
+              azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
               keyVaultName: ${{ parameters.keyVault.name }}
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
