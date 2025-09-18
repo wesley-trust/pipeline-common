@@ -160,7 +160,7 @@ jobs:
                       tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
               - template: ../../steps/azurecli.yml@PipelineCommon
                 parameters:
-                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }} (What-If ${{ parameters.region }})
+                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }} - What-If ${{ parameters.region }})
                   azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
                   repoAlias: PipelineCommon
                   script: bicep_run.ps1

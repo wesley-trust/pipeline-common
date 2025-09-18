@@ -44,10 +44,10 @@ switch ($Scope) {
     else {
       $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
       if ($AdditionalParameters) {
-        az deployment group create --resource-group $ResourceGroupName --location $Location --template-file $Template @paramArgs $AdditionalParameters $modeArgs --only-show-errors
+        az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters $modeArgs --only-show-errors
       }
       else {
-        az deployment group create --resource-group $ResourceGroupName --location $Location --template-file $Template @paramArgs $modeArgs --only-show-errors
+        az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
       }
     }
   }
