@@ -35,15 +35,20 @@ switch ($Scope) {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
       if ($AdditionalParameters) {
-        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters --only-show-errors | Tee-Object -FilePath $OutFile
       }
       else {
-        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs | Tee-Object -FilePath $OutFile
+        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs --only-show-errors | Tee-Object -FilePath $OutFile
       }
     }
     else {
       $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment group create --resource-group $ResourceGroupName -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
+      if ($AdditionalParameters) {
+        az deployment group create --resource-group $ResourceGroupName --location $Location --template-file $Template @paramArgs $AdditionalParameters $modeArgs --only-show-errors
+      }
+      else {
+        az deployment group create --resource-group $ResourceGroupName --location $Location --template-file $Template @paramArgs $modeArgs --only-show-errors
+      }
     }
   }
   'subscription' {
