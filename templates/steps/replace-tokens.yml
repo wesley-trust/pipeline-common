@@ -5,6 +5,9 @@ parameters:
   - name: targetFiles
     type: string
     default: ""
+  - name: tokenPattern
+    type: string
+    default: "custom"
   - name: tokenPrefix
     type: string
     default: "#{{"
@@ -20,6 +23,7 @@ steps:
     displayName: ${{ parameters.displayName }}
     inputs:
       targetFiles: ${{ parameters.targetFiles }}
+      tokenPattern: ${{ parameters.tokenPattern }}
       tokenRegex: "false"
       actionOnMissing: ${{ parameters.actionOnMissing }}
       keepToken: false
