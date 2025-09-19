@@ -52,8 +52,6 @@ switch ($Scope) {
     }
   }
   'subscription' {
-    Write-Host "here"
-    exit 0
     if ($Action -eq 'whatif') {
       az deployment sub what-if -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
