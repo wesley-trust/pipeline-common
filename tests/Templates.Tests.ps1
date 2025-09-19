@@ -248,6 +248,14 @@ Describe 'Template expression directives' {
     }
 }
 
+Describe 'Bicep deployment arguments' {
+    It 'does not use colon syntax for AllowDeleteOnUnmanage switch' {
+        $deployStage = Join-Path $templatesRoot 'stages/environment-region-deploy-stage.yml'
+        $content = Get-Content -Path $deployStage -Raw
+        $content | Should -Not -Match '-AllowDeleteOnUnmanage:'
+    }
+}
+
 Describe 'PowerShell script references' {
     $yamlFiles = Get-ChildItem -Path $templatesRoot -Include '*.yml', '*.yaml' -Recurse -File | Select-Object -ExpandProperty FullName
     $cases = foreach ($file in $yamlFiles) {

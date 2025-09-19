@@ -77,10 +77,11 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   location: westeurope
   templatePath: infra/bicep/main.bicep
   parametersFile: infra/bicep/params.bicepparam
-  additionalParameters: ''
+  additionalParameters: ''         # optional extra arguments passed to az stack (e.g. "--parameters foo=bar")
   managementGroupId: ''
   subscriptionId: ''
   mode: incremental|complete        # can be overridden globally by configuration.bicepModeOverride
+  allowDeleteOnUnmanage: true|false # default false; temporarily sets action-on-unmanage to deleteAll
 
   # PowerShell specifics:
   scriptPath: scripts/custom.ps1
@@ -93,6 +94,8 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 ```
 
 > Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group. Use `dependsOn` when you need sequential execution across actionGroups for a given environment/region — the dispatcher resolves the names you list into the underlying job dependencies, so keep `actionGroups[*].name` unique within each environment/region.
+
+> When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there.
 
 ## Validation (auto-discovered)
 
