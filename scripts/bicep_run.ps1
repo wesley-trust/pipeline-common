@@ -52,7 +52,6 @@ switch ($Scope) {
         az stack group create `
           --name $ResourceGroupName `
           --resource-group $ResourceGroupName `
-          --location $Location `
           --template-file $Template `
           @paramArgs `
           --action-on-unmanage detachAll `
