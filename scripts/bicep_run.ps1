@@ -34,7 +34,6 @@ switch ($Scope) {
   'resourceGroup' {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
-      Write-Host "here"
       if ($AdditionalParameters) {
         az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters --only-show-errors | Tee-Object -FilePath $OutFile
       }
@@ -53,6 +52,8 @@ switch ($Scope) {
     }
   }
   'subscription' {
+    Write-Host "here"
+    exit 0
     if ($Action -eq 'whatif') {
       az deployment sub what-if -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
