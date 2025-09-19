@@ -138,7 +138,7 @@ jobs:
               - template: ../../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish Terraform Plan (${{ coalesce(action.name, 'terraform') }})
-                  artifactName: terraform-plan-${{ coalesce(action.name, 'terraform'}}-${{ parameters.environmentName }}-${{ parameters.region }}
+                  artifactName: terraform-plan-${{ coalesce(action.name, 'terraform') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
       # Bicep Action
@@ -191,7 +191,7 @@ jobs:
               - template: ../../steps/publish-artifact.yml@PipelineCommon
                 parameters:
                   displayName: Publish What-If Output (${{ upper(coalesce(action.name, 'bicep')) }})
-                  artifactName: bicep-whatif-${{ coalesce(action.name, 'bicep'}}-${{ parameters.environmentName }}-${{ parameters.region }}
+                  artifactName: bicep-whatif-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
 
       # PowerShell Action
