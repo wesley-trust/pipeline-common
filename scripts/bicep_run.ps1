@@ -188,12 +188,11 @@ switch ($Scope) {
     }
   }
   'subscription' {
+    if (-not $Location) { throw 'Location is required for subscription scope' }
     if ($Action -eq 'whatif') {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     }
     else {
-      if (-not $Location) { throw 'Location is required for subscription scope' }
-
       $stackIdentifier = if (-not [string]::IsNullOrWhiteSpace($ResourceGroupName)) {
         $ResourceGroupName
       }
@@ -221,12 +220,11 @@ switch ($Scope) {
   }
   'managementGroup' {
     if (-not $ManagementGroupId) { throw 'ManagementGroupId is required for managementGroup scope' }
+    if (-not $Location) { throw 'Location is required for managementGroup scope' }
     if ($Action -eq 'whatif') {
       az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs @additionalParamArgs | Tee-Object -FilePath $OutFile
     }
     else {
-      if (-not $Location) { throw 'Location is required for managementGroup scope' }
-
       $stackCommandBase = @(
         'stack', 'mg', 'create',
         '--name', (Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId),
@@ -249,7 +247,7 @@ switch ($Scope) {
     }
     else {
       if ($AllowDeleteOnUnmanage) {
-        throw 'AllowDeleteOnUnmanage is not supported for tenant deployments with the current Azure CLI. Update the CLI once deployment stacks support tenant scope.'
+        throw 'AllowDeleteOnUnmanage is not known to be supported for tenant deployments. If this is now supported, this script will need to be updated.'
       }
 
       az deployment tenant create --location $Location --template-file $Template @paramArgs @additionalParamArgs
