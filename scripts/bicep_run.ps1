@@ -51,6 +51,7 @@ switch ($Scope) {
         #az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
         az stack group create `
           --name $ResourceGroupName `
+          --resource-group $ResourceGroupName `
           --location $Location `
           --template-file $Template `
           @paramArgs `
