@@ -11,11 +11,91 @@ param(
   [string]$SubscriptionId = '',
   [string]$OutFile = 'whatif.txt',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
-  [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = ''
+  [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
+  [switch]$AllowDeleteOnUnmanage
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+function ConvertTo-ArgumentList {
+  param([string]$Raw)
+
+  if ([string]::IsNullOrWhiteSpace($Raw)) {
+    return @()
+  }
+
+  $pattern = "((?<!\\)`"([^`"\\]|\\.)*`"|(?<!\\)'([^'\\]|\\.)*'|\\S+)"
+  $matches = [regex]::Matches($Raw, $pattern)
+  $arguments = @()
+  $doubleQuote = [char]34
+  $singleQuote = [char]39
+
+  foreach ($match in $matches) {
+    $value = $match.Value
+
+    if ($value.StartsWith($doubleQuote) -and $value.EndsWith($doubleQuote)) {
+      $value = $value.Substring(1, $value.Length - 2)
+      $value = $value -replace '\\(["\\])', '$1'
+    }
+    elseif ($value.StartsWith($singleQuote) -and $value.EndsWith($singleQuote)) {
+      $value = $value.Substring(1, $value.Length - 2).Replace("''", "'")
+      $value = $value -replace "\\\\(['\\])", '$1'
+    }
+
+    $arguments += $value
+  }
+
+  return $arguments
+}
+
+function Get-StackName {
+  param(
+    [string]$Prefix,
+    [string]$Identifier
+  )
+
+  $sanitisedIdentifier = if ([string]::IsNullOrWhiteSpace($Identifier)) { 'default' } else { $Identifier }
+  $sanitisedIdentifier = ($sanitisedIdentifier -replace '[^a-zA-Z0-9-]', '-').Trim('-')
+  if (-not $sanitisedIdentifier) {
+    $sanitisedIdentifier = 'default'
+  }
+
+  $name = "$Prefix-$sanitisedIdentifier"
+  if ($name.Length -gt 90) {
+    $name = $name.Substring(0, 90).Trim('-')
+    if (-not $name) {
+      $name = $Prefix
+    }
+  }
+
+  return $name
+}
+
+function Invoke-StackDeployment {
+  param(
+    [string[]]$BaseArgs,
+    [bool]$AllowDelete
+  )
+
+  $initialAction = if ($AllowDelete) { 'deleteAll' } else { 'detachAll' }
+  $initialArgs = $BaseArgs + @('--action-on-unmanage', $initialAction)
+
+  try {
+    az @initialArgs
+  }
+  finally {
+    if ($AllowDelete) {
+      $resetArgs = $BaseArgs + @('--action-on-unmanage', 'detachAll')
+      try {
+        az @resetArgs | Out-Null
+      }
+      catch {
+        Write-Warning "Failed to restore action-on-unmanage to detachAll: $($_.Exception.Message)"
+      }
+    }
+  }
+}
 
 if ($Action -eq 'validate') {
   az bicep install | Out-Null
@@ -30,77 +110,87 @@ if ($ModeOverride) {
 
 $paramArgs = @()
 if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
+$additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
+$allowDelete = $AllowDeleteOnUnmanage.IsPresent
 
 switch ($Scope) {
   'resourceGroup' {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
-      if ($AdditionalParameters) {
-        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters --only-show-errors | Tee-Object -FilePath $OutFile
-      }
-      else {
-        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs --only-show-errors | Tee-Object -FilePath $OutFile
-      }
+      az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     }
     else {
-      $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      if ($AdditionalParameters) {
-        az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters $modeArgs --only-show-errors
-      }
-      else {
-        #az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
-        az stack group create `
-          --name "ds-$ResourceGroupName" `
-          --resource-group $ResourceGroupName `
-          --template-file $Template `
-          @paramArgs `
-          --action-on-unmanage detachAll `
-          --deny-settings-mode denyDelete `
-          --only-show-errors
-      }
+      $stackCommandBase = @(
+        'stack', 'group', 'create',
+        '--name', (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName),
+        '--resource-group', $ResourceGroupName,
+        '--template-file', $Template
+      )
+
+      $stackCommandBase += $paramArgs
+      $stackCommandBase += $additionalParamArgs
+      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
+
+      Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
     }
   }
   'subscription' {
     if ($Action -eq 'whatif') {
-      if ($AdditionalParameters) {
-        az deployment sub what-if --location $Location --template-file $Template @paramArgs $AdditionalParameters --only-show-errors | Tee-Object -FilePath $OutFile
-      }
-      else {
-        az deployment sub what-if --location $Location --template-file $Template @paramArgs --only-show-errors | Tee-Object -FilePath $OutFile
-      }
+      az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     }
     else {
-      if ($AdditionalParameters) {
-        az deployment sub create --location $Location --template-file $Template @paramArgs $AdditionalParameters --only-show-errors
-      }
-      else {
-        #az deployment sub create --location $Location --template-file $Template @paramArgs --only-show-errors
-        az stack sub create `
-          --name "ds-sub-$ResourceGroupName" `
-          --location $Location `
-          --template-file $Template `
-          @paramArgs `
-          --action-on-unmanage detachAll `
-          --deny-settings-mode denyDelete `
-          --only-show-errors
-      }
+      if (-not $Location) { throw 'Location is required for subscription scope' }
+
+      $stackCommandBase = @(
+        'stack', 'sub', 'create',
+        '--name', (Get-StackName -Prefix 'ds-sub' -Identifier $SubscriptionId),
+        '--location', $Location,
+        '--template-file', $Template
+      )
+
+      $stackCommandBase += $paramArgs
+      $stackCommandBase += $additionalParamArgs
+      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
+
+      Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
     }
   }
   'managementGroup' {
     if (-not $ManagementGroupId) { throw 'ManagementGroupId is required for managementGroup scope' }
     if ($Action -eq 'whatif') {
-      az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs @additionalParamArgs | Tee-Object -FilePath $OutFile
     }
     else {
-      az deployment mg create -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $AdditionalParameters
+      if (-not $Location) { throw 'Location is required for managementGroup scope' }
+
+      $stackCommandBase = @(
+        'stack', 'mg', 'create',
+        '--name', (Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId),
+        '--management-group-id', $ManagementGroupId,
+        '--location', $Location,
+        '--template-file', $Template
+      )
+
+      $stackCommandBase += $paramArgs
+      $stackCommandBase += $additionalParamArgs
+      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
+
+      Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
     }
   }
   'tenant' {
     if ($Action -eq 'whatif') {
-      az deployment tenant what-if --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      az deployment tenant what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs | Tee-Object -FilePath $OutFile
     }
     else {
-      az deployment tenant create --location $Location --template-file $Template @paramArgs $AdditionalParameters
+      if ($AllowDeleteOnUnmanage) {
+        throw 'AllowDeleteOnUnmanage is not supported for tenant deployments with the current Azure CLI. Update the CLI once deployment stacks support tenant scope.'
+      }
+
+      az deployment tenant create --location $Location --template-file $Template @paramArgs @additionalParamArgs
     }
   }
 }
