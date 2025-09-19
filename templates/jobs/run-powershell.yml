@@ -73,10 +73,10 @@ parameters:
     default: []
   - name: tokenPrefix
     type: string
-    default: "#{"
+    default: "#{{"
   - name: tokenSuffix
     type: string
-    default: "}"
+    default: "}}"
   - name: delayMinutes
     type: number
     default: 0

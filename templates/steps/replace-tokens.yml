@@ -7,10 +7,10 @@ parameters:
     default: ""
   - name: tokenPrefix
     type: string
-    default: "#{"
+    default: "#{{"
   - name: tokenSuffix
     type: string
-    default: "}"
+    default: "}}"
   - name: actionOnMissing
     type: string
     default: "warn"

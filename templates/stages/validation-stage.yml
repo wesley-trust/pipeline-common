@@ -150,8 +150,8 @@ stages:
                           lockedSourcePath: $(Pipeline.Workspace)/locked-sources
                           tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, true) }}
                           tokenTargetPatterns: ${{ action.tokenTargetPatterns }}
-                          tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{') }}
-                          tokenSuffix: ${{ coalesce(action.tokenSuffix, '}') }}
+                          tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{{') }}
+                          tokenSuffix: ${{ coalesce(action.tokenSuffix, '}}') }}
                           delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
                           additionalRepositories: ${{ parameters.additionalRepositories }}
                           keyVault: ${{ parameters.keyVault }}
