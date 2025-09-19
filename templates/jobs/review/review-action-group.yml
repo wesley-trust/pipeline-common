@@ -111,7 +111,7 @@ jobs:
                 - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                     - template: ../../steps/replace-tokens.yml@PipelineCommon
                       parameters:
-                        displayName: Terraform token replacement
+                        displayName: Bicep token replacement (default)
                         targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
                         tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{{') }}
                         tokenSuffix: ${{ coalesce(action.tokenSuffix, '}}') }}
@@ -156,7 +156,7 @@ jobs:
                 - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                     - template: ../../steps/replace-tokens.yml@PipelineCommon
                       parameters:
-                        displayName: Bicep token replacement
+                        displayName: Bicep token replacement (default)
                         targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
                         tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{{') }}
                         tokenSuffix: ${{ coalesce(action.tokenSuffix, '}}') }}
