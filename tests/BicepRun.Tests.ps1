@@ -30,6 +30,9 @@ Describe 'bicep_run.ps1 stack orchestration' {
 
     $script:AzCalls | Should -HaveCount 1
     $call = $script:AzCalls[0]
+    $nameIndex = [Array]::IndexOf($call, '--name')
+    $nameIndex | Should -BeGreaterOrEqual 0
+    $call[$nameIndex + 1] | Should -Be 'ds-rg-test'
     $index = [Array]::IndexOf($call, '--action-on-unmanage')
     $index | Should -BeGreaterOrEqual 0
     $call[$index + 1] | Should -Be 'detachAll'
@@ -52,7 +55,7 @@ Describe 'bicep_run.ps1 stack orchestration' {
   It 'passes additional parameters without losing spacing' {
     $additional = "--parameters foo=bar --description `"space preserved`""
 
-    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -AdditionalParameters $additional
+    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -ResourceGroupName 'rg-sub-test' -AdditionalParameters $additional
 
     $script:AzCalls | Should -HaveCount 1
     $call = $script:AzCalls[0]
@@ -61,6 +64,7 @@ Describe 'bicep_run.ps1 stack orchestration' {
     $call | Should -Contain 'foo=bar'
     $call | Should -Contain '--description'
     $call[$call.IndexOf('--description') + 1] | Should -Be 'space preserved'
+    $call[$call.IndexOf('--name') + 1] | Should -Be 'ds-sub-rg-sub-test'
   }
 
   It 'parses single-quoted additional parameters correctly' {
@@ -74,6 +78,7 @@ Describe 'bicep_run.ps1 stack orchestration' {
     $call | Should -Contain "name=value with 'quotes'"
     $call | Should -Contain '--tag'
     $call[$call.IndexOf('--tag') + 1] | Should -Be 'single'
+    $call[$call.IndexOf('--name') + 1] | Should -Be 'ds-rg-test'
   }
 
   It 'resets stack when deleteAll is enabled at management group scope' {
@@ -84,12 +89,11 @@ Describe 'bicep_run.ps1 stack orchestration' {
   }
 
   It 'passes through subscription id and issues reset when delete is enabled' {
-    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -SubscriptionId '0000-1111' -AllowDeleteOnUnmanage '1'
+    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -ResourceGroupName 'rg-sub-test' -AllowDeleteOnUnmanage '1'
 
     $script:AzCalls | Should -HaveCount 2
     foreach ($call in $script:AzCalls) {
-      $call | Should -Contain '--subscription'
-      $call[$call.IndexOf('--subscription') + 1] | Should -Be '0000-1111'
+      $call[$call.IndexOf('--name') + 1] | Should -Be 'ds-sub-rg-sub-test'
     }
   }
 

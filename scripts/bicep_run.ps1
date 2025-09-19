@@ -90,21 +90,20 @@ function Get-StackName {
     [string]$Identifier
   )
 
-  $sanitisedIdentifier = if ([string]::IsNullOrWhiteSpace($Identifier)) { 'default' } else { $Identifier }
-  $sanitisedIdentifier = ($sanitisedIdentifier -replace '[^a-zA-Z0-9-]', '-').Trim('-')
-  if (-not $sanitisedIdentifier) {
-    $sanitisedIdentifier = 'default'
+  if ([string]::IsNullOrWhiteSpace($Identifier)) {
+    throw 'Identifier is required to compute the stack name.'
   }
 
-  $name = "$Prefix-$sanitisedIdentifier"
-  if ($name.Length -gt 90) {
-    $name = $name.Substring(0, 90).Trim('-')
-    if (-not $name) {
-      $name = $Prefix
-    }
+  $raw = "$Prefix-$Identifier"
+
+  $sanitised = ($raw -replace '[^a-zA-Z0-9-]', '-').Trim('-')
+  if (-not $sanitised) { $sanitised = $Prefix }
+  if ($sanitised.Length -gt 90) {
+    $sanitised = $sanitised.Substring(0, 90).Trim('-')
+    if (-not $sanitised) { $sanitised = $Prefix }
   }
 
-  return $name
+  return $sanitised
 }
 
 function Invoke-StackDeployment {
@@ -195,9 +194,19 @@ switch ($Scope) {
     else {
       if (-not $Location) { throw 'Location is required for subscription scope' }
 
+      $stackIdentifier = if (-not [string]::IsNullOrWhiteSpace($ResourceGroupName)) {
+        $ResourceGroupName
+      }
+      elseif (-not [string]::IsNullOrWhiteSpace($SubscriptionId)) {
+        $SubscriptionId
+      }
+      else {
+        throw 'Either ResourceGroupName or SubscriptionId is required to compute the stack name for subscription scope.'
+      }
+
       $stackCommandBase = @(
         'stack', 'sub', 'create',
-        '--name', (Get-StackName -Prefix 'ds-sub' -Identifier $SubscriptionId),
+        '--name', (Get-StackName -Prefix 'ds-sub' -Identifier $stackIdentifier),
         '--location', $Location,
         '--template-file', $Template
       )

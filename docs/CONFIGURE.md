@@ -95,7 +95,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 > Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group. Use `dependsOn` when you need sequential execution across actionGroups for a given environment/region — the dispatcher resolves the names you list into the underlying job dependencies, so keep `actionGroups[*].name` unique within each environment/region.
 
-> When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there.
+> When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there. Stack names follow the convention automatically: `ds-<resourceGroup>` for resource group deployments, `ds-sub-<subscriptionId>` (falling back to the template name when the ID is omitted) for subscription deployments, and `ds-mg-<managementGroupId>` for management group deployments.
 
 ## Validation (auto-discovered)
 
