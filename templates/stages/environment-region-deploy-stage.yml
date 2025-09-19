@@ -219,7 +219,7 @@ stages:
                                       -SubscriptionId "${{ action.subscriptionId }}"
                                       -ModeOverride "${{ parameters.bicepModeOverride }}"
                                       -Mode "${{ coalesce(action.mode, 'incremental') }}"
-                                      ${{ replace(replace(format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)), 'True', '-AllowDeleteOnUnmanage'), 'False', '') }}
+                                      -AllowDeleteOnUnmanage ${{ format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)) }}
                                     ${{ if ne(action.condition, '') }}:
                                       condition: ${{ action.condition }}
                                     ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:

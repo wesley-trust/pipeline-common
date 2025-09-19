@@ -36,7 +36,7 @@ Describe 'bicep_run.ps1 stack orchestration' {
   }
 
   It 'temporarily enables deleteAll when requested' {
-    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'resourceGroup' -ResourceGroupName 'rg-test' -Template 'template.bicep' -AllowDeleteOnUnmanage
+    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'resourceGroup' -ResourceGroupName 'rg-test' -Template 'template.bicep' -AllowDeleteOnUnmanage $true
 
     $script:AzCalls | Should -HaveCount 2
 
@@ -77,14 +77,14 @@ Describe 'bicep_run.ps1 stack orchestration' {
   }
 
   It 'resets stack when deleteAll is enabled at management group scope' {
-    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'managementGroup' -Location 'westeurope' -ManagementGroupId 'mg-test' -Template 'template.bicep' -AllowDeleteOnUnmanage
+    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'managementGroup' -Location 'westeurope' -ManagementGroupId 'mg-test' -Template 'template.bicep' -AllowDeleteOnUnmanage $true
 
     $script:AzCalls | Should -HaveCount 2
     $script:AzCalls | ForEach-Object { $_ | Should -Contain '--management-group-id' }
   }
 
   It 'passes through subscription id and issues reset when delete is enabled' {
-    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -SubscriptionId '0000-1111' -AllowDeleteOnUnmanage
+    . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'subscription' -Location 'westeurope' -Template 'template.bicep' -SubscriptionId '0000-1111' -AllowDeleteOnUnmanage $true
 
     $script:AzCalls | Should -HaveCount 2
     foreach ($call in $script:AzCalls) {
@@ -94,7 +94,7 @@ Describe 'bicep_run.ps1 stack orchestration' {
   }
 
   It 'rejects allowDeleteOnUnmanage for tenant scope' {
-    { . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'tenant' -Location 'westeurope' -Template 'template.bicep' -AllowDeleteOnUnmanage } | Should -Throw -ErrorId *
+    { . $script:ScriptPathUnderTest -Action 'deploy' -Scope 'tenant' -Location 'westeurope' -Template 'template.bicep' -AllowDeleteOnUnmanage $true } | Should -Throw -ErrorId *
   }
 
   It 'allows tenant deployments when delete toggle is disabled' {

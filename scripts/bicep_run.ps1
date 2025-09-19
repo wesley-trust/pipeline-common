@@ -12,7 +12,7 @@ param(
   [string]$OutFile = 'whatif.txt',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
   [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
-  [switch]$AllowDeleteOnUnmanage
+  [bool]$AllowDeleteOnUnmanage = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -146,7 +146,7 @@ if ($ModeOverride) {
 $paramArgs = @()
 if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
-$allowDelete = $AllowDeleteOnUnmanage.IsPresent
+$allowDelete = [bool]$AllowDeleteOnUnmanage
 
 switch ($Scope) {
   'resourceGroup' {
