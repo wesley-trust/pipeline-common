@@ -72,7 +72,7 @@ switch ($Scope) {
           --location $Location `
           --template-file $Template `
           @paramArgs `
-          --action-on-unmanage deleteAll `
+          --action-on-unmanage detach `
           --deny-settings-mode denyDelete `
           --only-show-errors
       }
