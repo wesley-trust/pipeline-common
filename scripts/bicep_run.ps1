@@ -66,7 +66,15 @@ switch ($Scope) {
         az deployment sub create --location $Location --template-file $Template @paramArgs $AdditionalParameters --only-show-errors
       }
       else {
-        az deployment sub create --location $Location --template-file $Template @paramArgs --only-show-errors
+        #az deployment sub create --location $Location --template-file $Template @paramArgs --only-show-errors
+        az stack sub create `
+          --name $ResourceGroupName `
+          --location $Location `
+          --template-file $Template `
+          @paramArgs `
+          --action-on-unmanage detachAll `
+          --deny-settings-mode denyDelete `
+          --only-show-errors
       }
     }
   }
