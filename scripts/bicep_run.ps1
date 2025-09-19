@@ -25,25 +25,60 @@ function ConvertTo-ArgumentList {
     return @()
   }
 
-  $pattern = "((?<!\\)`"([^`"\\]|\\.)*`"|(?<!\\)'([^'\\]|\\.)*'|\\S+)"
-  $matches = [regex]::Matches($Raw, $pattern)
   $arguments = @()
-  $doubleQuote = [char]34
-  $singleQuote = [char]39
+  $builder = [System.Text.StringBuilder]::new()
+  $inSingle = $false
+  $inDouble = $false
+  $escapeNext = $false
 
-  foreach ($match in $matches) {
-    $value = $match.Value
+  for ($index = 0; $index -lt $Raw.Length; $index++) {
+    $char = $Raw[$index]
 
-    if ($value.StartsWith($doubleQuote) -and $value.EndsWith($doubleQuote)) {
-      $value = $value.Substring(1, $value.Length - 2)
-      $value = $value -replace '\\(["\\])', '$1'
+    if ($escapeNext) {
+      [void]$builder.Append($char)
+      $escapeNext = $false
+      continue
     }
-    elseif ($value.StartsWith($singleQuote) -and $value.EndsWith($singleQuote)) {
-      $value = $value.Substring(1, $value.Length - 2).Replace("''", "'")
-      $value = $value -replace "\\\\(['\\])", '$1'
+
+    if ($inDouble -and $char -eq '\\') {
+      $escapeNext = $true
+      continue
     }
 
-    $arguments += $value
+    if (-not $inSingle -and $char -eq '"') {
+      $inDouble = -not $inDouble
+      continue
+    }
+
+    if (-not $inDouble -and $char -eq "'") {
+      if ($inSingle -and ($index + 1) -lt $Raw.Length -and $Raw[$index + 1] -eq "'") {
+        [void]$builder.Append("'")
+        $index++
+        continue
+      }
+
+      $inSingle = -not $inSingle
+      continue
+    }
+
+    if (-not $inSingle -and -not $inDouble -and [char]::IsWhiteSpace($char)) {
+      if ($builder.Length -gt 0) {
+        $arguments += $builder.ToString()
+        $builder.Clear() | Out-Null
+      }
+
+      continue
+    }
+
+    [void]$builder.Append($char)
+  }
+
+  if ($escapeNext) {
+    [void]$builder.Append('\\')
+  }
+
+  if ($builder.Length -gt 0) {
+    $arguments += $builder.ToString()
   }
 
   return $arguments
