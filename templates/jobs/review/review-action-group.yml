@@ -172,7 +172,8 @@ jobs:
                     -ResourceGroupName "${{ action.resourceGroupName }}"
                     -Location "${{ action.location }}"
                     -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
-                    ${{ if eq(action.parametersFile, '') }}-ParametersFile ''${{ else }}-ParametersFile "$(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}"${{ end }}
+                    -ParametersRoot "$(Pipeline.Workspace)/locked-sources"
+                    -ParametersFile "${{ action.parametersFile }}"
                     -AdditionalParameters "${{ action.additionalParameters }}"
                     -ManagementGroupId "${{ action.managementGroupId }}"
                     -SubscriptionId "${{ action.subscriptionId }}"

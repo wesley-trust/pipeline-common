@@ -4,6 +4,7 @@ param(
   [string]$ResourceGroupName = '',
   [string]$Location = '',
   [Parameter(Mandatory = $true)][string]$Template,
+  [string]$ParametersRoot = '',
   [string]$ParametersFile = '',
   [string]$AdditionalParameters = '',
   [string]$ManagementGroupId = '',
@@ -28,7 +29,7 @@ if ($ModeOverride) {
 }
 
 $paramArgs = @()
-if ($ParametersFile) { $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
+if ($ParametersFile) { $ParametersFile = $ParametersRoot + $ParametersFile; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 
 switch ($Scope) {
   'resourceGroup' {
@@ -53,30 +54,40 @@ switch ($Scope) {
   }
   'subscription' {
     if ($Action -eq 'whatif') {
-      az deployment sub what-if -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      if ($AdditionalParameters) {
+        az deployment sub what-if --location $Location --template-file $Template @paramArgs $AdditionalParameters --only-show-errors | Tee-Object -FilePath $OutFile
+      }
+      else {
+        az deployment sub what-if --location $Location --template-file $Template @paramArgs --only-show-errors | Tee-Object -FilePath $OutFile
+      }
     }
     else {
-      $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment sub create -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
+      if ($AdditionalParameters) {
+        $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
+        az deployment sub create --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters --only-show-errors
+      }
+      else {
+        az deployment sub create --location $Location --template-file $Template @paramArgs $modeArgs --only-show-errors
+      }
     }
   }
   'managementGroup' {
     if (-not $ManagementGroupId) { throw 'ManagementGroupId is required for managementGroup scope' }
     if ($Action -eq 'whatif') {
-      az deployment mg what-if -m $ManagementGroupId -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
     else {
       $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment mg create -m $ManagementGroupId -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
+      az deployment mg create -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters
     }
   }
   'tenant' {
     if ($Action -eq 'whatif') {
-      az deployment tenant what-if -l $Location -f $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
+      az deployment tenant what-if --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
     else {
       $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment tenant create -l $Location -f $Template @paramArgs $modeArgs $AdditionalParameters
+      az deployment tenant create --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters
     }
   }
 }

@@ -65,6 +65,21 @@ function Get-PreviewConfigValue {
     return $null
 }
 
+function Test-HasAzDoPat {
+    $pat = [Environment]::GetEnvironmentVariable('AZURE_DEVOPS_EXT_PAT')
+    if (-not [string]::IsNullOrWhiteSpace($pat)) {
+        return $true
+    }
+
+    $pat = [Environment]::GetEnvironmentVariable('AZDO_PERSONAL_ACCESS_TOKEN')
+    if (-not [string]::IsNullOrWhiteSpace($pat)) {
+        return $true
+    }
+
+    $patStore = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.pipeline-common/azdo_pat'
+    return Test-Path -Path $patStore
+}
+
 function Get-TemplateReferences {
     param(
         [Parameter(Mandatory)]
@@ -195,6 +210,44 @@ Describe 'Template dependencies' {
     }
 }
 
+Describe 'Template expression directives' {
+    $yamlFiles = Get-ChildItem -Path $templatesRoot -Include '*.yml', '*.yaml' -Recurse -File | Select-Object -ExpandProperty FullName
+    $violations = foreach ($file in $yamlFiles) {
+        $lines = Get-Content -Path $file
+        for ($index = 0; $index -lt $lines.Length; $index++) {
+            $line = $lines[$index]
+            $matches = [regex]::Matches($line, '\${{\s*(if|elseif|else|end)[^}]*}}')
+            foreach ($match in $matches) {
+                $after = $line.Substring($match.Index + $match.Length)
+                if ([string]::IsNullOrWhiteSpace($after)) { continue }
+
+                $trimmed = $after.Trim()
+                if (-not $trimmed) { continue }
+                if ($trimmed -match '^(:\s*(#.*)?|#.*)$') { continue }
+
+                [ordered]@{
+                    File    = $file
+                    Line    = $index + 1
+                    Snippet = $line.Trim()
+                }
+            }
+        }
+    }
+
+    if ($violations) {
+        It 'does not embed directive output inside scalar content in <File>:<Line>' -TestCases $violations {
+            param($File, $Line, $Snippet)
+            $message = '{0}:{1} -> {2}' -f $File, $Line, $Snippet
+            $message | Should -BeNullOrEmpty -Because 'directive blocks must occupy the entire value'
+        }
+    }
+    else {
+        It 'has no directive formatting violations' {
+            $true | Should -BeTrue
+        }
+    }
+}
+
 Describe 'PowerShell script references' {
     $yamlFiles = Get-ChildItem -Path $templatesRoot -Include '*.yml', '*.yaml' -Recurse -File | Select-Object -ExpandProperty FullName
     $cases = foreach ($file in $yamlFiles) {
@@ -317,89 +370,89 @@ Describe 'Pipeline examples' {
 }
 
 Describe 'Azure DevOps preview (optional)' {
-    $azCli = Get-Command az -ErrorAction SilentlyContinue
-    $missingEnv = @()
-    $organizationValue = [Environment]::GetEnvironmentVariable('AZDO_ORG_SERVICE_URL')
-    if ([string]::IsNullOrEmpty($organizationValue)) {
-        $organizationValue = Get-PreviewConfigValue -Key 'OrganizationUrl'
-    }
-    if ([string]::IsNullOrEmpty($organizationValue)) {
-        $missingEnv += 'AZDO_ORG_SERVICE_URL'
-    }
+    It 'previews example pipelines via Azure DevOps' {
+        $organizationValue = [Environment]::GetEnvironmentVariable('AZDO_ORG_SERVICE_URL')
+        $previewConfig = $null
+        $previewConfigVariable = Get-Variable -Name 'previewConfig' -Scope Script -ErrorAction SilentlyContinue
+        if ($previewConfigVariable) {
+            $previewConfig = $previewConfigVariable.Value
+        }
+        if ([string]::IsNullOrEmpty($organizationValue)) {
+            if ($previewConfig -and $previewConfig.ContainsKey('OrganizationUrl')) {
+                $organizationValue = $previewConfig['OrganizationUrl']
+            }
+        }
 
-    $projectValue = [Environment]::GetEnvironmentVariable('AZDO_PROJECT')
-    if ([string]::IsNullOrEmpty($projectValue)) {
-        $projectValue = Get-PreviewConfigValue -Key 'Project'
-    }
-    if ([string]::IsNullOrEmpty($projectValue)) {
-        $missingEnv += 'AZDO_PROJECT'
-    }
+        $projectValue = [Environment]::GetEnvironmentVariable('AZDO_PROJECT')
+        if ([string]::IsNullOrEmpty($projectValue)) {
+            if ($previewConfig -and $previewConfig.ContainsKey('Project')) {
+                $projectValue = $previewConfig['Project']
+            }
+        }
 
-    if (-not $azCli) {
-        It 'skips because Azure CLI is not available' {
-            Set-ItResult -Skipped -Because 'Install Azure CLI to enable pipeline preview checks'
+        $patValue = [Environment]::GetEnvironmentVariable('AZURE_DEVOPS_EXT_PAT')
+        if ([string]::IsNullOrEmpty($patValue)) {
+            $patValue = [Environment]::GetEnvironmentVariable('AZDO_PERSONAL_ACCESS_TOKEN')
         }
-    }
-    elseif ($missingEnv.Count -gt 0) {
-        It 'skips because required Azure DevOps settings are missing' {
-            Set-ItResult -Skipped -Because 'Set AZDO_ORG_SERVICE_URL/AZDO_PROJECT or populate config/azdo-preview.config.psd1'
+        if ([string]::IsNullOrEmpty($patValue)) {
+            $patStore = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.pipeline-common/azdo_pat'
+            if (Test-Path -Path $patStore) {
+                $patValue = 'cached'
+            }
         }
-    }
-    elseif (-not $examplesRoot) {
-        It 'skips because pipeline-examples repository is unavailable' {
-            Set-ItResult -Skipped -Because 'Clone wesley-trust/pipeline-examples alongside pipeline-common'
-        }
-    }
-    else {
-        It 'previews example pipelines via Azure DevOps' {
-            $scriptPath = Join-Path $repoRoot 'scripts/preview_examples.ps1'
-            { & $scriptPath | Out-Null } | Should -Not -Throw
-        }
+
+        $organizationValue | Should -Not -BeNullOrEmpty -Because 'Set AZDO_ORG_SERVICE_URL or populate config/azdo-preview.config.psd1 with OrganizationUrl.'
+        $projectValue | Should -Not -BeNullOrEmpty -Because 'Set AZDO_PROJECT or populate config/azdo-preview.config.psd1 with Project.'
+        $patValue | Should -Not -BeNullOrEmpty -Because 'Provide AZURE_DEVOPS_EXT_PAT, AZDO_PERSONAL_ACCESS_TOKEN, or run scripts/set_azdo_pat.ps1 to cache a PAT.'
+        $examplesRoot | Should -Not -BeNullOrEmpty -Because 'Clone wesley-trust/pipeline-examples alongside pipeline-common so previews can compile consumer definitions.'
+
+        $scriptPath = Join-Path $repoRoot 'scripts/preview_examples.ps1'
+        { & $scriptPath | Out-Null } | Should -Not -Throw
     }
 }
 
 Describe 'Azure DevOps pipeline definition preview (optional)' {
-    $azCli = Get-Command az -ErrorAction SilentlyContinue
-    $missingEnv = @()
-    $organizationValue = [Environment]::GetEnvironmentVariable('AZDO_ORG_SERVICE_URL')
-    if ([string]::IsNullOrEmpty($organizationValue)) {
-        $organizationValue = Get-PreviewConfigValue -Key 'OrganizationUrl'
-    }
-    if ([string]::IsNullOrEmpty($organizationValue)) {
-        $missingEnv += 'AZDO_ORG_SERVICE_URL'
-    }
+    It 'previews configured pipeline definitions via Azure DevOps' {
+        $organizationValue = [Environment]::GetEnvironmentVariable('AZDO_ORG_SERVICE_URL')
+        $previewConfig = $null
+        $previewConfigVariable = Get-Variable -Name 'previewConfig' -Scope Script -ErrorAction SilentlyContinue
+        if ($previewConfigVariable) {
+            $previewConfig = $previewConfigVariable.Value
+        }
+        if ([string]::IsNullOrEmpty($organizationValue)) {
+            if ($previewConfig -and $previewConfig.ContainsKey('OrganizationUrl')) {
+                $organizationValue = $previewConfig['OrganizationUrl']
+            }
+        }
 
-    $projectValue = [Environment]::GetEnvironmentVariable('AZDO_PROJECT')
-    if ([string]::IsNullOrEmpty($projectValue)) {
-        $projectValue = Get-PreviewConfigValue -Key 'Project'
-    }
-    if ([string]::IsNullOrEmpty($projectValue)) {
-        $missingEnv += 'AZDO_PROJECT'
-    }
+        $projectValue = [Environment]::GetEnvironmentVariable('AZDO_PROJECT')
+        if ([string]::IsNullOrEmpty($projectValue)) {
+            if ($previewConfig -and $previewConfig.ContainsKey('Project')) {
+                $projectValue = $previewConfig['Project']
+            }
+        }
 
-    $pipelineIdsEnv = [Environment]::GetEnvironmentVariable('AZDO_PIPELINE_IDS')
-    $configPipelineIds = Get-PreviewConfigValue -Key 'PipelineIds'
-    $hasPipelineIds = -not [string]::IsNullOrEmpty($pipelineIdsEnv) -or ($configPipelineIds -and $configPipelineIds.Count -gt 0)
+        $pipelineIdsEnv = [Environment]::GetEnvironmentVariable('AZDO_PIPELINE_IDS')
+        $configPipelineIds = if ($previewConfig -and $previewConfig.ContainsKey('PipelineIds')) { $previewConfig['PipelineIds'] } else { $null }
+        $hasPipelineIds = -not [string]::IsNullOrEmpty($pipelineIdsEnv) -or ($configPipelineIds -and $configPipelineIds.Count -gt 0)
 
-    if (-not $azCli) {
-        It 'skips because Azure CLI is not available' {
-            Set-ItResult -Skipped -Because 'Install Azure CLI to enable pipeline definition preview checks'
+        $patValue = [Environment]::GetEnvironmentVariable('AZURE_DEVOPS_EXT_PAT')
+        if ([string]::IsNullOrEmpty($patValue)) {
+            $patValue = [Environment]::GetEnvironmentVariable('AZDO_PERSONAL_ACCESS_TOKEN')
         }
-    }
-    elseif ($missingEnv.Count -gt 0) {
-        It 'skips because required Azure DevOps settings are missing' {
-            Set-ItResult -Skipped -Because 'Set AZDO_ORG_SERVICE_URL/AZDO_PROJECT or populate config/azdo-preview.config.psd1'
+        if ([string]::IsNullOrEmpty($patValue)) {
+            $patStore = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.pipeline-common/azdo_pat'
+            if (Test-Path -Path $patStore) {
+                $patValue = 'cached'
+            }
         }
-    }
-    elseif (-not $hasPipelineIds) {
-        It 'skips because no pipeline identifiers are configured' {
-            Set-ItResult -Skipped -Because 'Set AZDO_PIPELINE_IDS (e.g. 132) or populate config/azdo-preview.config.psd1'
-        }
-    }
-    else {
-        It 'previews configured pipeline definitions via Azure DevOps' {
-            $scriptPath = Join-Path $repoRoot 'scripts/preview_pipeline_definitions.ps1'
-            { & $scriptPath | Out-Null } | Should -Not -Throw
-        }
+
+        $organizationValue | Should -Not -BeNullOrEmpty -Because 'Set AZDO_ORG_SERVICE_URL or populate config/azdo-preview.config.psd1 with OrganizationUrl.'
+        $projectValue | Should -Not -BeNullOrEmpty -Because 'Set AZDO_PROJECT or populate config/azdo-preview.config.psd1 with Project.'
+        $hasPipelineIds | Should -BeTrue -Because 'Set AZDO_PIPELINE_IDS (e.g. 132) or populate config/azdo-preview.config.psd1 with PipelineIds.'
+        $patValue | Should -Not -BeNullOrEmpty -Because 'Provide AZURE_DEVOPS_EXT_PAT, AZDO_PERSONAL_ACCESS_TOKEN, or run scripts/set_azdo_pat.ps1 to cache a PAT.'
+
+        $scriptPath = Join-Path $repoRoot 'scripts/preview_pipeline_definitions.ps1'
+        { & $scriptPath | Out-Null } | Should -Not -Throw
     }
 }

@@ -89,9 +89,8 @@ Maintaining the pipeline templates without immediate access to Azure DevOps vali
 - Git (used to fetch `wesley-trust/pipeline-dispatcher` into `.cache/pipeline-dispatcher`).
 - Internet access on first run so the harness can install the `Pester` (>= 5.0.0) and `powershell-yaml` modules, and to hydrate the dispatcher/pipeline repositories.
 - The `wesley-trust/pipeline-examples` repository checked out next to this repo (`../pipeline-examples`). The consumer YAML there is used as live compile targets.
-- (Optional) Azure CLI with the `azure-devops` extension for live preview checks.
-- (Optional) Populate `config/azdo-preview.config.psd1` with non-sensitive defaults (organisation URL, project name, branch refs, pipeline IDs). Secrets such as PATs stay out of source control.
-- Authenticate once with the Azure DevOps CLI (`az devops login`) so preview commands can use the cached credential.
+- Populate `config/azdo-preview.config.psd1` with non-sensitive defaults (organisation URL, project name, branch refs, pipeline IDs). Secrets such as PATs stay out of source control.
+- Provide an Azure DevOps PAT via `AZURE_DEVOPS_EXT_PAT`, `AZDO_PERSONAL_ACCESS_TOKEN`, or `scripts/set_azdo_pat.ps1` so preview requests can authenticate; the test harness now fails fast when the preview prerequisites are missing.
 
 ### Running the Tests
 ```powershell
@@ -105,27 +104,27 @@ What the runner does:
 - Parses every consumer example in `../pipeline-examples/examples/consumer` to ensure the dispatcher contracts remain valid.
 - Clones or refreshes `wesley-trust/pipeline-dispatcher` into `.cache/pipeline-dispatcher` and asserts the dispatcher template extends `templates/main.yml@PipelineCommon`.
 - Executes `scripts/ps_analyse.ps1` so PSScriptAnalyzer runs across the `scripts/` directory (warnings are reported but only errors fail the suite).
-- (Optional) Triggers Azure DevOps previews when the required CLI tooling and environment variables are present (otherwise this step is reported as skipped).
+- Triggers Azure DevOps previews and fails the run if the Azure DevOps settings or PAT are missing.
 
 The command exits non-zero on any failure, which is what we should rely on before marking work complete.
 
 ### Azure DevOps Preview (Optional)
-The test suite automatically exposes Azure DevOps preview checks when the following environment variables are set and the Azure CLI is available:
+The test suite enforces Azure DevOps preview checks and fails when the following prerequisites are absent. Make sure an Azure DevOps PAT and the key environment variables are provided before running the harness:
 
 - `AZDO_ORG_SERVICE_URL` – your organisation URL (e.g. `https://dev.azure.com/<org>`)
 - `AZDO_PROJECT` – the target project
 - `AZURE_DEVOPS_EXT_PAT` **or** `AZDO_PERSONAL_ACCESS_TOKEN` – a PAT with at least `Read & execute` permissions for Pipelines
 - (Definition preview only) `AZDO_PIPELINE_IDS` – comma-separated pipeline IDs (e.g. `132`)
 
-When these are present, `tests/Templates.Tests.ps1` runs two optional checks:
+When these are present, `tests/Templates.Tests.ps1` runs two checks:
 
 1. `scripts/preview_examples.ps1`
-   - Ensures the `azure-devops` CLI extension is installed.
-   - Calls the `pipelines/preview` REST endpoint for every example `*.pipeline.yml`, injecting repository overrides for `wesley-trust/pipeline-common` and `wesley-trust/pipeline-dispatcher`.
+   - Calls the hidden `_apis/pipelines/{id}/runs?api-version=7.1-preview.1` endpoint with `previewRun = true`, injecting repository overrides for `wesley-trust/pipeline-common` and `wesley-trust/pipeline-dispatcher`.
+   - Sends the pipeline YAML as `yamlOverride` so Azure DevOps validates the exact template content in this workspace.
    - Fails the run if Azure DevOps returns validation or compilation errors.
 
 2. `scripts/preview_pipeline_definitions.ps1`
-   - Uses the `run-pipeline` REST API with `previewRun = true` for each configured pipeline ID (e.g. definition 132).
+   - Uses the same `_apis/pipelines/{id}/runs?api-version=7.1-preview.1` endpoint with `previewRun = true` for each configured pipeline ID (e.g. definition 132).
    - Overrides the repository refs so Azure DevOps compiles the pipeline using the current branch of `pipeline-common`/`pipeline-dispatcher` before you queue a real run.
    - Surfaces validation issues returned from the service as test failures.
 
@@ -141,8 +140,6 @@ pwsh -File scripts/preview_pipeline_definitions.ps1
 ```
 
 Use the `-PipelineCommonRef`, `-PipelineDispatcherRef`, or `-ExamplesBranch` switches to align the preview with a feature branch.
-
-If you prefer to avoid setting environment variables, run `az devops login` once (paste your PAT when prompted). The CLI caches the token securely and the preview scripts will reuse it until it expires.
 
 To avoid exporting the same non-sensitive values repeatedly, store them in `config/azdo-preview.config.psd1` (already seeded with the wesleytrust defaults). The harness loads that file automatically; you only need to supply a PAT via `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN`.
 
