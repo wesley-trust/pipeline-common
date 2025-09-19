@@ -50,7 +50,7 @@ switch ($Scope) {
       else {
         #az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
         az stack group create `
-          --name $ResourceGroupName `
+          --name "ds-$ResourceGroupName" `
           --resource-group $ResourceGroupName `
           --template-file $Template `
           @paramArgs `
@@ -76,7 +76,7 @@ switch ($Scope) {
       else {
         #az deployment sub create --location $Location --template-file $Template @paramArgs --only-show-errors
         az stack sub create `
-          --name $ResourceGroupName `
+          --name "ds-sub-$ResourceGroupName" `
           --location $Location `
           --template-file $Template `
           @paramArgs `
