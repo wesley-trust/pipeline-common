@@ -48,7 +48,15 @@ switch ($Scope) {
         az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $AdditionalParameters $modeArgs --only-show-errors
       }
       else {
-        az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
+        #az deployment group create --resource-group $ResourceGroupName --template-file $Template @paramArgs $modeArgs --only-show-errors
+        az stack group create `
+          --name $ResourceGroupName `
+          --location $Location `
+          --template-file $Template `
+          @paramArgs `
+          --action-on-unmanage detachAll `
+          --deny-settings-mode denyDelete `
+          --only-show-errors
       }
     }
   }
