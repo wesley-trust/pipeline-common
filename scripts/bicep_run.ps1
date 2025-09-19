@@ -12,7 +12,7 @@ param(
   [string]$OutFile = 'whatif.txt',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
   [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
-  [bool]$AllowDeleteOnUnmanage = $false
+  [object]$AllowDeleteOnUnmanage = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -146,7 +146,25 @@ if ($ModeOverride) {
 $paramArgs = @()
 if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
-$allowDelete = [bool]$AllowDeleteOnUnmanage
+
+function ConvertTo-BooleanValue {
+  param($Value)
+
+  switch ($Value) {
+    { $_ -is [bool] } { return $_ }
+    { $_ -is [int] } { return [bool]$_ }
+    { $_ -is [string] } {
+      $normalized = $_.Trim()
+      if ($normalized -match '^(?i:true|1)$') { return $true }
+      if ($normalized -match '^(?i:false|0)$') { return $false }
+      break
+    }
+  }
+
+  throw 'AllowDeleteOnUnmanage must be a boolean-compatible value (true/false, 1/0).'
+}
+
+$allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
 
 switch ($Scope) {
   'resourceGroup' {
