@@ -63,11 +63,10 @@ switch ($Scope) {
     }
     else {
       if ($AdditionalParameters) {
-        $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-        az deployment sub create --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters --only-show-errors
+        az deployment sub create --location $Location --template-file $Template @paramArgs $AdditionalParameters --only-show-errors
       }
       else {
-        az deployment sub create --location $Location --template-file $Template @paramArgs $modeArgs --only-show-errors
+        az deployment sub create --location $Location --template-file $Template @paramArgs --only-show-errors
       }
     }
   }
@@ -77,8 +76,7 @@ switch ($Scope) {
       az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
     else {
-      $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment mg create -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters
+      az deployment mg create -m $ManagementGroupId --location $Location --template-file $Template @paramArgs $AdditionalParameters
     }
   }
   'tenant' {
@@ -86,8 +84,7 @@ switch ($Scope) {
       az deployment tenant what-if --location $Location --template-file $Template @paramArgs $AdditionalParameters | Tee-Object -FilePath $OutFile
     }
     else {
-      $modeArgs = @(); if ($Mode) { $modeArgs += '--mode'; $modeArgs += $Mode }
-      az deployment tenant create --location $Location --template-file $Template @paramArgs $modeArgs $AdditionalParameters
+      az deployment tenant create --location $Location --template-file $Template @paramArgs $AdditionalParameters
     }
   }
 }
