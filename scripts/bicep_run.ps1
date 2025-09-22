@@ -178,19 +178,25 @@ switch ($Scope) {
       $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
       
       if ($WhatIf) {
-<#         $Stack = az stack group show `
+        # $Stack = az stack group show `
+        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+        #   --resource-group $ResourceGroupName `
+        #   --only-show-errors `
+        #   --output json 2>$null | ConvertFrom-Json 
+
+        # $Stack = az stack group show `
+        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+        #   --resource-group $ResourceGroupName `
+        #   --only-show-errors `
+        #   --output json | ConvertFrom-Json
+
+        az stack group show `
           --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
           --resource-group $ResourceGroupName `
           --only-show-errors `
-          --output json 2>$null | ConvertFrom-Json #>
+          --output json
 
-        $Stack = az stack group show `
-          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-          --resource-group $ResourceGroupName `
-          --only-show-errors `
-          --output json | ConvertFrom-Json
-
-        Write-Host $Stack
+        break
 
         if ($Stack) {
           $ManagedResources = foreach ($Change in $whatIf.changes) {
