@@ -173,39 +173,49 @@ switch ($Scope) {
       az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
       
       # Check against deployment stack
-      $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-            
       Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
       
-      $Stack = az stack group show `
-        --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-        --resource-group $ResourceGroupName `
-        --only-show-errors `
-        --output json 2>$null | ConvertFrom-Json
-
-      Write-Host $Stack
+      $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
       
-      if ($Stack) {
-        $ManagedResources = foreach ($Change in $whatIf.changes) {
+      if ($WhatIf) {
+<#         $Stack = az stack group show `
+          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          --resource-group $ResourceGroupName `
+          --only-show-errors `
+          --output json 2>$null | ConvertFrom-Json #>
 
-          $Resource = @{}
-          $Resource.Add("ResourceId", $Change.resourceId)
-          $Resource.Add("ChangeType", $Change.ChangeType)
+        $Stack = az stack group show `
+          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          --resource-group $ResourceGroupName `
+          --only-show-errors `
+          --output json | ConvertFrom-Json
+
+        Write-Host $Stack
+
+        if ($Stack) {
+          $ManagedResources = foreach ($Change in $whatIf.changes) {
+
+            $Resource = @{}
+            $Resource.Add("ResourceId", $Change.resourceId)
+            $Resource.Add("ChangeType", $Change.ChangeType)
             
-          if ($Change.resourceId -in $Stack.resources.id) {
-            $Resource.Add("ManagedResource", $true)
+            if ($Change.resourceId -in $Stack.resources.id) {
+              $Resource.Add("ManagedResource", $true)
+            }
+            else {
+              $Resource.Add("ManagedResource", $false)
+            }
           }
-
-          else {
-            $Resource.Add("ManagedResource", $false)
+          if ($ManagedResources) {
+            $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
           }
         }
-        if ($ManagedResources) {
-          $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+        else {
+          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
         }
       }
       else {
-        Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+        Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
       }
     }
     else {
