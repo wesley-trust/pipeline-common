@@ -177,11 +177,14 @@ switch ($Scope) {
         '--name', (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName),
         '--resource-group', $ResourceGroupName,
         '--template-file', $Template
+        '--deny-settings-mode', 'denyDelete'
+        '--deny-settings-apply-to-child-scopes'
+        '--only-show-errors'
       )
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
@@ -208,11 +211,13 @@ switch ($Scope) {
         '--name', (Get-StackName -Prefix 'ds-sub' -Identifier $stackIdentifier),
         '--location', $Location,
         '--template-file', $Template
+        '--deny-settings-mode', 'denyDelete'
+        '--only-show-errors'
       )
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
@@ -241,11 +246,13 @@ switch ($Scope) {
         '--management-group-id', $ManagementGroupId,
         '--location', $Location,
         '--template-file', $Template
+        '--deny-settings-mode', 'denyDelete'
+        '--only-show-errors'
       )
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      $stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
+      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
