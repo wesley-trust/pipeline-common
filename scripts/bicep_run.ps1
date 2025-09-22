@@ -10,6 +10,7 @@ param(
   [string]$ManagementGroupId = '',
   [string]$SubscriptionId = '',
   [string]$OutFile = 'whatif.txt',
+  [string]$StackOutFile = 'stack.txt',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
   [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
   [object]$AllowDeleteOnUnmanage = $false
@@ -170,6 +171,49 @@ switch ($Scope) {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
       az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
+      
+      # Check against deployment stack
+      $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      
+      if ($WhatIf) {
+        $WhatIfChanges = $whatIf.properties.changes
+      }
+      
+      if ($WhatIfChanges) {
+        Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
+        $Stack = az stack group show `
+          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          --resource-group $ResourceGroupName `
+          --only-show-errors `
+          --output json 2>$null | ConvertFrom-Json
+      
+        if ($Stack) {
+          $StackResourceIds = $Stack.resources.id
+        }
+
+        if ($StackResourceIds) {
+          $ManagedResources = foreach ($Change in $WhatIfChanges) {
+
+            $Resource = @{}
+            $Resource.Add("ResourceId", $Change.resourceId)
+            $Resource.Add("ChangeType", $Change.ChangeType)
+            
+            if ($Change.resourceId -in $StackResourceIds) {
+              $Resource.Add("ManagedResource", $true)
+            }
+
+            else {
+              $Resource.Add("ManagedResource", $false)
+            }
+          }
+        }
+        if ($ManagedResources) {
+          $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+        }
+        else {
+          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+        }
+      }
     }
     else {
       $stackCommandBase = @(

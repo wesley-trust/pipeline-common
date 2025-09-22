@@ -229,6 +229,11 @@ jobs:
                   displayName: Publish What-If Output (${{ upper(coalesce(action.name, 'bicep')) }})
                   artifactName: bicep-whatif-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                   targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
+              - template: ../../steps/publish-artifact.yml@PipelineCommon
+                parameters:
+                  displayName: Publish What-If Stack Output (${{ upper(coalesce(action.name, 'bicep')) }})
+                  artifactName: bicep-stack-review-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
+                  targetPath: ${{ format('{0}/stack.txt', '$(Pipeline.Workspace)/locked-sources') }}
 
       # PowerShell Action
       # - ${{ if eq(parameters.actionGroup.type, 'powershell') }}:
