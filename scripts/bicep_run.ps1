@@ -240,8 +240,12 @@ switch ($Scope) {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     
       # Check against deployment stack
-      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      #$WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | Tee-Object -FilePath $StackOutFile
       
+      
+      break
+
       if ($WhatIf) {
         $WhatIfChanges = $whatIf.properties.changes
       }
