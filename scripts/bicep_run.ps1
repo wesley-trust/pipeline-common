@@ -259,18 +259,11 @@ switch ($Scope) {
           --only-show-errors `
           --output json 2>$null | ConvertFrom-Json
 
-        # $Stack = az stack group show `
-        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-        #   --resource-group $ResourceGroupName `
-        #   --only-show-errors `
-        #   --output json | ConvertFrom-Json
-
-        az stack sub show `
-          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
+        $Stack = az stack group show `
+          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          --resource-group $ResourceGroupName `
           --only-show-errors `
           --output json | ConvertFrom-Json
-
-        break
 
         if ($Stack) {
           $ManagedResources = foreach ($Change in $whatIf.changes) {
