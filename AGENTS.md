@@ -82,6 +82,7 @@
 4. Coordinate dispatcher updates alongside template changes to keep consumers pinned to compatible versions.
 5. Before making any edits, confirm you are working on a dedicated `feature/*` or `bugfix/*` branch; if you are on `main`, create the appropriate branch first, then commit and push your work there so Azure DevOps validations track the right branch.
 6. Once your initial changes are committed and pushed, open a draft pull request and keep it updated until the work is ready for full review.
+7. Do not run `scripts/invoke_local_tests.ps1` (or the harness it wraps) until the changes under test are committed and pushed; when the suite fails, fix the issue locally, commit, push, and only then rerun the tests.
 
 ## Local Validation Guide
 
@@ -95,6 +96,12 @@ Maintaining the pipeline templates without immediate access to Azure DevOps vali
 - The `wesley-trust/pipeline-examples` repository checked out next to this repo (`../pipeline-examples`). The consumer YAML there is used as live compile targets.
 - Populate `config/azdo-preview.config.psd1` with non-sensitive defaults (organisation URL, project name, branch refs, pipeline IDs). Secrets such as PATs stay out of source control.
 - Provide an Azure DevOps PAT via `AZURE_DEVOPS_EXT_PAT`, `AZDO_PERSONAL_ACCESS_TOKEN`, or `scripts/set_azdo_pat.ps1` so preview requests can authenticate; the test harness now fails fast when the preview prerequisites are missing.
+
+### Required Workflow
+- Always work from a branch that exists remotely (usually `feature/*` or `bugfix/*`).
+- Commit the exact changes you intend to validate (which ust be pushed to the remote) before invoking `scripts/invoke_local_tests.ps1`.
+- Push those commits so the remote branch tip matches your workspace; the Azure DevOps preview endpoints only compile what is available remotely.
+- When the harness reports a failure, apply the fix, commit it, push again, and rerun the suite. Never rerun on unpushed work.
 
 ### Running the Tests
 ```powershell
