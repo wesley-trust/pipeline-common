@@ -249,6 +249,57 @@ switch ($Scope) {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     
       # Check against deployment stack
+      Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
+      
+      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      
+      if ($WhatIf) {
+        $Stack = az stack sub show `
+          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
+          --only-show-errors `
+          --output json 2>$null | ConvertFrom-Json
+
+        # $Stack = az stack group show `
+        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+        #   --resource-group $ResourceGroupName `
+        #   --only-show-errors `
+        #   --output json | ConvertFrom-Json
+
+        az stack sub show `
+          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
+          --only-show-errors `
+          --output json | ConvertFrom-Json
+
+        break
+
+        if ($Stack) {
+          $ManagedResources = foreach ($Change in $whatIf.changes) {
+
+            $Resource = @{}
+            $Resource.Add("ResourceId", $Change.resourceId)
+            $Resource.Add("ChangeType", $Change.ChangeType)
+            
+            if ($Change.resourceId -in $Stack.resources.id) {
+              $Resource.Add("ManagedResource", $true)
+            }
+            else {
+              $Resource.Add("ManagedResource", $false)
+            }
+          }
+          if ($ManagedResources) {
+            $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+          }
+        }
+        else {
+          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+        }
+      }
+      else {
+        Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
+      }
+
+
+      # Check against deployment stack
       $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
 
       if ($WhatIf) {
