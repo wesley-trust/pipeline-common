@@ -176,7 +176,7 @@ switch ($Scope) {
       $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
       
       if ($WhatIf) {
-        $WhatIfChanges = $whatIf.properties.changes
+        $WhatIfChanges = $whatIf.changes
       }
       
       if ($WhatIfChanges) {
@@ -240,14 +240,10 @@ switch ($Scope) {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     
       # Check against deployment stack
-      #$WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | Tee-Object -FilePath $StackOutFile
-      
-      
-      break
+      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
 
       if ($WhatIf) {
-        $WhatIfChanges = $whatIf.properties.changes
+        $WhatIfChanges = $whatIf.changes
       }
       
       if ($WhatIfChanges) {
@@ -268,7 +264,7 @@ switch ($Scope) {
             $Resource.Add("ResourceId", $Change.resourceId)
             $Resource.Add("ChangeType", $Change.ChangeType)
             
-            if ($Change.resourceId -in $StackResourceIds) {
+            if ($Change.resourceId -in $StackResourceIds -and $Change.ChangeType -ne "Ignore") {
               $Resource.Add("ManagedResource", $true)
             }
 
