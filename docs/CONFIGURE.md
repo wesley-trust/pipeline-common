@@ -66,6 +66,8 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   postDeploy: { scripts: [ { script, arguments } ] }
   tokenReplaceEnabled: true|false
   tokenTargetPatterns: ['path/**/pattern']
+  tokenPrefix: '#{{'
+  tokenSuffix: '}}'
 
   # Terraform specifics:
   workingDirectory: infra/terraform
@@ -128,10 +130,12 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - Centralised via `templates/steps/replace-tokens.yml` (requires Qetza Replace Tokens extension).
 - Multiple targets supported per task via `tokenTargetPatterns` array.
-- Defaults if not specified:
-  - Terraform: `**/*.tfvars` under a task’s working directory.
-  - Bicep: `**/*.bicepparam`.
-- Applied in review (plan/what-if) and deployment phases; can be overridden per task; disable with `tokenReplaceEnabled: false`.
+- Configure at either the `actionGroup` or individual `action` level. Actions inherit prefix/suffix defaults from their parent.
+- Defaults when enabled and `tokenTargetPatterns` are omitted:
+  - `actionGroup.tokenReplaceEnabled: true` → Terraform action groups evaluate `**/*.tfvars` in each declared `workingDirectory`; Bicep action groups evaluate `**/*.bicepparam` once per group.
+  - `action.tokenReplaceEnabled: true` → Terraform actions continue to target `**/*.tfvars` under their `workingDirectory`; Bicep actions target only their declared `parametersFile` to avoid double-processing shared parameter assets.
+- Override defaults with `tokenTargetPatterns` on the relevant scope; omit the property to fall back to the behaviour above. `tokenPrefix`/`tokenSuffix` honour the same inheritance (action → actionGroup → default `#{{` / `}}`).
+- Applied in review (plan/what-if) and deployment phases; disable with `tokenReplaceEnabled: false` on either scope. PowerShell validation/review runs accept the same flags.
 
 ## Additional Repository Checkouts
 
