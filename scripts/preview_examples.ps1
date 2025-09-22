@@ -15,6 +15,43 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $configPath = Join-Path $repoRoot 'config/azdo-preview.config.psd1'
+function Get-RepoHeadRef {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [string]$Fallback = 'refs/heads/main'
+    )
+
+    try {
+        $git = Get-Command git -ErrorAction Stop
+    }
+    catch {
+        return $Fallback
+    }
+
+    try {
+        $symbolicRef = & $git.Path -C $Path symbolic-ref --quiet HEAD 2>$null
+        if ($LASTEXITCODE -eq 0 -and $symbolicRef) {
+            return $symbolicRef.Trim()
+        }
+    }
+    catch {
+        $symbolicRef = $null
+    }
+
+    try {
+        $branchName = & $git.Path -C $Path rev-parse --abbrev-ref HEAD 2>$null
+        if ($LASTEXITCODE -eq 0 -and $branchName -and $branchName -ne 'HEAD') {
+            return "refs/heads/$branchName"
+        }
+    }
+    catch {
+        $branchName = $null
+    }
+
+    return $Fallback
+}
+
 if (Test-Path -Path $configPath) {
     $config = Import-PowerShellDataFile -Path $configPath
     if (-not $Organization -and $config.OrganizationUrl) { $Organization = $config.OrganizationUrl }
@@ -27,7 +64,7 @@ if (Test-Path -Path $configPath) {
 }
 
 if (-not $ExamplesBranch) { $ExamplesBranch = 'refs/heads/main' }
-if (-not $PipelineCommonRef) { $PipelineCommonRef = 'refs/heads/main' }
+if (-not $PipelineCommonRef) { $PipelineCommonRef = Get-RepoHeadRef -Path $repoRoot }
 if (-not $PipelineDispatcherRef) { $PipelineDispatcherRef = 'refs/heads/main' }
 
 if (-not $Organization) { throw 'Set AZDO_ORG_SERVICE_URL or pass -Organization.' }

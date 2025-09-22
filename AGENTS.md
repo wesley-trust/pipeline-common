@@ -63,6 +63,8 @@
   - Run `pwsh` linting locally where feasible (`pwsh -File scripts/ps_analyse.ps1` etc.).
   - For YAML templates, rely on Azure DevOps pipeline validation (`az pipelines validate` or Draft runs) – document expected compile-time behaviour if you cannot execute it.
   - Ensure documentation (this file and `docs/CONFIGURE.md`) reflects behavioural changes.
+- Remote Azure DevOps validations (previews and pipeline runs) execute against the branch that exists in Azure DevOps. Commit and push your work—ideally on a `feature/*` or `bugfix/*` branch—before triggering them, and push any fixes before re-running.
+- Do not run (or rely on automated triggers for) the Azure DevOps validation suite from an unpushed state. Create/switch to a `feature/*` or `bugfix/*` branch, commit the changes, and push before the first run; repeat the commit-and-push cycle before each rerun after addressing issues.
 - Ensure Replace Tokens extension (`qetza.replacetokens`) and Azure Key Vault task are available in target organisations; templates assume v5 of Replace Tokens.
 
 ## Operational Gotchas
@@ -78,6 +80,8 @@
 2. Clone or reference `wesley-trust/pipeline-examples` to reproduce consumer setups; copy the settings structure when introducing new features.
 3. Document any template/script changes in this file and, when appropriate, `docs/CONFIGURE.md`.
 4. Coordinate dispatcher updates alongside template changes to keep consumers pinned to compatible versions.
+5. Before making any edits, confirm you are working on a dedicated `feature/*` or `bugfix/*` branch; if you are on `main`, create the appropriate branch first, then commit and push your work there so Azure DevOps validations track the right branch.
+6. Once your initial changes are committed and pushed, open a draft pull request and keep it updated until the work is ready for full review.
 
 ## Local Validation Guide
 
@@ -108,8 +112,11 @@ What the runner does:
 
 The command exits non-zero on any failure, which is what we should rely on before marking work complete.
 
+Note: the harness calls Azure DevOps preview endpoints as part of the run. Because those previews compile the branch tip from the remote service, automated tests only execute against commits that have been pushed. Uncommitted or unpushed edits are ignored, so make sure your changes are committed and pushed before invoking the suite. Push follow-up commits before rerunning so the service validates the latest state, and always run the harness from the feature/bugfix branch that contains your changes.
+The preview helpers identify the currently checked-out Git branch for `pipeline-common` and send that ref to Azure DevOps automatically (falling back to `refs/heads/main` only if the branch cannot be resolved), so the remote validation always mirrors your active branch once it is pushed.
+
 ### Azure DevOps Preview (Optional)
-The test suite enforces Azure DevOps preview checks and fails when the following prerequisites are absent. Make sure an Azure DevOps PAT and the key environment variables are provided before running the harness:
+The test suite enforces Azure DevOps preview checks and fails when the following prerequisites are absent. These previews work for any branch that exists in Azure DevOps (e.g. `main`, `feature/*`, `bugfix/*`); the branch ref comes from the commit you push or the overrides you supply. Make sure an Azure DevOps PAT and the key environment variables are provided before running the harness:
 
 - `AZDO_ORG_SERVICE_URL` – your organisation URL (e.g. `https://dev.azure.com/<org>`)
 - `AZDO_PROJECT` – the target project
@@ -154,3 +161,4 @@ When a regression slips through, add a targeted assertion to `tests/Templates.Te
 - Run `pwsh -File scripts/invoke_local_tests.ps1` before pushing.
 - If the suite fails, fix the template/script first; do not ignore warnings without converting them into explicit excludes.
 - Update this document whenever the validation flow changes so the team stays aligned.
+- When automated Azure DevOps validations trigger (manually or via CI), ensure the branch already exists remotely. Commit and push fixes before rerunning so the next validation has the updated source.
