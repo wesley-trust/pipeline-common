@@ -218,7 +218,7 @@ stages:
                                       -ManagementGroupId "${{ action.managementGroupId }}"
                                       -SubscriptionId "${{ action.subscriptionId }}"
                                       -ModeOverride "${{ parameters.bicepModeOverride }}"
-                                      -Mode "${{ coalesce(action.mode, 'incremental') }}"
+                                      -Mode "${{ if(eq(coalesce(action.allowDeleteOnUnmanage, false), true), 'complete', coalesce(action.mode, 'incremental')) }}"
                                       -AllowDeleteOnUnmanage ${{ format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)) }}
                                     ${{ if ne(action.condition, '') }}:
                                       condition: ${{ action.condition }}
