@@ -20,7 +20,14 @@ if ($Action -eq 'validate') {
 terraform init
 
 if ($EnvironmentName) {
-  try { terraform workspace new $EnvironmentName | Out-Null } catch {}
+  try {
+    terraform workspace new $EnvironmentName | Out-Null
+  }
+  catch {
+    if ($_.Exception.Message -notmatch 'already exists') {
+      throw $_
+    }
+  }
   terraform workspace select $EnvironmentName
 }
 
@@ -32,6 +39,9 @@ foreach ($f in $VarFiles) {
 }
 
 switch ($Action) {
-  'plan' { terraform plan -out=$PlanFile @tfArgs }
+  'plan' {
+    Write-Verbose ("Terraform plan output file: {0}" -f $PlanFile)
+    terraform plan -out=$PlanFile @tfArgs
+  }
   'apply' { terraform apply -auto-approve @tfArgs }
 }

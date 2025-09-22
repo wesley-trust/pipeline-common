@@ -225,6 +225,16 @@ switch ($Scope) {
       az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs @additionalParamArgs | Tee-Object -FilePath $OutFile
     }
     else {
+      $stackIdentifier = if (-not [string]::IsNullOrWhiteSpace($SubscriptionId)) {
+        $SubscriptionId
+      }
+      elseif (-not [string]::IsNullOrWhiteSpace($ManagementGroupId)) {
+        $ManagementGroupId
+      }
+      else {
+        throw 'Either ManagementGroupId or SubscriptionId is required to compute the stack name for management group scope.'
+      }
+
       $stackCommandBase = @(
         'stack', 'mg', 'create',
         '--name', (Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId),

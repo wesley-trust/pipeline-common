@@ -11,9 +11,10 @@ $branchFull = $env:BUILD_SOURCEBRANCH
 $branchName = $env:BUILD_SOURCEBRANCHNAME
 if (-not $branchFull) { Write-Information -InformationAction Continue -MessageData 'No branch variable found'; exit 0 }
 
-function Normalise-List([object[]]$items) {
-  if (-not $items) { return @() }
-  return $items |
+function ConvertTo-NormalizedList {
+  param([object[]]$Items)
+  if (-not $Items) { return @() }
+  return $Items |
   ForEach-Object { if ($null -eq $_) { '' } else { $_.ToString() } } |
   ForEach-Object { $_.Trim() } |
   Where-Object { $_ -ne '' }
@@ -40,16 +41,20 @@ if ((-not $AllowedBranches) -and (-not $fromCsv) -and -not [string]::IsNullOrWhi
   }
 }
 
-$AllowedBranches = Normalise-List -items @($AllowedBranches + $fromCsv + $fromJson)
+$AllowedBranches = ConvertTo-NormalizedList -Items @($AllowedBranches + $fromCsv + $fromJson)
 
 if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
   Write-Information -InformationAction Continue -MessageData "No branch restrictions configured."
   exit 0
 }
 
-function Match-Pattern($text, $pattern) {
-  $regex = '^' + [Regex]::Escape($pattern).Replace('\*', '.*') + '$'
-  return [Regex]::IsMatch($text, $regex)
+function Test-BranchPattern {
+  param(
+    [string]$Text,
+    [string]$Pattern
+  )
+  $regex = '^' + [Regex]::Escape($Pattern).Replace('\*', '.*') + '$'
+  return [Regex]::IsMatch($Text, $regex)
 }
 
 $allowed = $false
@@ -60,7 +65,7 @@ if ($AllowedBranches -contains '*') {
 }
 else {
   foreach ($p in $AllowedBranches) {
-    if (Match-Pattern $branchName $p -or Match-Pattern $branchFull $p) { $allowed = $true; break }
+    if (Test-BranchPattern -Text $branchName -Pattern $p -or Test-BranchPattern -Text $branchFull -Pattern $p) { $allowed = $true; break }
   }
 }
 

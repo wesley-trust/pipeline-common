@@ -63,7 +63,10 @@ try {
 
         Set-Content -Path $patStorePath -Value $plainText -Encoding utf8 -Force
 
-        try { chmod 600 $patStorePath } catch { }
+        try { chmod 600 $patStorePath }
+        catch {
+            Write-Warning ("Failed to set permissions on {0}: {1}" -f $patStorePath, $_)
+        }
 
         Write-Information -InformationAction Continue -MessageData ("Stored Azure DevOps PAT at {0}" -f $patStorePath)
     }

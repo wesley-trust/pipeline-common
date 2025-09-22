@@ -4,7 +4,6 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 Write-Information -InformationAction Continue -MessageData "Installing Terraform $Version"
-$os = $PSStyle.Platform
 if ($IsWindows) { $platform = 'windows_amd64' }
 elseif ($IsLinux) { $platform = 'linux_amd64' }
 elseif ($IsMacOS) { $platform = 'darwin_amd64' } else { throw 'Unsupported OS' }
@@ -23,4 +22,3 @@ else {
   sudo chmod +x "$dest/terraform"
 }
 terraform -version
-
