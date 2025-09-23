@@ -34,17 +34,19 @@ jobs:
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'powershell'), ne(coalesce(actionGroup.actions, ''), '')) }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - template: ../../steps/powershell.yml@PipelineCommon
-                    parameters:
-                      displayName: PSScriptAnalyzer (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
-                      repoAlias: PipelineCommon
-                      script: ps_analyse.ps1
-                      arguments: -Path "$(Pipeline.Workspace)/locked-sources/${{ coalesce(action.analysePath, 'scripts') }}"
-      - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
-          - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
-            parameters:
-              displayName: Import Key Vault Secrets
-              azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
-              keyVaultName: ${{ parameters.keyVault.name }}
-              secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
+              - ${{ if ne(actionGroup.enabled, false) }}:
+                  - ${{ each action in actionGroup.actions }}:
+                      - ${{ if ne(action.enabled, false) }}:
+                          - template: ../../steps/powershell.yml@PipelineCommon
+                            parameters:
+                              displayName: PSScriptAnalyzer (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
+                              repoAlias: PipelineCommon
+                              script: ps_analyse.ps1
+                              arguments: -Path "$(Pipeline.Workspace)/locked-sources/${{ coalesce(action.analysePath, 'scripts') }}"
+          - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
+              - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
+                parameters:
+                  displayName: Import Key Vault Secrets
+                  azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+                  keyVaultName: ${{ parameters.keyVault.name }}
+                  secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}

@@ -34,13 +34,15 @@ jobs:
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'terraform'), ne(coalesce(actionGroup.actions, ''), '')) }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - template: ../../steps/powershell.yml@PipelineCommon
-                    parameters:
-                      displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
-                      repoAlias: PipelineCommon
-                      script: terraform_lint.ps1
-                      arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+              - ${{ if ne(actionGroup.enabled, false) }}:
+                  - ${{ each action in actionGroup.actions }}:
+                      - ${{ if ne(action.enabled, false) }}:
+                          - template: ../../steps/powershell.yml@PipelineCommon
+                            parameters:
+                              displayName: Terraform Lint/Validate (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
+                              repoAlias: PipelineCommon
+                              script: terraform_lint.ps1
+                              arguments: -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:

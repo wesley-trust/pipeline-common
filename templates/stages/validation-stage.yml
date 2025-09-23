@@ -133,26 +133,28 @@ stages:
       # Invoke PowerShell actions in Validation when requested
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'powershell'), ne(coalesce(actionGroup.actions, ''), '')) }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - ${{ if eq(coalesce(action.runInValidation, false), true) }}:
-                      - template: ../jobs/run-powershell.yml@PipelineCommon
-                        parameters:
-                          name: ${{ coalesce(action.name, 'ps') }}_validation
-                          displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Validation)
-                          scriptPath: ${{ action.scriptPath }}
-                          scriptFullPath: ""
-                          arguments: ${{ action.arguments }}
-                          variableRoot: ${{ parameters.variableRoot }}
-                          environmentName: ""
-                          region: ""
-                          useLockedSources: true
-                          lockedArtifactName: source-snapshot
-                          lockedSourcePath: $(Pipeline.Workspace)/locked-sources
-                          tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
-                          tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, createArray()) }}
-                          tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
-                          tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
-                          delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
-                          additionalRepositories: ${{ parameters.additionalRepositories }}
-                          keyVault: ${{ parameters.keyVault }}
-                          serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              - ${{ if ne(actionGroup.enabled, false) }}:
+                  - ${{ each action in actionGroup.actions }}:
+                      - ${{ if ne(action.enabled, false) }}:
+                          - ${{ if eq(coalesce(action.runInValidation, false), true) }}:
+                              - template: ../jobs/run-powershell.yml@PipelineCommon
+                                parameters:
+                                  name: ${{ coalesce(action.name, 'ps') }}_validation
+                                  displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Validation)
+                                  scriptPath: ${{ action.scriptPath }}
+                                  scriptFullPath: ""
+                                  arguments: ${{ action.arguments }}
+                                  variableRoot: ${{ parameters.variableRoot }}
+                                  environmentName: ""
+                                  region: ""
+                                  useLockedSources: true
+                                  lockedArtifactName: source-snapshot
+                                  lockedSourcePath: $(Pipeline.Workspace)/locked-sources
+                                  tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
+                                  tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, createArray()) }}
+                                  tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
+                                  tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
+                                  delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
+                                  additionalRepositories: ${{ parameters.additionalRepositories }}
+                                  keyVault: ${{ parameters.keyVault }}
+                                  serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}

@@ -41,10 +41,12 @@ jobs:
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'bicep'), ne(coalesce(actionGroup.actions, ''), '')) }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - template: ../../steps/azurecli.yml@PipelineCommon
-                    parameters:
-                      displayName: Bicep Lint (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
-                      repoAlias: PipelineCommon
-                      script: bicep_lint.ps1
-                      arguments: -SearchPath "$(Pipeline.Workspace)/locked-sources"
+              - ${{ if ne(actionGroup.enabled, false) }}:
+                  - ${{ each action in actionGroup.actions }}:
+                      - ${{ if ne(action.enabled, false) }}:
+                          - template: ../../steps/azurecli.yml@PipelineCommon
+                            parameters:
+                              displayName: Bicep Lint (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
+                              repoAlias: PipelineCommon
+                              script: bicep_lint.ps1
+                              arguments: -SearchPath "$(Pipeline.Workspace)/locked-sources"

@@ -34,16 +34,18 @@ jobs:
           downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if ne(coalesce(actionGroup.actions, ''), '') }}:
-              - ${{ each action in actionGroup.actions }}:
-                  - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                      - template: ../../steps/powershell.yml@PipelineCommon
-                        parameters:
-                          displayName: Validate token patterns (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'ACTION'), '_', ' '))) }})
-                          repoAlias: PipelineCommon
-                          script: validate_token_targets.ps1
-                          arguments: >-
-                            -RootPath "$(Pipeline.Workspace)/locked-sources"
-                            -Patterns @('${{ join(action.tokenTargetPatterns, ''',''') }}')
+              - ${{ if ne(actionGroup.enabled, false) }}:
+                  - ${{ each action in actionGroup.actions }}:
+                      - ${{ if ne(action.enabled, false) }}:
+                          - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                              - template: ../../steps/powershell.yml@PipelineCommon
+                                parameters:
+                                  displayName: Validate token patterns (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'ACTION'), '_', ' '))) }})
+                                  repoAlias: PipelineCommon
+                                  script: validate_token_targets.ps1
+                                  arguments: >-
+                                    -RootPath "$(Pipeline.Workspace)/locked-sources"
+                                    -Patterns @('${{ join(action.tokenTargetPatterns, ''',''') }}')
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
             parameters:
