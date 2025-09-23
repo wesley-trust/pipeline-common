@@ -272,6 +272,7 @@ stages:
                                         script: bicep_run.ps1
                                         arguments: >-
                                           -Action "deploy"
+                                          -Name "${{ action.name }}"
                                           -Scope "${{ action.scope }}"
                                           -ResourceGroupName "${{ action.resourceGroupName }}"
                                           -Location "${{ action.location }}"
