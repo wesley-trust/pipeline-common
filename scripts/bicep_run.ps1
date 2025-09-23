@@ -219,6 +219,7 @@ switch ($Scope) {
               }
               if ($StackResources) {
                 Write-Information -InformationAction Continue -MessageData "Exporting Analysis of What-If Resources against Deployment Stack Resources" 
+                Write-Information -InformationAction Continue -MessageData "Analysis is limited to the Resources exposed in the What-If and so may be incomplete" 
                 $StackResources | Export-Csv -Path $StackOutFile
               }
               else {
@@ -298,6 +299,7 @@ switch ($Scope) {
             }
             if ($StackResources) {
               Write-Information -InformationAction Continue -MessageData "Exporting Analysis of What-If Resources against Deployment Stack Resources" 
+              Write-Information -InformationAction Continue -MessageData "Analysis is limited to the Resources exposed in the What-If and so may be incomplete" 
               $StackResources | Export-Csv -Path $StackOutFile
             }
             else {
