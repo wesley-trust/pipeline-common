@@ -204,7 +204,7 @@ switch ($Scope) {
             if ($Stack) {
               $StackResources = foreach ($Change in $whatIf.changes) {
 
-                $Resource = @{}
+                $Resource = [ordered]@{}
                 $Resource.Add("ResourceId", $Change.resourceId)
                 $Resource.Add("ChangeType", $Change.ChangeType)
             
@@ -218,7 +218,7 @@ switch ($Scope) {
                 [pscustomobject]$Resource
               }
               if ($StackResources) {
-                $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+                $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize -Wrap
               }
               else {
                 Write-Error -Message "Stack Resource Object has not been returned"
@@ -254,7 +254,6 @@ switch ($Scope) {
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
@@ -279,11 +278,11 @@ switch ($Scope) {
             --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
             --only-show-errors `
             --output json | ConvertFrom-Json
-        
+
           if ($Stack) {
             $StackResources = foreach ($Change in $whatIf.changes) {
 
-              $Resource = @{}
+              $Resource = [ordered]@{}
               $Resource.Add("ResourceId", $Change.resourceId)
               $Resource.Add("ChangeType", $Change.ChangeType)
             
@@ -297,7 +296,7 @@ switch ($Scope) {
               [pscustomobject]$Resource
             }
             if ($StackResources) {
-              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize -Wrap
             }
             else {
               Write-Error -Message "Stack Resource Object has not been returned"
@@ -337,7 +336,6 @@ switch ($Scope) {
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
@@ -372,7 +370,6 @@ switch ($Scope) {
 
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
-      #$stackCommandBase += @('--deny-settings-mode', 'denyDelete', '--only-show-errors')
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
