@@ -199,7 +199,7 @@ switch ($Scope) {
         break
 
         if ($Stack) {
-          $ManagedResources = foreach ($Change in $whatIf.changes) {
+          $StackResources = foreach ($Change in $whatIf.changes) {
 
             $Resource = @{}
             $Resource.Add("ResourceId", $Change.resourceId)
@@ -212,8 +212,8 @@ switch ($Scope) {
               $Resource.Add("ManagedResource", $false)
             }
           }
-          if ($ManagedResources) {
-            $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+          if ($StackResources) {
+            $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
           }
         }
         else {
@@ -260,27 +260,27 @@ switch ($Scope) {
         #   --output json 2>$null | ConvertFrom-Json
 
         $Stack = az stack group show `
-          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
           --resource-group $ResourceGroupName `
           --only-show-errors `
           --output json | ConvertFrom-Json
 
         if ($Stack) {
-          $ManagedResources = foreach ($Change in $whatIf.changes) {
+          $StackResources = foreach ($Change in $whatIf.changes) {
 
             $Resource = @{}
             $Resource.Add("ResourceId", $Change.resourceId)
             $Resource.Add("ChangeType", $Change.ChangeType)
             
-            if ($Change.resourceId -in $Stack.resources.id) {
-              $Resource.Add("ManagedResource", $true)
+            if ($Change.resourceId -in $StackResourceIds) {
+              $Resource.Add("StackResource", 'Managed')
             }
             else {
-              $Resource.Add("ManagedResource", $false)
+              $Resource.Add("StackResource", 'Unmanaged')
             }
           }
-          if ($ManagedResources) {
-            $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+          if ($StackResources) {
+            $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
           }
         }
         else {
@@ -289,49 +289,6 @@ switch ($Scope) {
       }
       else {
         Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
-      }
-
-
-      # Check against deployment stack
-      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-
-      if ($WhatIf) {
-        $WhatIfChanges = $whatIf.changes
-      }
-      
-      if ($WhatIfChanges) {
-        Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
-        $Stack = az stack sub show `
-          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
-          --only-show-errors `
-          --output json 2>$null | ConvertFrom-Json
-      
-        if ($Stack) {
-          $StackResourceIds = $Stack.resources.id
-        }
-
-        if ($StackResourceIds) {
-          $ManagedResources = foreach ($Change in $WhatIfChanges) {
-
-            $Resource = @{}
-            $Resource.Add("ResourceId", $Change.resourceId)
-            $Resource.Add("ChangeType", $Change.ChangeType)
-            
-            if ($Change.resourceId -in $StackResourceIds -and $Change.ChangeType -ne "Ignore") {
-              $Resource.Add("ManagedResource", $true)
-            }
-
-            else {
-              $Resource.Add("ManagedResource", $false)
-            }
-          }
-        }
-        if ($ManagedResources) {
-          $ManagedResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
-        }
-        else {
-          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
-        }
       }
     }
     else {
