@@ -19,6 +19,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+# Functions
 function ConvertTo-ArgumentList {
   param([string]$Raw)
 
@@ -132,21 +133,6 @@ function Invoke-StackDeployment {
   }
 }
 
-if ($Action -eq 'validate') {
-  az bicep install | Out-Null
-  az bicep version | Out-Null
-  az bicep build --file "$Template"
-  exit 0
-}
-
-if ($ModeOverride) {
-  $Mode = $ModeOverride
-}
-
-$paramArgs = @()
-if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
-$additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
-
 function ConvertTo-BooleanValue {
   param($Value)
 
@@ -164,6 +150,83 @@ function ConvertTo-BooleanValue {
   throw 'AllowDeleteOnUnmanage must be a boolean-compatible value (true/false, 1/0).'
 }
 
+function Get-DeploymentStackResourceId {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][ValidateSet('ResourceGroup', 'Subscription', 'ManagementGroup', 'Tenant')]
+    [string]$Scope,
+    [string]$ResourceGroupName,
+    [string]$SubscriptionId = (Get-AzContext).Subscription.Id,
+    [string]$ManagementGroupId
+  )
+
+  switch ($Scope) {
+    'ResourceGroup' {
+      if (-not $ResourceGroupName) { throw "ResourceGroupName is required for ResourceGroup scope." }
+      if (-not $SubscriptionId) { throw "SubscriptionId is required (no default context)." }
+      "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.Resources/deploymentStacks/$Name"
+    }
+    'Subscription' {
+      if (-not $SubscriptionId) { throw "SubscriptionId is required (no default context)." }
+      "/subscriptions/$SubscriptionId/providers/Microsoft.Resources/deploymentStacks/$Name"
+    }
+    'ManagementGroup' {
+      if (-not $ManagementGroupId) { throw "ManagementGroupId is required for ManagementGroup scope." }
+      "/providers/Microsoft.Management/managementGroups/$ManagementGroupId/providers/Microsoft.Resources/deploymentStacks/$Name"
+    }
+    'Tenant' {
+      "/providers/Microsoft.Resources/deploymentStacks/$Name"
+    }
+  }
+}
+
+function Test-DeploymentStackExists {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][ValidateSet('ResourceGroup', 'Subscription', 'ManagementGroup', 'Tenant')]
+    [string]$Scope,
+    [string]$ResourceGroupName,
+    [string]$SubscriptionId,
+    [string]$ManagementGroupId
+  )
+
+  $id = Get-DeploymentStackResourceId @PSBoundParameters
+  $res = Get-AzResource -ResourceId $id -ErrorAction SilentlyContinue
+  return ($null -ne $res)
+}
+
+function Get-DeploymentStackOrNull {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)][string]$Name,
+    [Parameter(Mandatory)][ValidateSet('ResourceGroup', 'Subscription', 'ManagementGroup', 'Tenant')]
+    [string]$Scope,
+    [string]$ResourceGroupName,
+    [string]$SubscriptionId,
+    [string]$ManagementGroupId
+  )
+
+  $id = Get-DeploymentStackResourceId @PSBoundParameters
+  return (Get-AzResource -ResourceId $id -ErrorAction SilentlyContinue)
+}
+
+if ($Action -eq 'validate') {
+  az bicep install | Out-Null
+  az bicep version | Out-Null
+  az bicep build --file "$Template"
+  exit 0
+}
+
+if ($ModeOverride) {
+  $Mode = $ModeOverride
+}
+
+$paramArgs = @()
+if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
+$additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
+
 $allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
 
 switch ($Scope) {
@@ -171,57 +234,63 @@ switch ($Scope) {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
     if ($Action -eq 'whatif') {
       az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
-      
-      # Check against deployment stack
-      Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
-      
-      $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-      
-      if ($WhatIf) {
-        # $Stack = az stack group show `
-        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-        #   --resource-group $ResourceGroupName `
-        #   --only-show-errors `
-        #   --output json 2>$null | ConvertFrom-Json 
-
-        # $Stack = az stack group show `
-        #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-        #   --resource-group $ResourceGroupName `
-        #   --only-show-errors `
-        #   --output json | ConvertFrom-Json
-
-        az stack group show `
-          --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
-          --resource-group $ResourceGroupName `
-          --only-show-errors `
-          --output json
-
-        break
-
-        if ($Stack) {
-          $StackResources = foreach ($Change in $whatIf.changes) {
-
-            $Resource = @{}
-            $Resource.Add("ResourceId", $Change.resourceId)
-            $Resource.Add("ChangeType", $Change.ChangeType)
             
-            if ($Change.resourceId -in $Stack.resources.id) {
-              $Resource.Add("ManagedResource", $true)
+      $StackExists = Get-DeploymentStackOrNull -Name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) -Scope ResourceGroup
+
+      if ($StackExists) {
+        
+        # Check against deployment stack
+        Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
+
+        $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      
+        if ($WhatIf) {
+          # $Stack = az stack group show `
+          #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          #   --resource-group $ResourceGroupName `
+          #   --only-show-errors `
+          #   --output json 2>$null | ConvertFrom-Json 
+
+          # $Stack = az stack group show `
+          #   --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+          #   --resource-group $ResourceGroupName `
+          #   --only-show-errors `
+          #   --output json | ConvertFrom-Json
+
+          az stack group show `
+            --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName) `
+            --resource-group $ResourceGroupName `
+            --only-show-errors `
+            --output json
+
+          if ($Stack) {
+            $StackResources = foreach ($Change in $whatIf.changes) {
+
+              $Resource = @{}
+              $Resource.Add("ResourceId", $Change.resourceId)
+              $Resource.Add("ChangeType", $Change.ChangeType)
+            
+              if ($Change.resourceId -in $Stack.resources.id) {
+                $Resource.Add("StackResource", 'Managed')
+              }
+              else {
+                $Resource.Add("StackResource", 'Unmanaged')
+              }
             }
-            else {
-              $Resource.Add("ManagedResource", $false)
+            if ($StackResources) {
+              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
             }
           }
-          if ($StackResources) {
-            $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+          else {
+            Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against"
           }
         }
         else {
-          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+          Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
         }
       }
       else {
-        Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
+        Write-Information -InformationAction Continue -MessageData "No Deployment Stack exists to check against" | Tee-Object -FilePath $StackOutFile
       }
     }
     else {
@@ -248,18 +317,21 @@ switch ($Scope) {
     if ($Action -eq 'whatif') {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     
-      # Check against deployment stack
-      Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
-      
-      $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-      
-      if ($WhatIf) {
-        # $Stack = az stack sub show `
-        #   --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
-        #   --only-show-errors `
-        #   --output json 2>$null | ConvertFrom-Json
+      $StackExists = Get-DeploymentStackOrNull -Name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) -Scope Subscription
 
-        try {
+      if ($StackExists) {
+
+        # Check against deployment stack
+        Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
+      
+        $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+      
+        if ($WhatIf) {
+          # $Stack = az stack sub show `
+          #   --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
+          #   --only-show-errors `
+          #   --output json 2>$null | ConvertFrom-Json
+
           $Stack = az stack group show `
             --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
             --resource-group $ResourceGroupName `
@@ -285,15 +357,16 @@ switch ($Scope) {
             }
           }
           else {
-            Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+            Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against"
           }
+
         }
-        catch {
-          Write-Information -InformationAction Continue -MessageData "No Deployment Stack exists to check against" 
+        else {
+          Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against"
         }
       }
       else {
-        Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
+        Write-Information -InformationAction Continue -MessageData "No Deployment Stack exists to check against" | Tee-Object -FilePath $StackOutFile
       }
     }
     else {
