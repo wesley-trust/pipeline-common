@@ -97,15 +97,17 @@ function Get-StackName {
   if ([string]::IsNullOrWhiteSpace($Identifier)) {
     throw 'Identifier is required to compute the stack name.'
   }
-
   if ([string]::IsNullOrWhiteSpace($Name)) {
     throw 'Name is required to compute the stack name.'
   }
 
-  $raw = "$Prefix-$Identifier-$Name"
+  # Build raw name; remove spaces around parts but don't alter valid characters
+  $raw = ("$Prefix-$Identifier-$Name").Trim()
 
-  $sanitised = ($raw -replace '[^a-zA-Z0-9-]', '-').Trim('-')
+  # Allow: letters, digits, underscore, hyphen, dot, parentheses
+  $sanitised = ($raw -replace '[^-\w\._\(\)]', '-').Trim('-')
   if (-not $sanitised) { $sanitised = $Prefix }
+
   if ($sanitised.Length -gt 90) {
     $sanitised = $sanitised.Substring(0, 90).Trim('-')
     if (-not $sanitised) { $sanitised = $Prefix }
