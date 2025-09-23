@@ -285,7 +285,8 @@ switch ($Scope) {
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
       
           $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
-      
+          Write-Host "here"
+          break
           if ($WhatIf) {
             $Stack = az stack sub show `
               --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name) `
