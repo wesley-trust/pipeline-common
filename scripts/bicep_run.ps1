@@ -191,12 +191,10 @@ switch ($Scope) {
       if ($ResourceGroupExists) {
 
         az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
-        
-        #$StackExists = az stack group list --resource-group $ResourceGroupName
 
         $StackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$(Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name)']"
 
-        if ($StackExists) {
+        if ($StackExists -ne "[]") {
           
           # Check against deployment stack
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
@@ -282,7 +280,7 @@ switch ($Scope) {
 
         $StackExists = az stack sub list --query "[?name=='$(Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name)']"
 
-        if ($StackExists) {
+        if ($StackExists -ne "[]") {
           # Check against deployment stack
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
       
