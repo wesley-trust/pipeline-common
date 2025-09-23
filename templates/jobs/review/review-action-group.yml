@@ -233,7 +233,7 @@ jobs:
                 parameters:
                   displayName: Publish Stack Output (${{ upper(coalesce(action.name, 'bicep')) }})
                   artifactName: bicep-stack-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
-                  targetPath: ${{ format('{0}/stack.txt', '$(Pipeline.Workspace)/locked-sources') }}
+                  targetPath: ${{ format('{0}/stack.csv', '$(Pipeline.Workspace)/locked-sources') }}
 
       # PowerShell Action
       # - ${{ if eq(parameters.actionGroup.type, 'powershell') }}:

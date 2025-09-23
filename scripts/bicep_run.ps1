@@ -10,7 +10,7 @@ param(
   [string]$ManagementGroupId = '',
   [string]$SubscriptionId = '',
   [string]$OutFile = 'whatif.txt',
-  [string]$StackOutFile = 'stack.txt',
+  [string]$StackOutFile = 'stack.csv',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
   [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
   [object]$AllowDeleteOnUnmanage = $false
@@ -218,7 +218,8 @@ switch ($Scope) {
                 [pscustomobject]$Resource
               }
               if ($StackResources) {
-                $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize -Wrap
+                Write-Information -InformationAction Continue -MessageData "Exporting Analysis of What-If Resources against Deployment Stack Resources" 
+                $StackResources | Export-Csv -Path $StackOutFile
               }
               else {
                 Write-Error -Message "Stack Resource Object has not been returned"
@@ -296,7 +297,8 @@ switch ($Scope) {
               [pscustomobject]$Resource
             }
             if ($StackResources) {
-              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize -Wrap
+              Write-Information -InformationAction Continue -MessageData "Exporting Analysis of What-If Resources against Deployment Stack Resources" 
+              $StackResources | Export-Csv -Path $StackOutFile
             }
             else {
               Write-Error -Message "Stack Resource Object has not been returned"
