@@ -263,7 +263,7 @@ switch ($Scope) {
           --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
           --resource-group $ResourceGroupName `
           --only-show-errors `
-          --output json | ConvertFrom-Json
+          --output json 2>$null | ConvertFrom-Json
 
         if ($Stack) {
           $StackResources = foreach ($Change in $whatIf.changes) {
