@@ -290,7 +290,7 @@ switch ($Scope) {
               }
             }
             if ($StackResources) {
-              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+              $StackResources | Tee-Object -FilePath $StackOutFile
             }
           }
           else {
