@@ -214,9 +214,14 @@ switch ($Scope) {
                 else {
                   $Resource.Add("StackResource", 'Unmanaged')
                 }
+
+                [pscustomobject]$Resource
               }
               if ($StackResources) {
                 $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+              }
+              else {
+                Write-Error -Message "Stack Resource Object has not been returned"
               }
             }
             else {
@@ -288,9 +293,14 @@ switch ($Scope) {
               else {
                 $Resource.Add("StackResource", 'Unmanaged')
               }
+
+              [pscustomobject]$Resource
             }
             if ($StackResources) {
-              $StackResources | Tee-Object -FilePath $StackOutFile
+              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+            }
+            else {
+              Write-Error -Message "Stack Resource Object has not been returned"
             }
           }
           else {
