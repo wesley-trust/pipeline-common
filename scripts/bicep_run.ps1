@@ -231,16 +231,16 @@ switch ($Scope) {
             }
           }
           else {
-            Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against" 
+            Write-Information -InformationAction Continue -MessageData "No What-If Resources to check against"
           }
         }
         else {
-          Write-Information -InformationAction Continue -MessageData "No Deployment Stack exists to check against" | Tee-Object -FilePath $StackOutFile
+          Write-Output "No Deployment Stack exists to check against" | Tee-Object -FilePath $StackOutFile
         }
       }
       else {
-        Write-Information -InformationAction Continue -MessageData "What-If cannot be generated, the Resource Group must first be created" | Tee-Object -FilePath $OutFile
-        Write-Information -InformationAction Continue -MessageData "Stack cannot be checked due to no Resource Group existing" | Tee-Object -FilePath $StackOutFile
+        Write-Output "What-If cannot be generated, the Resource Group must first be created" | Tee-Object -FilePath $OutFile
+        Write-Output "Stack cannot be checked due to no Resource Group existing" | Tee-Object -FilePath $StackOutFile
       }
     }
     else {
@@ -315,7 +315,7 @@ switch ($Scope) {
         }
       }
       else {
-        Write-Information -InformationAction Continue -MessageData "Stack cannot be checked due to no Resource Group existing" | Tee-Object -FilePath $StackOutFile
+        Write-Output "Stack cannot be checked due to no Resource Group existing" | Tee-Object -FilePath $StackOutFile
       }
     }
     else {
