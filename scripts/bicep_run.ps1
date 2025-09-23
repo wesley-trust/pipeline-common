@@ -259,32 +259,37 @@ switch ($Scope) {
         #   --only-show-errors `
         #   --output json 2>$null | ConvertFrom-Json
 
-        $Stack = az stack group show `
-          --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
-          --resource-group $ResourceGroupName `
-          --only-show-errors `
-          --output json 2>$null | ConvertFrom-Json
+        try {
+          $Stack = az stack group show `
+            --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName) `
+            --resource-group $ResourceGroupName `
+            --only-show-errors `
+            --output json | ConvertFrom-Json
+        
+          if ($Stack) {
+            $StackResources = foreach ($Change in $whatIf.changes) {
 
-        if ($Stack) {
-          $StackResources = foreach ($Change in $whatIf.changes) {
-
-            $Resource = @{}
-            $Resource.Add("ResourceId", $Change.resourceId)
-            $Resource.Add("ChangeType", $Change.ChangeType)
+              $Resource = @{}
+              $Resource.Add("ResourceId", $Change.resourceId)
+              $Resource.Add("ChangeType", $Change.ChangeType)
             
-            if ($Change.resourceId -in $StackResourceIds) {
-              $Resource.Add("StackResource", 'Managed')
+              if ($Change.resourceId -in $Stack.resources.id) {
+                $Resource.Add("StackResource", 'Managed')
+              }
+              else {
+                $Resource.Add("StackResource", 'Unmanaged')
+              }
             }
-            else {
-              $Resource.Add("StackResource", 'Unmanaged')
+            if ($StackResources) {
+              $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
             }
           }
-          if ($StackResources) {
-            $StackResources | Tee-Object -FilePath $StackOutFile | Format-Table -AutoSize
+          else {
+            Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
           }
         }
-        else {
-          Write-Information -InformationAction Continue -MessageData "No Deployment Stack Resources to check against" 
+        catch {
+          Write-Information -InformationAction Continue -MessageData "No Deployment Stack exists to check against" 
         }
       }
       else {
