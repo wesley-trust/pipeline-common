@@ -187,6 +187,9 @@ $allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
 switch ($Scope) {
   'resourceGroup' {
     if (-not $ResourceGroupName) { throw 'ResourceGroupName is required for resourceGroup scope' }
+    
+    $StackName = Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name
+
     if ($Action -eq 'whatif') {      
       $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
 
@@ -194,7 +197,6 @@ switch ($Scope) {
 
         az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
 
-        $StackName = Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name
         $StackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']"
 
         if ($StackExists -ne "[]") {
@@ -309,6 +311,9 @@ switch ($Scope) {
   }
   'subscription' {
     if (-not $Location) { throw 'Location is required for subscription scope' }
+    
+    $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name
+    
     if ($Action -eq 'whatif') {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
     
@@ -316,7 +321,6 @@ switch ($Scope) {
 
       if ($ResourceGroupExists) {
         
-        $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name
         $StackExists = az stack sub list --query "[?name=='$StackName']"
 
         if ($StackExists -ne "[]") {
