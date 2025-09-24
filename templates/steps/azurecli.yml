@@ -30,6 +30,8 @@ steps:
         scriptType: pscore
         scriptLocation: scriptPath
         scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+        addSpnToEnvironment: true
+        useFederatedToken: true
         ${{ if ne(parameters.arguments, '') }}:
           arguments: ${{ parameters.arguments }}
         ${{ if ne(parameters.workingDirectory, '') }}:
