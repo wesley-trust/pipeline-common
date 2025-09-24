@@ -364,7 +364,7 @@ switch ($Scope) {
               }
               else {
                 Write-Warning "What-If returned no resource changes; exporting Deployment Stack inventory instead."
-                $Stack.resources
+                $Stack.resources | fl
                 break
                 if ($Stack.resources) {
                   $FallbackResources = foreach ($StackResource in $Stack.resources) {
