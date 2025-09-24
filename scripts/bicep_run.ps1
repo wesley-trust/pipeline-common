@@ -147,6 +147,7 @@ function Invoke-StackDeployment {
 }
 
 function ConvertTo-BooleanValue {
+  [CmdletBinding()]
   param (
     [parameter(
       Mandatory = $true,
@@ -156,22 +157,24 @@ function ConvertTo-BooleanValue {
     [string]$Value
   )
 
-  if ($null -eq $Value) {
-    return $false
-  }
-
-  switch ($Value) {
-    { $_ -is [bool] } { return $_ }
-    { $_ -is [int] } { return [bool]$_ }
-    { $_ -is [string] } {
-      $normalized = $_.Trim()
-      if ($normalized -match '^(?i:true|1)$') { return $true }
-      if ($normalized -match '^(?i:false|0)$') { return $false }
-      break
+  process {
+    if ($null -eq $Value) {
+      return $false
     }
-  }
 
-  throw 'Must be a boolean-compatible value (true/false, 1/0).'
+    switch ($Value) {
+      { $_ -is [bool] } { return $_ }
+      { $_ -is [int] } { return [bool]$_ }
+      { $_ -is [string] } {
+        $normalized = $_.Trim()
+        if ($normalized -match '^(?i:true|1)$') { return $true }
+        if ($normalized -match '^(?i:false|0)$') { return $false }
+        break
+      }
+    }
+
+    throw 'Must be a boolean-compatible value (true/false, 1/0).'
+  }
 }
 
 if ($Action -eq 'validate') {
@@ -450,16 +453,6 @@ switch ($Scope) {
       }
     }
     else {
-      $stackIdentifier = if (-not [string]::IsNullOrWhiteSpace($ResourceGroupName)) {
-        $ResourceGroupName
-      }
-      elseif (-not [string]::IsNullOrWhiteSpace($SubscriptionId)) {
-        $SubscriptionId
-      }
-      else {
-        throw 'Either ResourceGroupName or SubscriptionId is required to compute the stack name for subscription scope.'
-      }
-
       $stackCommandBase = @(
         'stack', 'sub', 'create',
         '--name', $StackName,
@@ -487,16 +480,6 @@ switch ($Scope) {
       az deployment mg what-if -m $ManagementGroupId --location $Location --template-file $Template @paramArgs @additionalParamArgs | Tee-Object -FilePath $OutFile    
     }
     else {
-      $stackIdentifier = if (-not [string]::IsNullOrWhiteSpace($SubscriptionId)) {
-        $SubscriptionId
-      }
-      elseif (-not [string]::IsNullOrWhiteSpace($ManagementGroupId)) {
-        $ManagementGroupId
-      }
-      else {
-        throw 'Either ManagementGroupId or SubscriptionId is required to compute the stack name for management group scope.'
-      }
-
       $StackName = Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId -Name $Name
       $stackCommandBase = @(
         'stack', 'mg', 'create',
