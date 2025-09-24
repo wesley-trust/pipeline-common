@@ -306,7 +306,14 @@ switch ($Scope) {
       $stackCommandBase += $additionalParamArgs
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
-      Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
+      $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
+
+      if ($ResourceGroupExists) {
+        Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
+      }
+      else {
+        Write-Error "Unable to deploy as Resource Group '$ResourceGroupName' does not exist"
+      }
     }
   }
   'subscription' {
