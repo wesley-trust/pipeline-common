@@ -217,10 +217,25 @@ switch ($Scope) {
                 $Resource.Add("ChangeType", $Change.ChangeType)
             
                 if ($Change.resourceId -in $Stack.resources.id) {
-                  $Resource.Add("StackResource", 'Managed')
+                  $StackResource = $null
+                  $StackResource = $Stack.resources | Where-Object { $_.id -eq $Change.resourceId }
+                  
+                  $Resource.Add("StackResource", $StackResource.status)
+                  $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
+                  $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resources)
+
+                  if ($AllowDeleteOnUnmanage) {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $AllowDeleteOnUnmanage)
+                  }
+                  else {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $false)
+                  }
                 }
                 else {
-                  $Resource.Add("StackResource", 'Unmanaged')
+                  $Resource.Add("StackResource", "N/A")
+                  $Resource.Add("StackDenyStatus", "N/A")
+                  $Resource.Add("StackActionOnUnmanage", "N/A")
+                  $Resource.Add("StackAllowDeleteOnUnmanage", "N/A")
                 }
 
                 [pscustomobject]$Resource
@@ -300,10 +315,25 @@ switch ($Scope) {
                 $Resource.Add("ChangeType", $Change.ChangeType)
             
                 if ($Change.resourceId -in $Stack.resources.id) {
-                  $Resource.Add("StackResource", 'Managed')
+                  $StackResource = $null
+                  $StackResource = $Stack.resources | Where-Object { $_.id -eq $Change.resourceId }
+                  
+                  $Resource.Add("StackResource", $StackResource.status)
+                  $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
+                  $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resourceGroups)
+
+                  if ($AllowDeleteOnUnmanage) {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $AllowDeleteOnUnmanage)
+                  }
+                  else {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $false)
+                  }
                 }
                 else {
-                  $Resource.Add("StackResource", 'Unmanaged')
+                  $Resource.Add("StackResource", "N/A")
+                  $Resource.Add("StackDenyStatus", "N/A")
+                  $Resource.Add("StackActionOnUnmanage", "N/A")
+                  $Resource.Add("StackAllowDeleteOnUnmanage", "N/A")
                 }
 
                 [pscustomobject]$Resource
