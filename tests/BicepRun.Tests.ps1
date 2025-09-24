@@ -15,6 +15,10 @@ Describe 'bicep_run.ps1 stack orchestration' {
         [Parameter(ValueFromRemainingArguments = $true)][object[]]$Arguments
       )
 
+      if ($Arguments.Length -ge 2 -and $Arguments[0] -eq 'group' -and $Arguments[1] -eq 'exists') {
+        return 'true'
+      }
+
       $script:AzCalls += ,@($Arguments)
     }
   }

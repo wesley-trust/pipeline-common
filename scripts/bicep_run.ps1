@@ -97,12 +97,17 @@ function Get-StackName {
   if ([string]::IsNullOrWhiteSpace($Identifier)) {
     throw 'Identifier is required to compute the stack name.'
   }
-  if ([string]::IsNullOrWhiteSpace($Name)) {
-    throw 'Name is required to compute the stack name.'
+  $parts = @($Prefix, $Identifier)
+
+  if (-not [string]::IsNullOrWhiteSpace($Name)) {
+    $sanitisedName = $Name.Trim()
+    if ($sanitisedName -and -not $sanitisedName.Equals($Identifier, [System.StringComparison]::OrdinalIgnoreCase)) {
+      $parts += $sanitisedName
+    }
   }
 
   # Build raw name; remove spaces around parts but don't alter valid characters
-  $raw = ("$Prefix-$Identifier-$Name").Trim()
+  $raw = ($parts -join '-').Trim()
 
   # Allow: letters, digits, underscore, hyphen, dot, parentheses
   $sanitised = ($raw -replace '[^-\w\._\(\)]', '-').Trim('-')
@@ -151,6 +156,10 @@ function ConvertTo-BooleanValue {
     [string]$Value
   )
 
+  if ($null -eq $Value) {
+    return $false
+  }
+
   switch ($Value) {
     { $_ -is [bool] } { return $_ }
     { $_ -is [int] } { return [bool]$_ }
@@ -183,6 +192,30 @@ $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
 # Set variable for AllowDeleteOnUnmanage
 $allowDelete = $false
 $allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
+
+if ([string]::IsNullOrWhiteSpace($Name)) {
+  switch ($Scope) {
+    'resourceGroup' { $Name = $ResourceGroupName }
+    'subscription' {
+      if ($ResourceGroupName) {
+        $Name = $ResourceGroupName
+      }
+      elseif ($Template) {
+        $Name = [System.IO.Path]::GetFileNameWithoutExtension($Template)
+      }
+    }
+    'managementGroup' { $Name = $ManagementGroupId }
+    'tenant' {
+      if ($Template) {
+        $Name = [System.IO.Path]::GetFileNameWithoutExtension($Template)
+      }
+    }
+  }
+}
+
+if ([string]::IsNullOrWhiteSpace($Name)) {
+  throw 'Name is required to compute the stack name.'
+}
 
 switch ($Scope) {
   'resourceGroup' {
@@ -306,14 +339,12 @@ switch ($Scope) {
       $stackCommandBase += $additionalParamArgs
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
 
-      $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
-
-      if ($ResourceGroupExists) {
-        Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
-      }
-      else {
+      if (-not (az group exists --name $ResourceGroupName | ConvertTo-BooleanValue)) {
         Write-Error "Unable to deploy as Resource Group '$ResourceGroupName' does not exist"
+        return
       }
+
+      Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
     }
   }
   'subscription' {
@@ -441,6 +472,10 @@ switch ($Scope) {
       $stackCommandBase += $paramArgs
       $stackCommandBase += $additionalParamArgs
       if ($SubscriptionId) { $stackCommandBase += @('--subscription', $SubscriptionId) }
+      if ($ResourceGroupName -and -not (az group exists --name $ResourceGroupName | ConvertTo-BooleanValue)) {
+        Write-Error "Unable to deploy as Resource Group '$ResourceGroupName' does not exist"
+        return
+      }
 
       Invoke-StackDeployment -BaseArgs $stackCommandBase -AllowDelete:$allowDelete
     }
