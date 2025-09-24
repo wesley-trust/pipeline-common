@@ -285,6 +285,7 @@ stages:
                                           -ModeOverride "${{ parameters.bicepModeOverride }}"
                                           -Mode "${{ coalesce(replace(replace(format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)), 'True', 'complete'), 'False', ''), coalesce(action.mode, 'incremental')) }}"
                                           -AllowDeleteOnUnmanage ${{ format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)) }}
+                                          -CleanupStack ${{ format('{0}', eq(coalesce(action.cleanupStack, false), true)) }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
                                         ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:

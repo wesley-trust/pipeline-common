@@ -14,7 +14,8 @@ param(
   [string]$StackOutFile = 'stack.csv',
   [ValidateSet('incremental', 'complete')][string]$Mode = '',
   [ValidateSet('incremental', 'complete', '')][string]$ModeOverride = '',
-  [object]$AllowDeleteOnUnmanage = $false
+  [object]$AllowDeleteOnUnmanage = $false,
+  [object]$CleanupStack = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -192,9 +193,10 @@ $paramArgs = @()
 if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
 
-# Set variable for AllowDeleteOnUnmanage
+# Set variables for optional toggles
 $allowDelete = $false
 $allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
+$cleanupStack = ConvertTo-BooleanValue -Value $CleanupStack
 
 if ([string]::IsNullOrWhiteSpace($Name)) {
   switch ($Scope) {
@@ -328,6 +330,32 @@ switch ($Scope) {
       }
     }
     else {
+      if ($cleanupStack) {
+        $stackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']" --only-show-errors
+
+        if ($stackExists -and $stackExists -ne '[]') {
+          $deleteArgs = @(
+            'stack', 'group', 'delete',
+            '--name', $StackName,
+            '--resource-group', $ResourceGroupName,
+            '--yes',
+            '--only-show-errors'
+          )
+
+          if ($SubscriptionId) { $deleteArgs += @('--subscription', $SubscriptionId) }
+
+          $actionOnUnmanage = if ($allowDelete) { 'deleteAll' } else { 'detachAll' }
+          $deleteArgs += @('--action-on-unmanage', $actionOnUnmanage)
+
+          az @deleteArgs
+        }
+        else {
+          Write-Information -InformationAction Continue -MessageData "Cleanup skipped; resource group stack '$StackName' not found."
+        }
+
+        return
+      }
+
       $stackCommandBase = @(
         'stack', 'group', 'create',
         '--name', $StackName,
@@ -353,11 +381,11 @@ switch ($Scope) {
   'subscription' {
     if (-not $Location) { throw 'Location is required for subscription scope' }
     
-    $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name
+    $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName
     
     if ($Action -eq 'whatif') {
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
-    
+
       $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
 
       if ($ResourceGroupExists) {
@@ -453,6 +481,31 @@ switch ($Scope) {
       }
     }
     else {
+      if ($cleanupStack) {
+        $stackExists = az stack sub list --query "[?name=='$StackName']" --only-show-errors
+
+        if ($stackExists -and $stackExists -ne '[]') {
+          $deleteArgs = @(
+            'stack', 'sub', 'delete',
+            '--name', $StackName,
+            '--yes',
+            '--only-show-errors'
+          )
+
+          if ($SubscriptionId) { $deleteArgs += @('--subscription', $SubscriptionId) }
+
+          $actionOnUnmanage = if ($allowDelete) { 'deleteAll' } else { 'detachAll' }
+          $deleteArgs += @('--action-on-unmanage', $actionOnUnmanage)
+
+          az @deleteArgs
+        }
+        else {
+          Write-Information -InformationAction Continue -MessageData "Cleanup skipped; subscription stack '$StackName' not found."
+        }
+
+        return
+      }
+
       $stackCommandBase = @(
         'stack', 'sub', 'create',
         '--name', $StackName,

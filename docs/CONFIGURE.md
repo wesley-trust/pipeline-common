@@ -84,6 +84,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   subscriptionId: ''
   mode: incremental|complete        # can be overridden globally by configuration.bicepModeOverride
   allowDeleteOnUnmanage: true|false # default false; temporarily sets action-on-unmanage to deleteAll
+  cleanupStack: true|false          # resource group and subscription scopes; deletes the deployment stack instead of running a deployment
 
   # PowerShell specifics:
   scriptPath: scripts/custom.ps1
@@ -97,7 +98,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 > Actions never declare their own `type`; set it on the containing actionGroup and it applies to every action in that group. Use `dependsOn` when you need sequential execution across actionGroups for a given environment/region — the dispatcher resolves the names you list into the underlying job dependencies, so keep `actionGroups[*].name` unique within each environment/region.
 
-> When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there. Stack names follow the convention automatically: `ds-<resourceGroup>` for resource group deployments, `ds-sub-<subscriptionId>` (falling back to the template name when the ID is omitted) for subscription deployments, and `ds-mg-<managementGroupId>` for management group deployments.
+> When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there. Stack names follow the convention automatically: `ds-<resourceGroup>` for resource group deployments, `ds-sub-<resourceGroup>` for subscription deployments, and `ds-mg-<managementGroupId>` for management group deployments. Enable `cleanupStack` when the stack needs to be retired — the script skips the deployment and calls the matching `az stack <scope> delete`, using `allowDeleteOnUnmanage` to decide whether deletion detaches (default) or removes the managed resources (`deleteAll`).
 
 ## Validation (auto-discovered)
 
