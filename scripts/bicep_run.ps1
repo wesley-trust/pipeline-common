@@ -204,7 +204,7 @@ switch ($Scope) {
           # Check against deployment stack
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
 
-          $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+          $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --result-format ResourceIdOnly --only-show-errors --no-pretty-print | ConvertFrom-Json
       
           if ($WhatIf) {
 
@@ -327,7 +327,7 @@ switch ($Scope) {
           # Check against deployment stack
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
       
-          $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors --no-pretty-print | ConvertFrom-Json
+          $WhatIf = az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --result-format ResourceIdOnly --only-show-errors --no-pretty-print | ConvertFrom-Json
 
           if ($WhatIf) {
             $Stack = az stack sub show `
