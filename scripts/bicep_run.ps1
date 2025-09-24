@@ -233,8 +233,48 @@ switch ($Scope) {
         $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
         $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the resource group stack '$StackName' in '$ResourceGroupName' to $actionDescription."
         $message | Tee-Object -FilePath $OutFile
-        "CleanupStack is enabled. No stack inventory generated because the stack will be deleted." | Tee-Object -FilePath $StackOutFile
         Write-Information -InformationAction Continue -MessageData $message
+
+        $stackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']" --only-show-errors
+
+        if ($stackExists -and $stackExists -ne '[]') {
+          $stack = az stack group show `
+            --name $StackName `
+            --resource-group $ResourceGroupName `
+            --only-show-errors `
+            --output json | ConvertFrom-Json
+
+          if ($stack -and $stack.resources) {
+            $plannedAction = if ($allowDelete) { 'Delete' } else { 'Detach' }
+            $resourceSummaries = foreach ($stackResource in $stack.resources) {
+              [PSCustomObject]@{
+                ResourceId    = $stackResource.id
+                CurrentStatus = $stackResource.status
+                PlannedAction = $plannedAction
+                DenyStatus    = $stackResource.denyStatus
+              }
+            }
+
+            if ($resourceSummaries) {
+              $resourceSummaries | Export-Csv -Path $StackOutFile -NoTypeInformation
+              $summaryLines = $resourceSummaries | ForEach-Object { "${plannedAction}: $($_.ResourceId)" }
+              if ($summaryLines) {
+                Add-Content -Path $OutFile -Value $summaryLines -Encoding utf8
+              }
+            }
+            else {
+              "Stack contains no tracked resources; nothing to $actionDescription." | Tee-Object -FilePath $StackOutFile
+            }
+          }
+          else {
+            "Unable to retrieve stack inventory; Azure CLI returned no resources." | Tee-Object -FilePath $StackOutFile
+          }
+        }
+        else {
+          "CleanupStack is enabled but stack '$StackName' was not found." | Tee-Object -FilePath $StackOutFile
+          Add-Content -Path $OutFile -Value "Stack '$StackName' not found; nothing to delete." -Encoding utf8
+        }
+
         return
       }
 
@@ -397,8 +437,47 @@ switch ($Scope) {
         $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
         $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the subscription stack '$StackName' to $actionDescription."
         $message | Tee-Object -FilePath $OutFile
-        "CleanupStack is enabled. No stack inventory generated because the stack will be deleted." | Tee-Object -FilePath $StackOutFile
         Write-Information -InformationAction Continue -MessageData $message
+
+        $stackExists = az stack sub list --query "[?name=='$StackName']" --only-show-errors
+
+        if ($stackExists -and $stackExists -ne '[]') {
+          $stack = az stack sub show `
+            --name $StackName `
+            --only-show-errors `
+            --output json | ConvertFrom-Json
+
+          if ($stack -and $stack.resources) {
+            $plannedAction = if ($allowDelete) { 'Delete' } else { 'Detach' }
+            $resourceSummaries = foreach ($stackResource in $stack.resources) {
+              [PSCustomObject]@{
+                ResourceId    = $stackResource.id
+                CurrentStatus = $stackResource.status
+                PlannedAction = $plannedAction
+                DenyStatus    = $stackResource.denyStatus
+              }
+            }
+
+            if ($resourceSummaries) {
+              $resourceSummaries | Export-Csv -Path $StackOutFile -NoTypeInformation
+              $summaryLines = $resourceSummaries | ForEach-Object { "${plannedAction}: $($_.ResourceId)" }
+              if ($summaryLines) {
+                Add-Content -Path $OutFile -Value $summaryLines -Encoding utf8
+              }
+            }
+            else {
+              "Stack contains no tracked resources; nothing to $actionDescription." | Tee-Object -FilePath $StackOutFile
+            }
+          }
+          else {
+            "Unable to retrieve stack inventory; Azure CLI returned no resources." | Tee-Object -FilePath $StackOutFile
+          }
+        }
+        else {
+          "CleanupStack is enabled but stack '$StackName' was not found." | Tee-Object -FilePath $StackOutFile
+          Add-Content -Path $OutFile -Value "Stack '$StackName' not found; nothing to delete." -Encoding utf8
+        }
+
         return
       }
 
