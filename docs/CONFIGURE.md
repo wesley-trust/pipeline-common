@@ -100,6 +100,8 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 > When `allowDeleteOnUnmanage` is true the deployment switches the Bicep stack’s `action-on-unmanage` setting to `deleteAll` for that run and restores it to `detachAll` once the deployment finishes, matching the default safe posture. The toggle applies to resource group, subscription, and management group scopes; Azure CLI currently does not expose deployment stacks at tenant scope, so `allowDeleteOnUnmanage` is rejected there. Stack names follow the convention automatically: `ds-<resourceGroup>` for resource group deployments, `ds-sub-<resourceGroup>` for subscription deployments, and `ds-mg-<managementGroupId>` for management group deployments. Enable `cleanupStack` when the stack needs to be retired — the script skips the deployment and calls the matching `az stack <scope> delete`, using `allowDeleteOnUnmanage` to decide whether deletion detaches (default) or removes the managed resources (`deleteAll`).
 
+> Review-stage Bicep what-if jobs respect `cleanupStack`: when the flag is true they emit explanatory messages (captured in the usual artifacts) instead of running `az deployment … what-if`, so reviewers see the exact teardown action that will execute.
+
 ## Validation (auto-discovered)
 
 - Validation stage is modular and composes only required jobs:

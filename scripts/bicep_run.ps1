@@ -228,7 +228,16 @@ switch ($Scope) {
     
     $StackName = Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name
 
-    if ($Action -eq 'whatif') {      
+    if ($Action -eq 'whatif') {     
+      if ($cleanupStack) {
+        $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
+        $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the resource group stack '$StackName' in '$ResourceGroupName' to $actionDescription."
+        $message | Tee-Object -FilePath $OutFile
+        "CleanupStack is enabled. No stack inventory generated because the stack will be deleted." | Tee-Object -FilePath $StackOutFile
+        Write-Information -InformationAction Continue -MessageData $message
+        return
+      }
+
       $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
 
       if ($ResourceGroupExists) {
@@ -384,6 +393,15 @@ switch ($Scope) {
     $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName
     
     if ($Action -eq 'whatif') {
+      if ($cleanupStack) {
+        $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
+        $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the subscription stack '$StackName' to $actionDescription."
+        $message | Tee-Object -FilePath $OutFile
+        "CleanupStack is enabled. No stack inventory generated because the stack will be deleted." | Tee-Object -FilePath $StackOutFile
+        Write-Information -InformationAction Continue -MessageData $message
+        return
+      }
+
       az deployment sub what-if --location $Location --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
 
       $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
