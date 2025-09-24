@@ -180,6 +180,8 @@ $paramArgs = @()
 if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
 $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
 
+# Set variable for AllowDeleteOnUnmanage
+$allowDelete = $false
 $allowDelete = ConvertTo-BooleanValue -Value $AllowDeleteOnUnmanage
 
 switch ($Scope) {
@@ -192,7 +194,8 @@ switch ($Scope) {
 
         az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
 
-        $StackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$(Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name)']"
+        $StackName = Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name
+        $StackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']"
 
         if ($StackExists -ne "[]") {
           
@@ -204,7 +207,7 @@ switch ($Scope) {
           if ($WhatIf) {
 
             $Stack = az stack group show `
-              --name (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name) `
+              --name $StackName `
               --resource-group $ResourceGroupName `
               --only-show-errors `
               --output json | ConvertFrom-Json
@@ -212,31 +215,25 @@ switch ($Scope) {
             if ($Stack) {
               $StackResources = foreach ($Change in $whatIf.changes) {
 
-                $Resource = [ordered]@{}
-                $Resource.Add("ResourceId", $Change.resourceId)
-                $Resource.Add("ChangeType", $Change.ChangeType)
+                $Resource = [ordered]@{
+                  ResourceId                 = $Change.resourceId
+                  ChangeType                 = $Change.ChangeType
+                  StackResource              = "N/A"
+                  StackDenyStatus            = "N/A"
+                  StackActionOnUnmanage      = "N/A"
+                  StackAllowDeleteOnUnmanage = "N/A"
+                  allowDelete                = "N/A"
+                }
             
                 if ($Change.resourceId -in $Stack.resources.id) {
                   $StackResource = $null
                   $StackResource = $Stack.resources | Where-Object { $_.id -eq $Change.resourceId }
                   
-                  $Resource.Add("StackResource", $StackResource.status)
-                  $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
-                  $Resource.Add("StackApplyToChildScopes", $stack.denySettings.applyToChildScopes)
-                  $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resources)
-
-                  if ($allowDelete) {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $allowDelete)
-                  }
-                  else {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $false)
-                  }
-                }
-                else {
-                  $Resource.Add("StackResource", "N/A")
-                  $Resource.Add("StackDenyStatus", "N/A")
-                  $Resource.Add("StackActionOnUnmanage", "N/A")
-                  $Resource.Add("StackAllowDeleteOnUnmanage", "N/A")
+                  $Resource.StackResource = $StackResource.status
+                  $Resource.StackDenyStatus = $StackResource.denyStatus
+                  $Resource.StackApplyToChildScopes = $stack.denySettings.applyToChildScopes
+                  $Resource.StackActionOnUnmanage = $stack.actionOnUnmanage.resources
+                  $Resource.StackAllowDeleteOnUnmanage = $allowDelete
                 }
 
                 [pscustomobject]$Resource
@@ -247,7 +244,32 @@ switch ($Scope) {
                 $StackResources | Export-Csv -Path $StackOutFile
               }
               else {
-                Write-Error -Message "Stack Resource Object has not been returned"
+                Write-Warning "What-If returned no resource changes; exporting Deployment Stack inventory instead."
+
+                if ($Stack.resources) {
+                  $FallbackResources = foreach ($StackResource in $Stack.resources) {
+                    
+                    $Resource = [PSCustomObject]@{
+                      ResourceId                 = $StackResource.id
+                      ChangeType                 = "NotReportedByWhatIf"
+                      StackResource              = $StackResource.status
+                      StackDenyStatus            = $StackResource.denyStatus
+                      StackActionOnUnmanage      = $stack.actionOnUnmanage.resources
+                      StackAllowDeleteOnUnmanage = $allowDelete
+                    }
+                  }
+
+                  if ($FallbackResources) {
+                    Write-Information -InformationAction Continue -MessageData "Exporting Deployment Stack inventory as a fallback"
+                    $FallbackResources | Export-Csv -Path $StackOutFile
+                  }
+                  else {
+                    Write-Warning "Deployment Stack did not return any resources to export"
+                  }
+                }
+                else {
+                  Write-Warning "Deployment Stack did not return any resources to export"
+                }
               }
             }
             else {
@@ -270,7 +292,7 @@ switch ($Scope) {
     else {
       $stackCommandBase = @(
         'stack', 'group', 'create',
-        '--name', (Get-StackName -Prefix 'ds' -Identifier $ResourceGroupName -Name $Name),
+        '--name', $StackName,
         '--resource-group', $ResourceGroupName,
         '--template-file', $Template
         '--deny-settings-mode', 'denyDelete'
@@ -293,8 +315,9 @@ switch ($Scope) {
       $ResourceGroupExists = az group exists --name $ResourceGroupName | ConvertTo-BooleanValue
 
       if ($ResourceGroupExists) {
-
-        $StackExists = az stack sub list --query "[?name=='$(Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name)']"
+        
+        $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name
+        $StackExists = az stack sub list --query "[?name=='$StackName']"
 
         if ($StackExists -ne "[]") {
           # Check against deployment stack
@@ -304,37 +327,32 @@ switch ($Scope) {
 
           if ($WhatIf) {
             $Stack = az stack sub show `
-              --name (Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName -Name $Name) `
+              --name $StackName `
               --only-show-errors `
               --output json | ConvertFrom-Json
 
             if ($Stack) {
               $StackResources = foreach ($Change in $whatIf.changes) {
 
-                $Resource = [ordered]@{}
-                $Resource.Add("ResourceId", $Change.resourceId)
-                $Resource.Add("ChangeType", $Change.ChangeType)
+                $Resource = [ordered]@{
+                  ResourceId                 = $Change.resourceId
+                  ChangeType                 = $Change.ChangeType
+                  StackResource              = "N/A"
+                  StackDenyStatus            = "N/A"
+                  StackActionOnUnmanage      = "N/A"
+                  StackAllowDeleteOnUnmanage = "N/A"
+                  allowDelete                = "N/A"
+                }
             
                 if ($Change.resourceId -in $Stack.resources.id) {
                   $StackResource = $null
                   $StackResource = $Stack.resources | Where-Object { $_.id -eq $Change.resourceId }
                   
-                  $Resource.Add("StackResource", $StackResource.status)
-                  $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
-                  $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resourceGroups)
-
-                  if ($allowDelete) {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $allowDelete)
-                  }
-                  else {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $false)
-                  }
-                }
-                else {
-                  $Resource.Add("StackResource", "N/A")
-                  $Resource.Add("StackDenyStatus", "N/A")
-                  $Resource.Add("StackActionOnUnmanage", "N/A")
-                  $Resource.Add("StackAllowDeleteOnUnmanage", "N/A")
+                  $Resource.StackResource = $StackResource.status
+                  $Resource.StackDenyStatus = $StackResource.denyStatus
+                  $Resource.StackApplyToChildScopes = $stack.denySettings.applyToChildScopes
+                  $Resource.StackActionOnUnmanage = $stack.actionOnUnmanage.resourceGroups
+                  $Resource.StackAllowDeleteOnUnmanage = $allowDelete
                 }
 
                 [pscustomobject]$Resource
@@ -345,7 +363,32 @@ switch ($Scope) {
                 $StackResources | Export-Csv -Path $StackOutFile
               }
               else {
-                Write-Error -Message "Stack Resource Object has not been returned"
+                Write-Warning "What-If returned no resource changes; exporting Deployment Stack inventory instead."
+
+                if ($Stack.resources) {
+                  $FallbackResources = foreach ($StackResource in $Stack.resources) {
+                    
+                    $Resource = [PSCustomObject]@{
+                      ResourceId                 = $StackResource.id
+                      ChangeType                 = "NotReportedByWhatIf"
+                      StackResource              = $StackResource.status
+                      StackDenyStatus            = $StackResource.denyStatus
+                      StackActionOnUnmanage      = $stack.actionOnUnmanage.resourceGroups
+                      StackAllowDeleteOnUnmanage = $allowDelete
+                    }
+                  }
+
+                  if ($FallbackResources) {
+                    Write-Information -InformationAction Continue -MessageData "Exporting Deployment Stack inventory as a fallback"
+                    $FallbackResources | Export-Csv -Path $StackOutFile
+                  }
+                  else {
+                    Write-Warning "Deployment Stack did not return any resources to export"
+                  }
+                }
+                else {
+                  Write-Warning "Deployment Stack did not return any resources to export"
+                }
               }
             }
             else {
@@ -377,7 +420,7 @@ switch ($Scope) {
 
       $stackCommandBase = @(
         'stack', 'sub', 'create',
-        '--name', (Get-StackName -Prefix 'ds-sub' -Identifier $stackIdentifier -Name $Name),
+        '--name', $StackName,
         '--location', $Location,
         '--template-file', $Template
         '--deny-settings-mode', 'denyDelete'
@@ -408,9 +451,10 @@ switch ($Scope) {
         throw 'Either ManagementGroupId or SubscriptionId is required to compute the stack name for management group scope.'
       }
 
+      $StackName = Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId -Name $Name
       $stackCommandBase = @(
         'stack', 'mg', 'create',
-        '--name', (Get-StackName -Prefix 'ds-mg' -Identifier $ManagementGroupId -Name $Name),
+        '--name', $StackName,
         '--management-group-id', $ManagementGroupId,
         '--location', $Location,
         '--template-file', $Template
