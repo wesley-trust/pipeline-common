@@ -222,10 +222,11 @@ switch ($Scope) {
                   
                   $Resource.Add("StackResource", $StackResource.status)
                   $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
+                  $Resource.Add("StackApplyToChildScopes", $stack.denySettings.applyToChildScopes)
                   $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resources)
 
-                  if ($AllowDeleteOnUnmanage) {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $AllowDeleteOnUnmanage)
+                  if ($allowDelete) {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $allowDelete)
                   }
                   else {
                     $Resource.Add("StackAllowDeleteOnUnmanage", $false)
@@ -322,8 +323,8 @@ switch ($Scope) {
                   $Resource.Add("StackDenyStatus", $StackResource.denyStatus)
                   $Resource.Add("StackActionOnUnmanage", $stack.actionOnUnmanage.resourceGroups)
 
-                  if ($AllowDeleteOnUnmanage) {
-                    $Resource.Add("StackAllowDeleteOnUnmanage", $AllowDeleteOnUnmanage)
+                  if ($allowDelete) {
+                    $Resource.Add("StackAllowDeleteOnUnmanage", $allowDelete)
                   }
                   else {
                     $Resource.Add("StackAllowDeleteOnUnmanage", $false)

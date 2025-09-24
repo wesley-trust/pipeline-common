@@ -136,7 +136,7 @@ jobs:
                               tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
                   - template: ../../steps/azurecli.yml@PipelineCommon
                     parameters:
-                      displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }} (Plan ${{ parameters.region }})
+                      displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }} - Plan
                       azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
                       repoAlias: PipelineCommon
                       script: terraform_run.ps1
@@ -156,7 +156,7 @@ jobs:
                         condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
-                      displayName: Publish Terraform Plan (${{ coalesce(action.name, 'terraform') }})
+                      displayName: Publish Terraform Plan (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
                       artifactName: terraform-plan-${{ coalesce(action.name, 'terraform') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                       targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
@@ -229,12 +229,12 @@ jobs:
                         condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
-                      displayName: Publish What-If Output (${{ upper(coalesce(action.name, 'bicep')) }})
+                      displayName: Publish What-If Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
                       artifactName: bicep-whatif-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                       targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
-                      displayName: Publish Stack Output (${{ upper(coalesce(action.name, 'bicep')) }})
+                      displayName: Publish Stack Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
                       artifactName: bicep-stack-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
                       targetPath: ${{ format('{0}/stack.csv', '$(Pipeline.Workspace)/locked-sources') }}
 
