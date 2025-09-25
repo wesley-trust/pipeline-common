@@ -232,8 +232,7 @@ switch ($Scope) {
       if ($cleanupStack) {
         $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
         $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the resource group stack '$StackName' in '$ResourceGroupName' to $actionDescription."
-        $message | Tee-Object -FilePath $OutFile
-        Write-Information -InformationAction Continue -MessageData $message
+        Write-Information -InformationAction Continue -MessageData $message | Tee-Object -FilePath $OutFile
 
         $stackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']" --only-show-errors
 
@@ -436,8 +435,7 @@ switch ($Scope) {
       if ($cleanupStack) {
         $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
         $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the subscription stack '$StackName' to $actionDescription."
-        $message | Tee-Object -FilePath $OutFile
-        Write-Information -InformationAction Continue -MessageData $message
+        Write-Information -InformationAction Continue -MessageData $message | Tee-Object -FilePath $OutFile
 
         $stackExists = az stack sub list --query "[?name=='$StackName']" --only-show-errors
 
