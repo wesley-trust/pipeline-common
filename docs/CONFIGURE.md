@@ -124,9 +124,10 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - A single switch controls the entire Review stage, which runs technology-specific checks (e.g., Bicep What‑If, Terraform Plan):
   - `configuration.runReviewStage: true|false` (default true)
-- Optional per‑technology toggles (default true when omitted):
-  - `configuration.runTerraformPlan`
-  - `configuration.runBicepWhatIf`
+- Individual action groups control whether their review job is emitted:
+  - Terraform groups: `runTerraformPlan: true|false` (default true when omitted)
+  - Bicep groups: `runBicepWhatIf: true|false` (default true when omitted)
+  - PowerShell groups: `runPowerShellReview: true|false` (default false when omitted)
 - When `runReviewStage` is false, the Review stage is skipped for non-production environments. Production deployments always run the Review stage.
 
 ## Token Replacement
@@ -175,8 +176,9 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Add to any `action` of `type: powershell`:
   - `delayMinutes: <number>` — inserts a non-blocking Delay task before execution.
   - `runInValidation: true|false` — also runs this action in the Validation stage.
-  - `runInReview: true|false` — also runs this action in the Review stage.
+- PowerShell review jobs are enabled per action group via `runPowerShellReview: true|false` (defaults to false). When enabled you must supply a review script per action using either `reviewScriptPath` (relative to the locked snapshot) or `reviewScriptFullPath`; actions without a review script are skipped. You can still override behaviour with `reviewArguments` (defaults to `arguments`), `reviewDisplayName` (defaults to the action display name), `reviewCondition`, `reviewDelayMinutes` (defaults to `delayMinutes`), `reviewWorkingDirectory` (relative to the locked snapshot), or `reviewWorkingDirectoryFullPath`.
 - Token replacement for PowerShell actions is supported in Validation and Review via `tokenReplaceEnabled`, `tokenTargetPatterns`, `tokenPrefix`, `tokenSuffix`.
+- To reuse the deployment logic, explicitly set `reviewScriptPath` to the same script the deploy action uses. `reviewArguments` defaults to the deployment arguments when omitted.
 
 ## DR Invocation Mode
 

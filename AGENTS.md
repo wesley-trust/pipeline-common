@@ -26,7 +26,7 @@
 4. **Main template** materialises stages:
    - Optional **Initialise** (global + per-environment) – publishes source snapshot, installs tooling (Terraform/Bicep) driven by `initialise-*` jobs.
    - **Validation** – only emits jobs that are relevant based on `configuration.validation` flags and detected action group types. Enforces environment model, branch allow-list, variable include sanity, token target existence, and technology linting (Terraform fmt/validate, Bicep build, PSScriptAnalyzer).
-   - Optional **Review** – runs Terraform plan / Bicep what-if / PowerShell preview jobs based on `runReviewStage`, `runTerraformPlan`, `runBicepWhatIf`, and action metadata. Outputs artifacts for manual inspection.
+   - Optional **Review** – runs Terraform plan / Bicep what-if / PowerShell preview jobs based on `runReviewStage` and each action group’s `runTerraformPlan` / `runBicepWhatIf` / `runPowerShellReview` settings. Outputs artifacts for manual inspection.
    - **Deploy** – per-environment deployment stages split by region (secondary first, primary last). Uses deployment jobs bound to Azure DevOps Environments for approvals. Supports DR invocation (`drInvocation`), per-action pre/post deploy hooks, token replacement, additional repo checkout, Key Vault import, manual/schedule/PR gating, and regional agent capability demands.
 
 ## Configuration Primitives

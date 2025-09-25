@@ -44,12 +44,6 @@ parameters:
   - name: keyVault
     type: object
     default: {}
-  - name: runTerraformPlan
-    type: boolean
-    default: true
-  - name: runBicepWhatIf
-    type: boolean
-    default: true
   - name: dependsOnActionGroups
     type: object
     default: []
@@ -97,7 +91,7 @@ jobs:
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
       # Terraform Action
-      - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), eq(parameters.runTerraformPlan, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), ne(toLower(format('{0}', coalesce(parameters.actionGroup.runTerraformPlan, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           # Optional token replacement at action group level
           - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
               - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
@@ -161,7 +155,7 @@ jobs:
                       targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
       # Bicep Action
-      - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), eq(parameters.runBicepWhatIf, true), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), ne(toLower(format('{0}', coalesce(parameters.actionGroup.runBicepWhatIf, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           # Optional token replacement at action group level
           - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
               - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
@@ -241,26 +235,64 @@ jobs:
                       targetPath: ${{ format('{0}/stack.csv', '$(Pipeline.Workspace)/locked-sources') }}
 
       # PowerShell Action
-      # - ${{ if eq(parameters.actionGroup.type, 'powershell') }}:
-      #     - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
-      #         - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
-      #             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-      #                 - template: ../steps/replace-tokens.yml@PipelineCommon
-      #                   parameters:
-      #                     displayName: PowerShell token replacement (${ tokenPattern })
-      #                     targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
-      #                     tokenPrefix: ${{ coalesce(action.tokenPrefix, '#{{') }}
-      #                     tokenSuffix: ${{ coalesce(action.tokenSuffix, '}}') }}
-      #     - template: ../../steps/powershell.yml@PipelineCommon
-      #       parameters:
-      #         displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review ${{ parameters.region }})
-      #         scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
-      #         arguments: ${{ action.arguments }}
-      #         ${{ if ne(action.condition, '') }}:
-      #           condition: ${{ action.condition }}
-      #         ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-      #           condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-      #         ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-      #           condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-      #         ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-      #           condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      - ${{ if and(eq(parameters.actionGroup.type, 'powershell'), eq(toLower(format('{0}', coalesce(parameters.actionGroup.runPowerShellReview, false))), 'true'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+          # Optional token replacement at action group level
+          - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
+              - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
+                  - ${{ each tokenPattern in parameters.actionGroup.tokenTargetPatterns }}:
+                      - template: ../../steps/replace-tokens.yml@PipelineCommon
+                        parameters:
+                          displayName: PowerShell token replacement (${ tokenPattern })
+                          targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                          tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
+                          tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
+
+          - ${{ each action in parameters.actionGroup.actions }}:
+              - ${{ if and(ne(action.enabled, false), ne(coalesce(action.reviewScriptFullPath, action.reviewScriptPath, ''), '')) }}:
+                  # Optional delay prior to executing review script
+                  - ${{ if gt(coalesce(action.reviewDelayMinutes, action.delayMinutes, 0), 0) }}:
+                      - task: Delay@1
+                        inputs:
+                          delayForMinutes: ${{ coalesce(action.reviewDelayMinutes, action.delayMinutes) }}
+
+                  # Optional per-action token replacement
+                  - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
+                      - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                          - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                              - template: ../../steps/replace-tokens.yml@PipelineCommon
+                                parameters:
+                                  displayName: PowerShell token replacement (${ tokenPattern })
+                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
+                                  tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
+
+                  - template: ../../steps/powershell.yml@PipelineCommon
+                    parameters:
+                      displayName: ${{ coalesce(action.reviewDisplayName, action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review ${{ parameters.region }})
+                      ${{ if ne(coalesce(action.reviewScriptFullPath, ''), '') }}:
+                        scriptFullPath: ${{ action.reviewScriptFullPath }}
+                      ${{ if and(eq(coalesce(action.reviewScriptFullPath, ''), ''), ne(coalesce(action.reviewScriptPath, ''), '')) }}:
+                        scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.reviewScriptPath }}
+                      arguments: ${{ coalesce(action.reviewArguments, action.arguments, '') }}
+                      ${{ if ne(coalesce(action.reviewWorkingDirectory, ''), '') }}:
+                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.reviewWorkingDirectory }}
+                      ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), ne(coalesce(action.reviewWorkingDirectoryFullPath, ''), '')) }}:
+                        workingDirectory: ${{ action.reviewWorkingDirectoryFullPath }}
+                      ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), eq(coalesce(action.reviewWorkingDirectoryFullPath, ''), ''), ne(coalesce(action.workingDirectory, ''), '')) }}:
+                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}
+                      ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), eq(coalesce(action.reviewWorkingDirectoryFullPath, ''), ''), eq(coalesce(action.workingDirectory, ''), '')) }}:
+                        workingDirectory: $(Pipeline.Workspace)/locked-sources
+                    ${{ if ne(coalesce(action.reviewCondition, action.condition, ''), '') }}:
+                      condition: ${{ coalesce(action.reviewCondition, action.condition) }}
+                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                  - ${{ if ne(coalesce(action.publishReviewOutput, false), false) }}:
+                      - template: ../../steps/publish-artifact.yml@PipelineCommon
+                        parameters:
+                          displayName: Publish PowerShell Review Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
+                          artifactName: powershell-review-${{ coalesce(action.name, 'powershell') }}-${{ parameters.environmentName }}-${{ parameters.region }}
+                          targetPath: ${{ format('{0}/output', '$(Pipeline.Workspace)/locked-sources') }}
