@@ -7,7 +7,8 @@ param(
     [string]$PipelineCommonRef = $env:AZDO_PIPELINE_COMMON_REF,
     [string]$PipelineDispatcherRef = $env:AZDO_PIPELINE_DISPATCHER_REF,
     [int]$PreviewPipelineId,
-    [string[]]$Pipelines
+    [string[]]$Pipelines,
+    [hashtable[]]$PipelineDefinitions
 )
 
 Set-StrictMode -Version Latest
@@ -61,6 +62,7 @@ if (Test-Path -Path $configPath) {
     if (-not $PipelineDispatcherRef -and $config.PipelineDispatcherRef) { $PipelineDispatcherRef = $config.PipelineDispatcherRef }
     if (-not $PreviewPipelineId -and $config.PreviewPipelineId) { $PreviewPipelineId = [int]$config.PreviewPipelineId }
     if (-not $PreviewPipelineId -and $config.PipelineIds) { $PreviewPipelineId = [int]$config.PipelineIds[0] }
+    if (-not $PipelineDefinitions -and $config.ContainsKey('PipelineDefinitions')) { $PipelineDefinitions = $config.PipelineDefinitions }
 }
 
 $pipelineCommonHead = Get-RepoHeadRef -Path $repoRoot
@@ -190,6 +192,178 @@ function Get-ErrorContent {
     return $responseContent
 }
 
+function Normalize-RelativePath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        return $null
+    }
+
+    $normalized = $Path -replace '\\', '/'
+    $normalized = $normalized.Trim()
+    $normalized = $normalized.Trim('/')
+    if ([string]::IsNullOrWhiteSpace($normalized)) {
+        return $null
+    }
+
+    return $normalized.ToLowerInvariant()
+}
+
+function New-DefaultParameterSet {
+    param(
+        [string]$Name = 'default'
+    )
+
+    return [pscustomobject]@{
+        Name               = $Name
+        TemplateParameters = $null
+        Variables          = $null
+    }
+}
+
+function ConvertTo-PipelineDefinition {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Definition
+    )
+
+    $id = $null
+    foreach ($key in @('PipelineId', 'Id')) {
+        if ($Definition.ContainsKey($key) -and $Definition[$key]) {
+            $id = [int]$Definition[$key]
+            break
+        }
+    }
+
+    $name = $null
+    foreach ($key in @('Name', 'DisplayName')) {
+        if ($Definition.ContainsKey($key) -and $Definition[$key]) {
+            $name = [string]$Definition[$key]
+            break
+        }
+    }
+
+    $path = $null
+    foreach ($key in @('PipelinePath', 'Path', 'File')) {
+        if ($Definition.ContainsKey($key) -and $Definition[$key]) {
+            $path = [string]$Definition[$key]
+            break
+        }
+    }
+
+    $parameterSets = @()
+    if ($Definition.ContainsKey('ParameterSets') -and $Definition.ParameterSets) {
+        foreach ($rawSet in @($Definition.ParameterSets)) {
+            if (-not $rawSet) { continue }
+
+            if ($rawSet -is [hashtable]) {
+                $setName = $null
+                if ($rawSet.ContainsKey('Name') -and $rawSet.Name) {
+                    $setName = [string]$rawSet.Name
+                }
+
+                $templateParameters = $null
+                foreach ($key in @('TemplateParameters', 'templateParameters', 'Parameters')) {
+                    if ($rawSet.ContainsKey($key) -and $rawSet[$key]) {
+                        $templateParameters = [hashtable]$rawSet[$key]
+                        break
+                    }
+                }
+
+                $variables = $null
+                foreach ($key in @('Variables', 'variables')) {
+                    if ($rawSet.ContainsKey($key) -and $rawSet[$key]) {
+                        $variables = [hashtable]$rawSet[$key]
+                        break
+                    }
+                }
+
+                if (-not $setName) { $setName = 'default' }
+                if ($templateParameters -and $templateParameters.Count -eq 0) { $templateParameters = $null }
+                if ($variables -and $variables.Count -eq 0) { $variables = $null }
+
+                $parameterSets += [pscustomobject]@{
+                    Name               = $setName
+                    TemplateParameters = $templateParameters
+                    Variables          = $variables
+                }
+            }
+            elseif ($rawSet -is [string]) {
+                $parameterSets += [pscustomobject]@{
+                    Name               = [string]$rawSet
+                    TemplateParameters = $null
+                    Variables          = $null
+                }
+            }
+        }
+    }
+
+    if ($parameterSets.Count -eq 0) {
+        $parameterSets = @(New-DefaultParameterSet)
+    }
+
+    return [pscustomobject]@{
+        PipelineId    = $id
+        Name          = $name
+        PipelinePath  = $path
+        ParameterSets = $parameterSets
+    }
+}
+
+function Get-UniqueParameterSets {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject[]]$ParameterSets
+    )
+
+    $unique = @{}
+    $ordered = @()
+    foreach ($set in @($ParameterSets)) {
+        if (-not $set) { continue }
+        $key = if ($set.Name) { $set.Name.ToLowerInvariant() } else { [Guid]::NewGuid().ToString() }
+        if (-not $unique.ContainsKey($key)) {
+            $unique[$key] = $true
+            $ordered += $set
+        }
+    }
+
+    return $ordered
+}
+
+function Get-ParameterSetContext {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Pipeline,
+        [string]$RelativePath,
+        [pscustomobject]$Definition,
+        [pscustomobject]$ParameterSet
+    )
+
+    $parts = @()
+    if ($Definition -and $Definition.PipelineId) {
+        $parts += "pipeline id $($Definition.PipelineId)"
+    }
+    if ($Definition -and $Definition.Name) {
+        $parts += $Definition.Name
+    }
+    if ($RelativePath) {
+        $parts += $RelativePath
+    }
+    if ($Pipeline) {
+        $parts += $Pipeline
+    }
+    if ($ParameterSet -and $ParameterSet.Name) {
+        $parts += "parameter set '$($ParameterSet.Name)'"
+    }
+    if ($parts.Count -eq 0) {
+        return 'pipeline preview'
+    }
+    return ($parts -join ' / ')
+}
+
 $pat = Get-AzDoPat
 if (-not $pat) {
     throw 'Azure DevOps PAT not found. Set AZURE_DEVOPS_EXT_PAT or AZDO_PERSONAL_ACCESS_TOKEN, or rerun scripts/set_azdo_pat.ps1.'
@@ -197,73 +371,217 @@ if (-not $pat) {
 
 $authHeader = 'Basic {0}' -f ([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(':' + $pat)))
 
+$definitionLookup = @{}
+if ($PipelineDefinitions) {
+    foreach ($definition in $PipelineDefinitions) {
+        if (-not $definition) { continue }
+        if ($definition -isnot [hashtable]) { continue }
+
+        $converted = ConvertTo-PipelineDefinition -Definition $definition
+        if (-not $converted) { continue }
+
+        $convertedObject = [pscustomobject]@{
+            PipelineId    = $converted.PipelineId
+            Name          = $converted.Name
+            PipelinePath  = $converted.PipelinePath
+            ParameterSets = Get-UniqueParameterSets -ParameterSets $converted.ParameterSets
+        }
+
+        $candidateKeys = @()
+        if ($convertedObject.PipelinePath) {
+            $candidateKeys += $convertedObject.PipelinePath
+            $candidateKeys += (Join-Path 'pipeline-examples' $convertedObject.PipelinePath)
+        }
+
+        if ($examplesRepoPath -and $convertedObject.PipelinePath) {
+            $fullCandidate = Join-Path $examplesRepoPath $convertedObject.PipelinePath
+            try {
+                $relativeToExamples = [System.IO.Path]::GetRelativePath($examplesRepoPath, $fullCandidate)
+                if ($relativeToExamples) {
+                    $candidateKeys += $relativeToExamples
+                }
+            }
+            catch {}
+
+            try {
+                $relativeToRepoCandidate = [System.IO.Path]::GetRelativePath($repoRoot, $fullCandidate)
+                if ($relativeToRepoCandidate) {
+                    $candidateKeys += $relativeToRepoCandidate
+                }
+            }
+            catch {}
+        }
+
+        $normalizedKeys = @()
+        foreach ($key in $candidateKeys) {
+            $normalized = Normalize-RelativePath -Path $key
+            if ($normalized) { $normalizedKeys += $normalized }
+        }
+        $normalizedKeys = $normalizedKeys | Sort-Object -Unique
+
+        if ($normalizedKeys.Count -eq 0) { continue }
+
+        foreach ($key in $normalizedKeys) {
+            if ($definitionLookup.ContainsKey($key)) {
+                $existing = $definitionLookup[$key]
+                $existing.ParameterSets = Get-UniqueParameterSets -ParameterSets @($existing.ParameterSets + $convertedObject.ParameterSets)
+                if (-not $existing.PipelineId -and $convertedObject.PipelineId) { $existing.PipelineId = $convertedObject.PipelineId }
+                if (-not $existing.Name -and $convertedObject.Name) { $existing.Name = $convertedObject.Name }
+                if (-not $existing.PipelinePath -and $convertedObject.PipelinePath) { $existing.PipelinePath = $convertedObject.PipelinePath }
+            }
+            else {
+                $definitionLookup[$key] = [pscustomobject]@{
+                    PipelineId    = $convertedObject.PipelineId
+                    Name          = $convertedObject.Name
+                    PipelinePath  = $convertedObject.PipelinePath
+                    ParameterSets = $convertedObject.ParameterSets
+                }
+            }
+        }
+    }
+}
+
 $results = @()
 foreach ($pipeline in $Pipelines) {
     $yamlContent = Get-Content -Path $pipeline -Raw
-    $payload = [ordered]@{
-        previewRun = $true
-        resources  = @{
-            repositories = @{
-                self = @{ refName = $ExamplesBranch }
-                PipelineCommon = @{ type = 'git'; name = 'wesley-trust/pipeline-common'; refName = $PipelineCommonRef }
-                PipelineDispatcher = @{ type = 'git'; name = 'wesley-trust/pipeline-dispatcher'; refName = $PipelineDispatcherRef }
-            }
-        }
-        yamlOverride = $yamlContent
-    }
 
-    $payloadFile = New-TemporaryFile
-    try {
-        $payload | ConvertTo-Json -Depth 20 | Set-Content -Path $payloadFile -Encoding utf8
-
-        $orgBase = $Organization.TrimEnd('/')
-        $previewUrl = "$orgBase/$Project/_apis/pipelines/$PreviewPipelineId/runs?api-version=7.1-preview.1"
-        $jsonBody = Get-Content -Path $payloadFile -Raw
-
+    $candidatePaths = @()
+    if ($examplesRepoPath) {
         try {
-            $preview = Invoke-RestMethod -Method Post -Uri $previewUrl -Headers @{ Authorization = $authHeader } -ContentType 'application/json' -Body $jsonBody
-        }
-        catch {
-            $errorMessage = $_
-            $responseContent = Get-ErrorContent $_
-            $message = 'Azure DevOps preview failed for {0}: {1} {2}' -f $pipeline, $errorMessage, $responseContent
-            throw $message
-        }
-        $status = 'Success'
-        $errors = @()
-        $propertyNames = $preview.PSObject.Properties.Name
-
-        if ($propertyNames -contains 'preview') {
-            $previewBlock = $preview.preview
-            if ($previewBlock) {
-                $previewProps = $previewBlock.PSObject.Properties.Name
-                if ($previewProps -contains 'validationIssues' -and $previewBlock.validationIssues) {
-                    $status = 'ValidationFailed'
-                    $errors = @($previewBlock.validationIssues)
-                }
-                elseif ($previewProps -contains 'validationErrors' -and $previewBlock.validationErrors) {
-                    $status = 'ValidationFailed'
-                    $errors = @($previewBlock.validationErrors)
-                }
+            $relativeToExamples = [System.IO.Path]::GetRelativePath($examplesRepoPath, $pipeline)
+            if ($relativeToExamples) {
+                $candidatePaths += $relativeToExamples
             }
         }
-        elseif ($propertyNames -contains 'validationIssues' -and $preview.validationIssues) {
-            $status = 'ValidationFailed'
-            $errors = @($preview.validationIssues)
-        }
-        elseif ($propertyNames -contains 'errors' -and $preview.errors) {
-            $status = 'ValidationFailed'
-            $errors = @($preview.errors)
-        }
+        catch {}
+    }
 
-        $results += [pscustomobject]@{
-            Pipeline = $pipeline
-            Status   = $status
-            Errors   = $errors
+    try {
+        $relativeToRepo = [System.IO.Path]::GetRelativePath($repoRoot, $pipeline)
+        if ($relativeToRepo) {
+            $candidatePaths += $relativeToRepo
         }
     }
-    finally {
-        Remove-Item -Path $payloadFile -ErrorAction SilentlyContinue
+    catch {}
+
+    $candidatePaths += $pipeline
+
+    $normalizedCandidates = @()
+    foreach ($candidate in $candidatePaths) {
+        $normalizedCandidate = Normalize-RelativePath -Path $candidate
+        if ($normalizedCandidate) {
+            $normalizedCandidates += $normalizedCandidate
+        }
+    }
+    $normalizedCandidates = $normalizedCandidates | Sort-Object -Unique
+
+    $definition = $null
+    foreach ($candidateKey in $normalizedCandidates) {
+        if ($definitionLookup.ContainsKey($candidateKey)) {
+            $definition = $definitionLookup[$candidateKey]
+            break
+        }
+    }
+
+    $relativePath = $null
+    if ($examplesRepoPath) {
+        try {
+            $relativePath = [System.IO.Path]::GetRelativePath($examplesRepoPath, $pipeline)
+        }
+        catch {}
+    }
+    if (-not $relativePath -and $normalizedCandidates.Count -gt 0) {
+        $relativePath = $normalizedCandidates[0]
+    }
+
+    $parameterSets = @()
+    if ($definition -and $definition.ParameterSets) {
+        $parameterSets = $definition.ParameterSets
+    }
+    if (-not $parameterSets -or $parameterSets.Count -eq 0) {
+        $parameterSets = @(New-DefaultParameterSet)
+    }
+
+    foreach ($parameterSet in $parameterSets) {
+        $payload = [ordered]@{
+            previewRun = $true
+            resources  = @{
+                repositories = @{
+                    self = @{ refName = $ExamplesBranch }
+                    PipelineCommon = @{ type = 'git'; name = 'wesley-trust/pipeline-common'; refName = $PipelineCommonRef }
+                    PipelineDispatcher = @{ type = 'git'; name = 'wesley-trust/pipeline-dispatcher'; refName = $PipelineDispatcherRef }
+                }
+            }
+            yamlOverride = $yamlContent
+        }
+
+        if ($parameterSet.TemplateParameters -and $parameterSet.TemplateParameters.Count -gt 0) {
+            $payload.templateParameters = $parameterSet.TemplateParameters
+        }
+        if ($parameterSet.Variables -and $parameterSet.Variables.Count -gt 0) {
+            $payload.variables = $parameterSet.Variables
+        }
+
+        $payloadFile = New-TemporaryFile
+        try {
+            $payload | ConvertTo-Json -Depth 20 | Set-Content -Path $payloadFile -Encoding utf8
+
+            $orgBase = $Organization.TrimEnd('/')
+            $previewUrl = "$orgBase/$Project/_apis/pipelines/$PreviewPipelineId/runs?api-version=7.1-preview.1"
+            $jsonBody = Get-Content -Path $payloadFile -Raw
+
+            try {
+                $preview = Invoke-RestMethod -Method Post -Uri $previewUrl -Headers @{ Authorization = $authHeader } -ContentType 'application/json' -Body $jsonBody
+            }
+            catch {
+                $errorMessage = $_
+                $responseContent = Get-ErrorContent $_
+                $message = 'Azure DevOps preview failed for {0}: {1} {2}' -f (Get-ParameterSetContext -Pipeline $pipeline -RelativePath $relativePath -Definition $definition -ParameterSet $parameterSet), $errorMessage, $responseContent
+                throw $message
+            }
+            $status = 'Success'
+            $errors = @()
+            $propertyNames = $preview.PSObject.Properties.Name
+
+            if ($propertyNames -contains 'preview') {
+                $previewBlock = $preview.preview
+                if ($previewBlock) {
+                    $previewProps = $previewBlock.PSObject.Properties.Name
+                    if ($previewProps -contains 'validationIssues' -and $previewBlock.validationIssues) {
+                        $status = 'ValidationFailed'
+                        $errors = @($previewBlock.validationIssues)
+                    }
+                    elseif ($previewProps -contains 'validationErrors' -and $previewBlock.validationErrors) {
+                        $status = 'ValidationFailed'
+                        $errors = @($previewBlock.validationErrors)
+                    }
+                    elseif ($previewProps -contains 'errors' -and $previewBlock.errors) {
+                        $status = 'ValidationFailed'
+                        $errors = @($previewBlock.errors)
+                    }
+                }
+            }
+            elseif ($propertyNames -contains 'validationIssues' -and $preview.validationIssues) {
+                $status = 'ValidationFailed'
+                $errors = @($preview.validationIssues)
+            }
+            elseif ($propertyNames -contains 'errors' -and $preview.errors) {
+                $status = 'ValidationFailed'
+                $errors = @($preview.errors)
+            }
+
+            $results += [pscustomobject]@{
+                Pipeline     = $pipeline
+                RelativePath = $relativePath
+                Definition   = $definition
+                ParameterSet = $parameterSet
+                Status       = $status
+                Errors       = $errors
+            }
+        }
+        finally {
+            Remove-Item -Path $payloadFile -ErrorAction SilentlyContinue
+        }
     }
 }
 
@@ -272,7 +590,8 @@ if ($failed) {
     $failed | ForEach-Object {
         $message = $_.Errors
         if (-not $message) { $message = 'Unknown error' }
-        Write-Error "Pipeline preview failed for $($_.Pipeline): $message"
+        $parameterSetContext = if ($_.ParameterSet) { $_.ParameterSet } else { New-DefaultParameterSet }
+        Write-Error "Pipeline preview failed for $(Get-ParameterSetContext -Pipeline $_.Pipeline -RelativePath $_.RelativePath -Definition $_.Definition -ParameterSet $parameterSetContext): $message"
     }
     exit 1
 }
