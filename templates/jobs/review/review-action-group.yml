@@ -258,7 +258,7 @@ jobs:
 
                   - template: ../../steps/powershell.yml@PipelineCommon
                     parameters:
-                      displayName: ${{ coalesce(action.reviewDisplayName, action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} (Review ${{ parameters.region }})
+                      displayName: ${{ coalesce(action.reviewDisplayName, action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }} - Review
                       ${{ if ne(coalesce(action.reviewScriptFullPath, ''), '') }}:
                         scriptFullPath: ${{ action.reviewScriptFullPath }}
                       ${{ if and(eq(coalesce(action.reviewScriptFullPath, ''), ''), ne(coalesce(action.reviewScriptPath, ''), '')) }}:
