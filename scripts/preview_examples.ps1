@@ -63,8 +63,41 @@ if (Test-Path -Path $configPath) {
     if (-not $PreviewPipelineId -and $config.PipelineIds) { $PreviewPipelineId = [int]$config.PipelineIds[0] }
 }
 
-if (-not $ExamplesBranch) { $ExamplesBranch = 'refs/heads/main' }
-if (-not $PipelineCommonRef) { $PipelineCommonRef = Get-RepoHeadRef -Path $repoRoot }
+$pipelineCommonHead = Get-RepoHeadRef -Path $repoRoot
+if (-not $PipelineCommonRef) {
+    $PipelineCommonRef = $pipelineCommonHead
+}
+elseif ($PipelineCommonRef -eq 'refs/heads/main' -and $pipelineCommonHead -and $pipelineCommonHead -ne 'refs/heads/main') {
+    $PipelineCommonRef = $pipelineCommonHead
+}
+
+$examplesRepoPath = $null
+try {
+    $examplesRepoPath = (Resolve-Path (Join-Path $repoRoot '..' 'pipeline-examples')).ProviderPath
+}
+catch {
+    $examplesRepoPath = $null
+}
+
+if (-not $ExamplesBranch) {
+    if ($examplesRepoPath) {
+        $examplesHead = Get-RepoHeadRef -Path $examplesRepoPath
+        if ($examplesHead) {
+            $ExamplesBranch = $examplesHead
+        }
+    }
+}
+
+if (-not $ExamplesBranch) {
+    $ExamplesBranch = 'refs/heads/main'
+}
+elseif ($examplesRepoPath -and $ExamplesBranch -eq 'refs/heads/main') {
+    $examplesHead = Get-RepoHeadRef -Path $examplesRepoPath
+    if ($examplesHead -and $examplesHead -ne 'refs/heads/main') {
+        $ExamplesBranch = $examplesHead
+    }
+}
+
 if (-not $PipelineDispatcherRef) { $PipelineDispatcherRef = 'refs/heads/main' }
 
 if (-not $Organization) { throw 'Set AZDO_ORG_SERVICE_URL or pass -Organization.' }

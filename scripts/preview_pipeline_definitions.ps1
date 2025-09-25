@@ -67,8 +67,20 @@ if (Test-Path -Path $configPath) {
     if ((-not $PipelineIds -or $PipelineIds.Count -eq 0) -and $config.PipelineIds) { $PipelineIds = $config.PipelineIds }
 }
 
-if (-not $SelfRef) { $SelfRef = Get-RepoHeadRef -Path $repoRoot }
-if (-not $PipelineCommonRef) { $PipelineCommonRef = $SelfRef }
+$_repoHead = Get-RepoHeadRef -Path $repoRoot
+if (-not $SelfRef) {
+    $SelfRef = $_repoHead
+}
+elseif ($SelfRef -eq 'refs/heads/main' -and $_repoHead -and $_repoHead -ne 'refs/heads/main') {
+    $SelfRef = $_repoHead
+}
+
+if (-not $PipelineCommonRef) {
+    $PipelineCommonRef = $SelfRef
+}
+elseif ($PipelineCommonRef -eq 'refs/heads/main' -and $_repoHead -and $_repoHead -ne 'refs/heads/main') {
+    $PipelineCommonRef = $_repoHead
+}
 if (-not $PipelineDispatcherRef) { $PipelineDispatcherRef = 'refs/heads/main' }
 
 if ([string]::IsNullOrEmpty($Organization)) { throw 'Set AZDO_ORG_SERVICE_URL or pass -Organization.' }
