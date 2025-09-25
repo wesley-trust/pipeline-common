@@ -83,9 +83,6 @@ parameters:
   - name: tokenSuffix
     type: string
     default: "}}"
-  - name: delayMinutes
-    type: number
-    default: 0
 
 jobs:
   - job: ${{ parameters.name }}
@@ -140,12 +137,6 @@ jobs:
                       tokenSuffix: ${{ parameters.tokenSuffix }}
 
       # Execute a script from the shared scripts directory
-      # Optional non-blocking delay before execution
-      - ${{ if gt(coalesce(parameters.delayMinutes, 0), 0) }}:
-          - task: Delay@1
-            inputs:
-              delayForMinutes: ${{ parameters.delayMinutes }}
-
       - template: ../steps/powershell.yml@PipelineCommon
         parameters:
           displayName: Run Script

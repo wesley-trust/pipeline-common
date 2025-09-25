@@ -156,7 +156,6 @@ stages:
                                   tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, createArray()) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
-                                  delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
                                   additionalRepositories: ${{ parameters.additionalRepositories }}
                                   keyVault: ${{ parameters.keyVault }}
                                   serviceConnection: ${{ coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
