@@ -51,7 +51,7 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    ${{ if gt(length(parameters.dependsOnActionGroups), 0) }}:
+    ${{ if ne(coalesce(actionGroup.dependsOn, ''), '') }}:
       dependsOn:
         - ${{ each dependency in parameters.dependsOnActionGroups }}:
             - ${{ format('{0}_{1}', dependency, parameters.region) }}
