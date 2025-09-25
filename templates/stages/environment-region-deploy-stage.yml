@@ -82,24 +82,24 @@ stages:
     jobs:
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(ne(actionGroup.enabled, false), or(contains(actionGroup.environments, parameters.environmentName), eq(coalesce(actionGroup.environments, ''), ''))) }}:
-              - ${{ if gt(coalesce(actionGroup.delayMinutes, 0), 0) }}:
+              - ${{ if gt(int(coalesce(actionGroup.delayMinutes, '0')), 0) }}:
                   - job: ${{ format('delay_deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, coalesce(actionGroup.name, 'actionGroup')) }}
                     displayName: Delay before ${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}
                     pool: server
                     steps:
                       - task: Delay@1
                         inputs:
-                          delayForMinutes: ${{ actionGroup.delayMinutes }}
+                          delayForMinutes: ${{ coalesce(actionGroup.delayMinutes, '0') }}
 
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
                 environment: ${{ upper(parameters.environmentName) }}
-                ${{ if or(ne(coalesce(actionGroup.dependsOn, ''), ''), gt(coalesce(actionGroup.delayMinutes, 0), 0)) }}:
+                ${{ if or(ne(coalesce(actionGroup.dependsOn, ''), ''), gt(int(coalesce(actionGroup.delayMinutes, '0')), 0)) }}:
                   dependsOn:
                     - ${{ if ne(coalesce(actionGroup.dependsOn, ''), '') }}:
                         - ${{ each dependency in actionGroup.dependsOn }}:
                             - ${{ format('deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, dependency) }}
-                    - ${{ if gt(coalesce(actionGroup.delayMinutes, 0), 0) }}:
+                    - ${{ if gt(int(coalesce(actionGroup.delayMinutes, '0')), 0) }}:
                         - ${{ format('delay_deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, coalesce(actionGroup.name, 'actionGroup')) }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
