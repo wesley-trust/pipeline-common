@@ -29,7 +29,7 @@
                 @{
                     Name = 'bicep-tests-smoke-delay'
                     TemplateParameters = @{
-                        bicepTestsDelayMinutes = '15'
+                        bicepTestsDelayMinutes = 15
                         doNotRunSmoke              = $false
                         doNotRunRegression         = $true
                     }
