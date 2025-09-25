@@ -245,12 +245,6 @@ jobs:
 
           - ${{ each action in parameters.actionGroup.actions }}:
               - ${{ if and(ne(action.enabled, false), ne(coalesce(action.reviewScriptFullPath, action.reviewScriptPath, ''), '')) }}:
-                  # Optional delay prior to executing review script
-                  - ${{ if gt(coalesce(action.reviewDelayMinutes, action.delayMinutes, 0), 0) }}:
-                      - task: Delay@1
-                        inputs:
-                          delayForMinutes: ${{ coalesce(action.reviewDelayMinutes, action.delayMinutes) }}
-
                   # Optional per-action token replacement
                   - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
                       - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
