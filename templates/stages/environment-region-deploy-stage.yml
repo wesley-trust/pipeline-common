@@ -320,6 +320,12 @@ stages:
                                         displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
                                         scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.scriptPath }}
                                         arguments: ${{ action.arguments }}
+                                        scriptTask: ${{ coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh') }}
+                                        ${{ if ne(coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection), '') }}:
+                                          azureSubscription: ${{ coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
+                                        ${{ if ne(coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, ''), '') }}:
+                                          azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion) }}
+                                        addSpnToEnvironment: ${{ eq(lower(coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
                                         ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:

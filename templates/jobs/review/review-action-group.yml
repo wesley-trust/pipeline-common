@@ -270,6 +270,7 @@ jobs:
                       ${{ if and(eq(coalesce(action.reviewScriptFullPath, ''), ''), ne(coalesce(action.reviewScriptPath, ''), '')) }}:
                         scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.reviewScriptPath }}
                       arguments: ${{ coalesce(action.reviewArguments, action.arguments, '') }}
+                      scriptTask: ${{ coalesce(action.reviewScriptTask, action.scriptTask, parameters.actionGroup.scriptTask, 'pwsh') }}
                       ${{ if ne(coalesce(action.reviewWorkingDirectory, ''), '') }}:
                         workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.reviewWorkingDirectory }}
                       ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), ne(coalesce(action.reviewWorkingDirectoryFullPath, ''), '')) }}:
@@ -278,6 +279,11 @@ jobs:
                         workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}
                       ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), eq(coalesce(action.reviewWorkingDirectoryFullPath, ''), ''), eq(coalesce(action.workingDirectory, ''), '')) }}:
                         workingDirectory: $(Pipeline.Workspace)/locked-sources
+                      ${{ if ne(coalesce(action.reviewServiceConnection, action.serviceConnection, parameters.actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection), '') }}:
+                        azureSubscription: ${{ coalesce(action.reviewServiceConnection, action.serviceConnection, parameters.actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
+                      ${{ if ne(coalesce(action.reviewAzurePowerShellVersion, action.azurePowerShellVersion, parameters.actionGroup.azurePowerShellVersion, ''), '') }}:
+                        azurePowerShellVersion: ${{ coalesce(action.reviewAzurePowerShellVersion, action.azurePowerShellVersion, parameters.actionGroup.azurePowerShellVersion) }}
+                      addSpnToEnvironment: ${{ eq(lower(coalesce(action.reviewScriptTask, action.scriptTask, parameters.actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
                     ${{ if ne(coalesce(action.reviewCondition, action.condition, ''), '') }}:
                       condition: ${{ coalesce(action.reviewCondition, action.condition) }}
                     ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:

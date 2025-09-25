@@ -17,6 +17,12 @@ parameters:
   - name: pwsh
     type: boolean
     default: true
+  - name: scriptTask
+    type: string
+    default: pwsh
+  - name: azurePowerShellVersion
+    type: string
+    default: LatestVersion
   - name: variableFiles
     type: object
     default: {}
@@ -144,8 +150,14 @@ jobs:
         parameters:
           displayName: Run Script
           repoAlias: PipelineCommon
+          scriptTask: ${{ parameters.scriptTask }}
           ${{ if ne(parameters.scriptFullPath, '') }}:
             scriptFullPath: ${{ parameters.scriptFullPath }}
-          ${{ if eq(parameters.scriptFullPath, '') }}:
+          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, '')) }}:
             script: ${{ parameters.scriptPath }}
           arguments: ${{ parameters.arguments }}
+          pwsh: ${{ parameters.pwsh }}
+          azurePowerShellVersion: ${{ parameters.azurePowerShellVersion }}
+          ${{ if ne(coalesce(parameters.serviceConnection, ''), '') }}:
+            azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+          addSpnToEnvironment: ${{ eq(lower(parameters.scriptTask), 'azurecli') }}

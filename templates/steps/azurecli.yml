@@ -11,6 +11,9 @@ parameters:
   - name: script
     type: string
     default: ""
+  - name: scriptFullPath
+    type: string
+    default: ""
   - name: arguments
     type: string
     default: ""
@@ -20,29 +23,27 @@ parameters:
   - name: condition
     type: string
     default: ""
+  - name: addSpnToEnvironment
+    type: boolean
+    default: false
 
 steps:
   - task: AzureCLI@2
     displayName: ${{ parameters.displayName }}
-    ${{ if ne(parameters.azureSubscription, '') }}:
-      inputs:
+    inputs:
+      scriptType: pscore
+      scriptLocation: scriptPath
+      ${{ if ne(parameters.scriptFullPath, '') }}:
+        scriptPath: ${{ parameters.scriptFullPath }}
+      ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.script, '')) }}:
+        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+      ${{ if ne(parameters.arguments, '') }}:
+        arguments: ${{ parameters.arguments }}
+      ${{ if ne(parameters.workingDirectory, '') }}:
+        workingDirectory: ${{ parameters.workingDirectory }}
+      ${{ if ne(parameters.azureSubscription, '') }}:
         azureSubscription: ${{ parameters.azureSubscription }}
-        scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+      ${{ if and(eq(parameters.addSpnToEnvironment, true), ne(parameters.azureSubscription, '')) }}:
         addSpnToEnvironment: true
-        ${{ if ne(parameters.arguments, '') }}:
-          arguments: ${{ parameters.arguments }}
-        ${{ if ne(parameters.workingDirectory, '') }}:
-          workingDirectory: ${{ parameters.workingDirectory }}
-    ${{ if eq(parameters.azureSubscription, '') }}:
-      inputs:
-        scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
-        ${{ if ne(parameters.arguments, '') }}:
-          arguments: ${{ parameters.arguments }}
-        ${{ if ne(parameters.workingDirectory, '') }}:
-          workingDirectory: ${{ parameters.workingDirectory }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}

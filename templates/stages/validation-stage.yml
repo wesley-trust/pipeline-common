@@ -144,6 +144,8 @@ stages:
                                   scriptPath: ${{ action.scriptPath }}
                                   scriptFullPath: ""
                                   arguments: ${{ action.arguments }}
+                                  scriptTask: ${{ coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh') }}
+                                  azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, 'LatestVersion') }}
                                   variableRoot: ${{ parameters.variableRoot }}
                                   environmentName: ""
                                   region: ""
@@ -157,4 +159,4 @@ stages:
                                   delayMinutes: ${{ coalesce(action.delayMinutes, 0) }}
                                   additionalRepositories: ${{ parameters.additionalRepositories }}
                                   keyVault: ${{ parameters.keyVault }}
-                                  serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+                                  serviceConnection: ${{ coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}

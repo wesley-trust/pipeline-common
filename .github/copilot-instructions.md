@@ -1,43 +1,74 @@
 # Copilot Instructions for AI Agents
 
 ## Project Purpose & Architecture
-- **`pipeline-common`** provides reusable Azure DevOps pipeline templates (YAML) for standardizing validation and deployment across consumer repos. All automation is PowerShell Core (no bash/inline scripts).
-- **Primary entry point:** `templates/main.yml` (all consumer pipelines must extend this via the dispatcher repo).
-- **Major components:**
-  - `templates/`: Modular YAML templates for stages, jobs, steps, and variable includes.
-  - `scripts/`: PowerShell Core scripts for all automation (e.g., `terraform_run.ps1`, `bicep_run.ps1`, `ps_analyse.ps1`).
-  - **Dispatcher integration:** The `wesley-trust/pipeline-dispatcher` repo wires up the main template and passes a single `configuration` object.
-- **Design principles:**
-  - Lock sources early (initialise stage publishes a snapshot)
-  - Run validation before review/deploy
-  - Reuse scripts/tasks for all supported technologies (Terraform, Bicep, PowerShell)
+## Purpose & Big picture
+- `pipeline-common` provides reusable Azure DevOps pipeline templates and PowerShell automation used by the dispatcher (`pipeline-dispatcher`) and consumer examples (`pipeline-examples`).
+- Primary template: `templates/main.yml` — everything is composed from `templates/` and `templates/variables/include.yml`.
 
-## Key Workflows
-- **Local validation:**
-  - Run `pwsh -File scripts/invoke_local_tests.ps1` (requires changes to be committed and pushed). This lints PowerShell, checks YAML, and validates template/script references.
-  - Azure DevOps validation: push to a feature/bugfix branch, then run pipeline previews or full runs.
-- **No automated unit tests:** Validation is via pipeline runs and the local harness. See `AGENTS.md` for full workflow.
-- **Branching:** Always work on a feature/bugfix branch. Do not run validation on unpushed work.
+## What matters for an AI coding agent (quick bullets)
+- Work in PowerShell-only automation. All runtime scripts live under `scripts/` (e.g. `terraform_run.ps1`, `bicep_run.ps1`, `ps_analyse.ps1`). Do not add Bash.
+- Consumers extend `templates/main.yml` via the dispatcher; check `pipeline-dispatcher/templates/pipeline-dispatcher.yml` and `pipeline-examples/examples/consumer/*` for real usage examples.
+- Validation is local-first: the harness `scripts/invoke_local_tests.ps1` is the canonical check before pushing changes.
 
-## Project-Specific Conventions
-- **No Bash:** All scripts must be PowerShell Core. Do not introduce bash or inline scripts.
-- **Extensibility:** Add new scripts to `scripts/` and reference them in templates. All jobs/steps are modular and reusable.
-- **Token replacement:** Defaults are technology-specific; override with `tokenTargetPatterns` if needed.
-- **Unique actionGroup names:** Ensure `actionGroups[*].name` is unique per environment/region.
-- **DR mode:** Use `drInvocation` to deploy only to DR region (see `AGENTS.md`).
-- **Variable includes:** Controlled by flags in `templates/variables/include.yml` (common, region, env, env-region).
+## Key workflows & concrete commands
+- Local validation (required):
+  - Commit your changes to a feature branch and push. Then run:
+    - `pwsh -File scripts/invoke_local_tests.ps1`
+  - The harness runs Pester, YAML/template includes resolution, script reference checks and optional Azure DevOps preview checks.
+- Azure preview (optional, needs PAT):
+  - `pwsh -File scripts/preview_examples.ps1` and `pwsh -File scripts/preview_pipeline_definitions.ps1` (see `config/azdo-preview.config.psd1` for settings).
 
-## Integration & External Dependencies
-- **Dispatcher:** All consumer pipelines are wired through the dispatcher (`pipeline-dispatcher`).
-- **Key Vault:** Use `configuration.keyVault` to import secrets before jobs.
-- **Additional repos:** Add to `configuration.additionalRepositories` for automatic checkout.
-- **Consumer onboarding:** Reference patterns in `wesley-trust/pipeline-examples` (see `examples/consumer/`).
+## Prerequisites (local agent)
+- PowerShell 7.x (`pwsh`) and Git are required. The harness installs Pester and `powershell-yaml` on first run (Internet required).
+- The local validation harness expects the `pipeline-examples` repo to be available next to this repo (e.g. sibling folder `../pipeline-examples`) so example consumer pipelines can be validated.
 
-## References & Further Reading
-- `README.md` and `AGENTS.md`: High-level and deep-dive documentation
-- `docs/CONFIGURE.md`: Parameter flow, action model, environment design
-- Example consumer pipelines: `wesley-trust/pipeline-examples/examples/consumer/`
+## Preview environment variables
+- To run the Azure DevOps preview scripts you need a PAT and basic org/project settings. Common env vars:
+  - `AZURE_DEVOPS_EXT_PAT` or `AZDO_PERSONAL_ACCESS_TOKEN` (PAT)
+  - `AZDO_ORG_SERVICE_URL` (e.g. `https://dev.azure.com/<org>`)
+  - `AZDO_PROJECT` (project name)
+  - Optional: `AZDO_PIPELINE_IDS` (comma-separated pipeline IDs for previewing definitions)
+  - `config/azdo-preview.config.psd1` can be used to avoid exporting env vars every time.
+
+## Files & places to inspect (high value)
+- `templates/main.yml` — entry point and stage composition.
+- `templates/variables/include.yml` — how compile-time variable layers are included.
+- `scripts/` — all deploy/validate helper scripts (`initialise_*.ps1`, `terraform_run.ps1`, `bicep_run.ps1`, `ps_analyse.ps1`).
+- `docs/CONFIGURE.md`, `AGENTS.md` — behavioural and onboarding documentation.
+- `tests/` — Pester-based tests used by the harness (e.g. `tests/Templates.Tests.ps1`).
+
+## Project-specific conventions & patterns
+- No Bash: PowerShell Core only. Scripts are expected to run under `pwsh`.
+- Lock sources early: the initialise stage publishes a snapshot used by later stages — see `templates/stages/initialise-stage.yml` and `scripts/initialise_*.ps1`.
+- Token replacement and variable includes are controlled centrally (search for `tokenTargetPatterns`, `tokenPrefix`, `tokenSuffix` in `templates/steps/`).
+- `actionGroups` model: consumer `*.settings.yml` files provide `configuration.actionGroups` that the dispatcher passes through; ensure `actionGroups[*].name` is unique per environment/region.
+- DR mode: consumers may set `drInvocation: true` to target DR region behaviour.
+- Agent demands: some jobs use `poolRegionDemand` and expect agents to advertise `region == <regionName>` capability.
+
+## Integration points & dependencies
+- Dispatcher: `pipeline-dispatcher` composes with this repo — update both when changing dispatcher contract.
+- Examples: `pipeline-examples/examples/consumer/` shows consumer settings and pipelines to mirror.
+- Key Vault & additional repositories: configured via `configuration.keyVault` and `configuration.additionalRepositories` respectively.
+
+## Quick tips for edits
+- When adding scripts, place them under `scripts/` and reference them from `templates/steps/` using the existing patterns.
+- Run the local harness after edits and push the branch before invoking Azure previews.
+- Update `docs/CONFIGURE.md` and `AGENTS.md` when behaviour or parameters change.
+
+## Minimal contract for adding scripts / templates / tests
+- Scripts: create under `scripts/`, use `param()` for arguments, include a short header comment describing inputs/outputs, and avoid platform-specific Bash usage — `pwsh` only.
+- Templates: place new steps in `templates/steps/` or jobs in `templates/jobs/`; when adding a static `script:` reference, point to a file inside `scripts/` (the harness verifies script paths).
+- Tests: add a concise Pester test under `tests/` (e.g. `tests/MyFeature.Tests.ps1`) that validates template include resolution or a script's linting; the harness picks up `tests/*.Tests.ps1`.
+
+## Troubleshooting pointers
+- PSScriptAnalyzer failures: run `pwsh -File scripts/ps_analyse.ps1` locally to reproduce rules used by the harness.
+- Missing template includes: the harness reports exact `template:` lines that fail to resolve — check relative paths and `templates/variables/include.yml` flags.
+- Preview failures: ensure your branch is committed and pushed; preview endpoints compile the remote branch tip, not local unpushed edits.
+
+## Where to look for examples in this repo
+- Example scripts: `scripts/*_run.ps1`, `scripts/initialise_*.ps1`, `scripts/ps_analyse.ps1`.
+- Example consumer pipelines: open `../pipeline-examples/examples/consumer/*.pipeline.yml`.
 
 ---
 
-**If unsure about a workflow or convention, check `AGENTS.md` and `docs/CONFIGURE.md` first, or review the dispatcher and examples repos.**
+If any of these sections are unclear or you'd like me to expand examples (e.g., show a small patch that adds a script + template step + a harness test), tell me which area to expand.

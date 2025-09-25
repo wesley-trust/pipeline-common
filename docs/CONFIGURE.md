@@ -89,6 +89,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   # PowerShell specifics:
   scriptPath: scripts/custom.ps1
   arguments: '-Env $(Environment)'
+  scriptTask: pwsh|azureCli|azurePowerShell   # optional; defaults to pwsh
 
   # Optional actions (same shape as an actionGroup entry, but no further nesting and they inherit the parent type):
   actions:
@@ -173,10 +174,13 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## PowerShell Action Enhancements
 
-- Add to any `action` of `type: powershell`:
+- Add to any `action` of `type: powershell` (group-level `scriptTask`/`serviceConnection` values act as defaults):
+  - `scriptTask: pwsh|azureCli|azurePowerShell` — selects the underlying task. `pwsh` stays on `PowerShell@2`; `azureCli` swaps to `AzureCLI@2` with `addSpnToEnvironment` so Az CLI and Az PowerShell share the injected service principal; `azurePowerShell` runs via `AzurePowerShell@5` for organisations that prefer the Az module.
+  - `serviceConnection: '<service connection name or variable>'` — overrides the environment-level connection when a task needs a different subscription/tenant. Required for `scriptTask: azureCli`/`azurePowerShell` so the task can authenticate.
+  - `azurePowerShellVersion: '<version>'` — optional when `scriptTask: azurePowerShell`; defaults to `LatestVersion`.
   - `delayMinutes: <number>` — inserts a non-blocking Delay task before execution.
   - `runInValidation: true|false` — also runs this action in the Validation stage.
-- PowerShell review jobs are enabled per action group via `runPowerShellReview: true|false` (defaults to false). When enabled you must supply a review script per action using either `reviewScriptPath` (relative to the locked snapshot) or `reviewScriptFullPath`; actions without a review script are skipped. You can still override behaviour with `reviewArguments` (defaults to `arguments`), `reviewDisplayName` (defaults to the action display name), `reviewCondition`, `reviewDelayMinutes` (defaults to `delayMinutes`), `reviewWorkingDirectory` (relative to the locked snapshot), or `reviewWorkingDirectoryFullPath`.
+- PowerShell review jobs are enabled per action group via `runPowerShellReview: true|false` (defaults to false). When enabled you must supply a review script per action using either `reviewScriptPath` (relative to the locked snapshot) or `reviewScriptFullPath`; actions without a review script are skipped. You can still override behaviour with `reviewScriptTask`, `reviewServiceConnection`, `reviewAzurePowerShellVersion`, `reviewArguments` (defaults to `arguments`), `reviewDisplayName` (defaults to the action display name), `reviewCondition`, `reviewDelayMinutes` (defaults to `delayMinutes`), `reviewWorkingDirectory` (relative to the locked snapshot), or `reviewWorkingDirectoryFullPath`.
 - Token replacement for PowerShell actions is supported in Validation and Review via `tokenReplaceEnabled`, `tokenTargetPatterns`, `tokenPrefix`, `tokenSuffix`.
 - To reuse the deployment logic, explicitly set `reviewScriptPath` to the same script the deploy action uses. `reviewArguments` defaults to the deployment arguments when omitted.
 

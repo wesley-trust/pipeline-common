@@ -67,7 +67,7 @@ Route-to-live integrity
 
 Reusable task templates
 - Azure CLI: `templates/steps/azurecli.yml` (scriptPath + args + optional service connection)
-- PowerShell: `templates/steps/powershell.yml` (scriptPath + args + pwsh)
+- PowerShell: `templates/steps/powershell.yml` (scriptPath + args; choose PowerShell@2, AzureCLI@2, or AzurePowerShell@5 via `scriptTask`)
 - Publish artifact: `templates/steps/publish-artifact.yml`
 - Download artifact: `templates/steps/download-artifact.yml`
 - Import Key Vault secrets: `templates/steps/import-keyvault-secrets.yml`
