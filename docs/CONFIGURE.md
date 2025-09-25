@@ -90,6 +90,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   scriptPath: scripts/custom.ps1
   arguments: '-Env $(Environment)'
   scriptTask: pwsh|azureCli|azurePowerShell   # optional; defaults to pwsh
+  workingDirectory: tests/powershell          # optional; relative to locked snapshot (defaults to repo root)
 
   # Optional actions (same shape as an actionGroup entry, but no further nesting and they inherit the parent type):
   actions:

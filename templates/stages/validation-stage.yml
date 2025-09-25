@@ -129,6 +129,12 @@ stages:
                       displayName: Custom Validation
                       scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.path }}
                       arguments: ${{ script.arguments }}
+                      ${{ if ne(coalesce(script.workingDirectory, ''), '') }}:
+                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ script.workingDirectory }}
+                      ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), ne(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                        workingDirectory: ${{ script.workingDirectoryFullPath }}
+                      ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), eq(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                        workingDirectory: $(Pipeline.Workspace)/locked-sources
 
       # Invoke PowerShell actions in Validation when requested
       - ${{ each actionGroup in parameters.actionGroups }}:
@@ -146,6 +152,8 @@ stages:
                                   arguments: ${{ action.arguments }}
                                   scriptTask: ${{ coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh') }}
                                   azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, 'LatestVersion') }}
+                                  workingDirectory: ${{ action.workingDirectory }}
+                                  workingDirectoryFullPath: ${{ action.workingDirectoryFullPath }}
                                   variableRoot: ${{ parameters.variableRoot }}
                                   environmentName: ""
                                   region: ""

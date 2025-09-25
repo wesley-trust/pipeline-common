@@ -44,6 +44,12 @@ parameters:
   - name: lockedSourcePath
     type: string
     default: $(Pipeline.Workspace)/locked-sources
+  - name: workingDirectory
+    type: string
+    default: ""
+  - name: workingDirectoryFullPath
+    type: string
+    default: ""
   - name: pool
     type: object
     default: {}
@@ -144,7 +150,9 @@ jobs:
           scriptTask: ${{ parameters.scriptTask }}
           ${{ if ne(parameters.scriptFullPath, '') }}:
             scriptFullPath: ${{ parameters.scriptFullPath }}
-          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, '')) }}:
+          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, ''), eq(parameters.useLockedSources, true)) }}:
+            scriptFullPath: ${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.scriptPath) }}
+          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, ''), ne(parameters.useLockedSources, true)) }}:
             script: ${{ parameters.scriptPath }}
           arguments: ${{ parameters.arguments }}
           pwsh: ${{ parameters.pwsh }}
@@ -152,3 +160,9 @@ jobs:
           ${{ if ne(coalesce(parameters.serviceConnection, ''), '') }}:
             azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
           addSpnToEnvironment: ${{ eq(lower(parameters.scriptTask), 'azurecli') }}
+          ${{ if ne(coalesce(parameters.workingDirectory, ''), '') }}:
+            workingDirectory: ${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.workingDirectory) }}
+          ${{ if and(eq(coalesce(parameters.workingDirectory, ''), ''), ne(coalesce(parameters.workingDirectoryFullPath, ''), '')) }}:
+            workingDirectory: ${{ parameters.workingDirectoryFullPath }}
+          ${{ if and(eq(coalesce(parameters.workingDirectory, ''), ''), eq(coalesce(parameters.workingDirectoryFullPath, ''), ''), eq(parameters.useLockedSources, true)) }}:
+            workingDirectory: ${{ parameters.lockedSourcePath }}

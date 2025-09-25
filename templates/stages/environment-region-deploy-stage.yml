@@ -147,6 +147,12 @@ stages:
                                     displayName: Pre-Deploy (script)
                                     scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
                                     arguments: ${{ script.arguments }}
+                                    ${{ if ne(coalesce(script.workingDirectory, ''), '') }}:
+                                      workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ script.workingDirectory }}
+                                    ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), ne(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                                      workingDirectory: ${{ script.workingDirectoryFullPath }}
+                                    ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), eq(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                                      workingDirectory: $(Pipeline.Workspace)/locked-sources
 
                         # Optional token replacement at action group level
                         - ${{ if eq(coalesce(actionGroup.tokenReplaceEnabled, false), true) }}:
@@ -323,6 +329,12 @@ stages:
                                         ${{ if ne(coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, ''), '') }}:
                                           azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion) }}
                                         addSpnToEnvironment: ${{ eq(lower(coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
+                                        ${{ if ne(coalesce(action.workingDirectory, ''), '') }}:
+                                          workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}
+                                        ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), ne(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
+                                          workingDirectory: ${{ action.workingDirectoryFullPath }}
+                                        ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), eq(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
+                                          workingDirectory: $(Pipeline.Workspace)/locked-sources
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
                                         ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
@@ -340,3 +352,9 @@ stages:
                                     displayName: Post-Deploy (script)
                                     scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.script }}
                                     arguments: ${{ script.arguments }}
+                                    ${{ if ne(coalesce(script.workingDirectory, ''), '') }}:
+                                      workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ script.workingDirectory }}
+                                    ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), ne(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                                      workingDirectory: ${{ script.workingDirectoryFullPath }}
+                                    ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), eq(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
+                                      workingDirectory: $(Pipeline.Workspace)/locked-sources
