@@ -20,7 +20,7 @@
                 @{
                     Name = 'prod-review-disabled'
                     TemplateParameters = @{
-                        runReviewStage = $false
+                        doNotRunReviewStage = $true
                         skip_qa        = $false
                         skip_preprod   = $false
                         enableProduction = $true
