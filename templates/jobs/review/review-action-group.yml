@@ -91,7 +91,7 @@ jobs:
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
 
       # Terraform Action
-      - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), ne(toLower(format('{0}', coalesce(parameters.actionGroup.runTerraformPlan, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'terraform'), ne(lower(format('{0}', coalesce(parameters.actionGroup.runTerraformPlan, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           # Optional token replacement at action group level
           - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
               - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
@@ -155,7 +155,7 @@ jobs:
                       targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
 
       # Bicep Action
-      - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), ne(toLower(format('{0}', coalesce(parameters.actionGroup.runBicepWhatIf, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), ne(lower(format('{0}', coalesce(parameters.actionGroup.runBicepWhatIf, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           # Optional token replacement at action group level
           - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
               - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
@@ -235,7 +235,7 @@ jobs:
                       targetPath: ${{ format('{0}/stack.csv', '$(Pipeline.Workspace)/locked-sources') }}
 
       # PowerShell Action
-      - ${{ if and(eq(parameters.actionGroup.type, 'powershell'), eq(toLower(format('{0}', coalesce(parameters.actionGroup.runPowerShellReview, false))), 'true'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
+      - ${{ if and(eq(parameters.actionGroup.type, 'powershell'), eq(lower(format('{0}', coalesce(parameters.actionGroup.runPowerShellReview, false))), 'true'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
           # Optional token replacement at action group level
           - ${{ if eq(coalesce(parameters.actionGroup.tokenReplaceEnabled, false), true) }}:
               - ${{ if ne(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:

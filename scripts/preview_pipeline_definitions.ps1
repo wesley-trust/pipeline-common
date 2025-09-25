@@ -107,7 +107,7 @@ function Get-AzDoPat {
         $patValue = $env:AZDO_PERSONAL_ACCESS_TOKEN
     }
     if ($patValue) {
-        return $patValue
+        return $patValue.Trim()
     }
 
     if (Test-Path -Path $patStorePath) {
@@ -118,7 +118,10 @@ function Get-AzDoPat {
                     $secure = ConvertTo-SecureString -String $storedValue -ErrorAction Stop
                     $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
                     try {
-                        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+                        $plaintext = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+                        if ($plaintext) {
+                            return $plaintext.Trim()
+                        }
                     }
                     finally {
                         if ($ptr -ne [IntPtr]::Zero) {
@@ -127,7 +130,7 @@ function Get-AzDoPat {
                     }
                 }
                 catch {
-                    return $storedValue
+                    return $storedValue.Trim()
                 }
             }
         }
@@ -152,7 +155,11 @@ function Get-ErrorContent {
         try {
             $responseContent = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
         }
-        catch { $responseContent = $_.Exception.Message }
+        catch {
+            if ($_.Exception -and $_.Exception.Message) {
+                $responseContent = 'Unable to read response content: {0}' -f $_.Exception.Message
+            }
+        }
     }
     elseif ($response) {
         try {
@@ -166,6 +173,77 @@ function Get-ErrorContent {
     }
 
     return $responseContent
+}
+
+function Get-ResponseSnippet {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Content,
+        [int]$MaxLength = 512
+    )
+
+    if ([string]::IsNullOrEmpty($Content)) {
+        return ''
+    }
+
+    $normalized = $Content.Trim()
+    if ($normalized.Length -le $MaxLength) {
+        return $normalized
+    }
+
+    return $normalized.Substring(0, $MaxLength)
+}
+
+function Get-IssueMessage {
+    param(
+        [Parameter(Mandatory)]
+        $Value
+    )
+
+    $messages = @()
+    foreach ($item in @($Value)) {
+        if (-not $item) { continue }
+
+        if ($item -is [System.Collections.IEnumerable] -and -not ($item -is [string])) {
+            $messages += Get-IssueMessage -Value $item
+            continue
+        }
+
+        $message = $null
+        if ($item -is [string]) {
+            $stringValue = $item.Trim()
+            if ($stringValue -match "`n") {
+                $messages += ($stringValue -split "`r?`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+                continue
+            }
+
+            $message = $stringValue
+        }
+        elseif ($item -is [System.Management.Automation.PSObject]) {
+            $messageProperty = $item.PSObject.Properties['message']
+            if (-not $messageProperty) {
+                $messageProperty = $item.PSObject.Properties['Message']
+            }
+            if ($messageProperty) {
+                $message = $messageProperty.Value
+            }
+        }
+
+        if (-not $message -and ($item -isnot [string])) {
+            try {
+                $message = ($item | ConvertTo-Json -Depth 5 -Compress)
+            }
+            catch {
+                $message = $item.ToString()
+            }
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($message)) {
+            $messages += $message.Trim()
+        }
+    }
+
+    return $messages
 }
 
 $pat = Get-AzDoPat
@@ -197,7 +275,7 @@ foreach ($pipelineId in $PipelineIds) {
         $jsonBody = Get-Content -Path $tempFile -Raw
 
         try {
-            $preview = Invoke-RestMethod -Method Post -Uri $previewUrl -Headers @{ Authorization = $authHeader } -ContentType 'application/json' -Body $jsonBody
+            $response = Invoke-WebRequest -Method Post -Uri $previewUrl -Headers @{ Authorization = $authHeader; Accept = 'application/json'; 'X-TFS-FedAuthRedirect' = 'Suppress' } -ContentType 'application/json' -Body $jsonBody -MaximumRedirection 0 -SkipHttpErrorCheck
         }
         catch {
             $errorMessage = $_
@@ -205,7 +283,36 @@ foreach ($pipelineId in $PipelineIds) {
             $message = 'Azure DevOps preview failed for pipeline id {0}: {1} {2}' -f $pipelineId, $errorMessage, $responseContent
             throw $message
         }
-        $status = 'Success'
+
+        $statusCode = $null
+        if ($response.StatusCode) {
+            $statusCode = [int]$response.StatusCode
+        }
+
+        $contentType = $response.Headers['Content-Type']
+        if (-not $contentType) {
+            $contentType = $response.Headers['content-type']
+        }
+
+        if ($contentType -is [System.Array]) {
+            $contentType = $contentType -join '; '
+        }
+
+        if (-not $contentType -or -not ($contentType -match 'application/json')) {
+            $snippet = Get-ResponseSnippet -Content $response.Content
+            $message = 'Azure DevOps preview returned unexpected content type for pipeline id {0}: {1} (StatusCode: {2}). Snippet: {3}' -f $pipelineId, $contentType, $statusCode, $snippet
+            throw $message
+        }
+
+        try {
+            $preview = $response.Content | ConvertFrom-Json -Depth 50
+        }
+        catch {
+            $snippet = Get-ResponseSnippet -Content $response.Content
+            $message = 'Azure DevOps preview returned invalid JSON for pipeline id {0}: {1}' -f $pipelineId, $snippet
+            throw $message
+        }
+        $status = if ($statusCode -and $statusCode -ge 400) { 'ValidationFailed' } else { 'Success' }
         $issues = @()
         $propertyNames = $preview.PSObject.Properties.Name
 
@@ -215,25 +322,34 @@ foreach ($pipelineId in $PipelineIds) {
                 $previewProps = $previewBlock.PSObject.Properties.Name
                 if ($previewProps -contains 'validationIssues' -and $previewBlock.validationIssues) {
                     $status = 'ValidationFailed'
-                    $issues = @($previewBlock.validationIssues)
+                    $issues += Get-IssueMessage -Value $previewBlock.validationIssues
                 }
                 elseif ($previewProps -contains 'validationErrors' -and $previewBlock.validationErrors) {
                     $status = 'ValidationFailed'
-                    $issues = @($previewBlock.validationErrors)
+                    $issues += Get-IssueMessage -Value $previewBlock.validationErrors
+                }
+                elseif ($previewProps -contains 'errors' -and $previewBlock.errors) {
+                    $status = 'ValidationFailed'
+                    $issues += Get-IssueMessage -Value $previewBlock.errors
                 }
             }
         }
         elseif ($propertyNames -contains 'validationIssues' -and $preview.validationIssues) {
             $status = 'ValidationFailed'
-            $issues = @($preview.validationIssues)
+            $issues += Get-IssueMessage -Value $preview.validationIssues
         }
 
         if (($issues.Count -eq 0) -and ($propertyNames -contains 'errors') -and $preview.errors) {
             $status = 'ValidationFailed'
-            $issues = @($preview.errors)
+            $issues += Get-IssueMessage -Value $preview.errors
+        }
+
+        if ($status -eq 'ValidationFailed' -and $propertyNames -contains 'message' -and $preview.message) {
+            $issues += Get-IssueMessage -Value $preview.message
         }
 
         if ($issues.Count -gt 0) {
+            $issues = @($issues | Where-Object { $_ } | Sort-Object -Unique)
             $results += [pscustomobject]@{
                 PipelineId = $pipelineId
                 Status     = $status
@@ -256,7 +372,7 @@ foreach ($pipelineId in $PipelineIds) {
 $failed = $results | Where-Object { $_.Status -ne 'Success' }
 if ($failed) {
     $failed | ForEach-Object {
-        $message = if ($_.Issues -and $_.Issues.Count) { $_.Issues } else { 'Unknown error' }
+        $message = if ($_.Issues -and $_.Issues.Count) { $_.Issues -join [Environment]::NewLine } else { 'Unknown error' }
         Write-Error "Pipeline preview failed for id $($_.PipelineId): $message"
     }
     exit 1
