@@ -51,10 +51,10 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    ${{ if ne(coalesce(parameters.dependsOnActionGroups, ''), '') }}:
-      dependsOn:
-        - ${{ each dependency in parameters.dependsOnActionGroups }}:
-            - ${{ format('{0}_{1}', dependency, parameters.region) }}
+    # ${{ if ne(coalesce(parameters.dependsOnActionGroups, ''), '') }}:
+    #   dependsOn:
+    #     - ${{ each dependency in parameters.dependsOnActionGroups }}:
+    #         - ${{ format('{0}_{1}', dependency, parameters.region) }}
     variables:
       - template: ../../variables/include.yml@PipelineCommon
         parameters:
