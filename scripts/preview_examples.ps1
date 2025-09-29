@@ -192,7 +192,7 @@ function Get-ErrorContent {
     return $responseContent
 }
 
-function Normalize-RelativePath {
+function Get-NormalizedRelativePath {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Path
@@ -212,7 +212,7 @@ function Normalize-RelativePath {
     return $normalized.ToLowerInvariant()
 }
 
-function New-DefaultParameterSet {
+function Get-DefaultParameterSet {
     param(
         [string]$Name = 'default'
     )
@@ -302,7 +302,7 @@ function ConvertTo-PipelineDefinition {
     }
 
     if ($parameterSets.Count -eq 0) {
-        $parameterSets = @(New-DefaultParameterSet)
+        $parameterSets = @(Get-DefaultParameterSet)
     }
 
     return [pscustomobject]@{
@@ -313,7 +313,7 @@ function ConvertTo-PipelineDefinition {
     }
 }
 
-function Get-UniqueParameterSets {
+function Get-UniqueParameterSet {
     param(
         [Parameter(Mandatory = $true)]
         [pscustomobject[]]$ParameterSets
@@ -384,7 +384,7 @@ if ($PipelineDefinitions) {
             PipelineId    = $converted.PipelineId
             Name          = $converted.Name
             PipelinePath  = $converted.PipelinePath
-            ParameterSets = Get-UniqueParameterSets -ParameterSets $converted.ParameterSets
+            ParameterSets = Get-UniqueParameterSet -ParameterSets $converted.ParameterSets
         }
 
         $candidateKeys = @()
@@ -401,7 +401,9 @@ if ($PipelineDefinitions) {
                     $candidateKeys += $relativeToExamples
                 }
             }
-            catch {}
+            catch {
+                Write-Verbose ("Unable to build pipeline path relative to examples repository for '{0}': {1}" -f $convertedObject.PipelinePath, $_.Exception.Message)
+            }
 
             try {
                 $relativeToRepoCandidate = [System.IO.Path]::GetRelativePath($repoRoot, $fullCandidate)
@@ -409,12 +411,14 @@ if ($PipelineDefinitions) {
                     $candidateKeys += $relativeToRepoCandidate
                 }
             }
-            catch {}
+            catch {
+                Write-Verbose ("Unable to build pipeline path relative to current repository for '{0}': {1}" -f $convertedObject.PipelinePath, $_.Exception.Message)
+            }
         }
 
         $normalizedKeys = @()
         foreach ($key in $candidateKeys) {
-            $normalized = Normalize-RelativePath -Path $key
+            $normalized = Get-NormalizedRelativePath -Path $key
             if ($normalized) { $normalizedKeys += $normalized }
         }
         $normalizedKeys = $normalizedKeys | Sort-Object -Unique
@@ -424,7 +428,7 @@ if ($PipelineDefinitions) {
         foreach ($key in $normalizedKeys) {
             if ($definitionLookup.ContainsKey($key)) {
                 $existing = $definitionLookup[$key]
-                $existing.ParameterSets = Get-UniqueParameterSets -ParameterSets @($existing.ParameterSets + $convertedObject.ParameterSets)
+                $existing.ParameterSets = Get-UniqueParameterSet -ParameterSets @($existing.ParameterSets + $convertedObject.ParameterSets)
                 if (-not $existing.PipelineId -and $convertedObject.PipelineId) { $existing.PipelineId = $convertedObject.PipelineId }
                 if (-not $existing.Name -and $convertedObject.Name) { $existing.Name = $convertedObject.Name }
                 if (-not $existing.PipelinePath -and $convertedObject.PipelinePath) { $existing.PipelinePath = $convertedObject.PipelinePath }
@@ -453,7 +457,9 @@ foreach ($pipeline in $Pipelines) {
                 $candidatePaths += $relativeToExamples
             }
         }
-        catch {}
+        catch {
+            Write-Verbose ("Unable to compute candidate path relative to examples repository for '{0}': {1}" -f $pipeline, $_.Exception.Message)
+        }
     }
 
     try {
@@ -462,13 +468,15 @@ foreach ($pipeline in $Pipelines) {
             $candidatePaths += $relativeToRepo
         }
     }
-    catch {}
+    catch {
+        Write-Verbose ("Unable to compute candidate path relative to current repository for '{0}': {1}" -f $pipeline, $_.Exception.Message)
+    }
 
     $candidatePaths += $pipeline
 
     $normalizedCandidates = @()
     foreach ($candidate in $candidatePaths) {
-        $normalizedCandidate = Normalize-RelativePath -Path $candidate
+        $normalizedCandidate = Get-NormalizedRelativePath -Path $candidate
         if ($normalizedCandidate) {
             $normalizedCandidates += $normalizedCandidate
         }
@@ -488,7 +496,9 @@ foreach ($pipeline in $Pipelines) {
         try {
             $relativePath = [System.IO.Path]::GetRelativePath($examplesRepoPath, $pipeline)
         }
-        catch {}
+        catch {
+            Write-Verbose ("Unable to compute relative path for '{0}' within examples repository: {1}" -f $pipeline, $_.Exception.Message)
+        }
     }
     if (-not $relativePath -and $normalizedCandidates.Count -gt 0) {
         $relativePath = $normalizedCandidates[0]
@@ -499,7 +509,7 @@ foreach ($pipeline in $Pipelines) {
         $parameterSets = $definition.ParameterSets
     }
     if (-not $parameterSets -or $parameterSets.Count -eq 0) {
-        $parameterSets = @(New-DefaultParameterSet)
+        $parameterSets = @(Get-DefaultParameterSet)
     }
 
     foreach ($parameterSet in $parameterSets) {
@@ -590,7 +600,7 @@ if ($failed) {
     $failed | ForEach-Object {
         $message = $_.Errors
         if (-not $message) { $message = 'Unknown error' }
-        $parameterSetContext = if ($_.ParameterSet) { $_.ParameterSet } else { New-DefaultParameterSet }
+        $parameterSetContext = if ($_.ParameterSet) { $_.ParameterSet } else { Get-DefaultParameterSet }
         Write-Error "Pipeline preview failed for $(Get-ParameterSetContext -Pipeline $_.Pipeline -RelativePath $_.RelativePath -Definition $_.Definition -ParameterSet $parameterSetContext): $message"
     }
     exit 1
