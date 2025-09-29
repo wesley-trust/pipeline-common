@@ -11,6 +11,129 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+function Get-VariableRootCandidatePath {
+  param(
+    [string]$Root
+  )
+
+  $candidates = @()
+
+  if ([string]::IsNullOrWhiteSpace($Root)) {
+    return $candidates
+  }
+
+  $candidates += $Root
+
+  try {
+    $pwdPath = (Get-Location).ProviderPath
+    if ($pwdPath) {
+      $candidates += (Join-Path -Path $pwdPath -ChildPath $Root)
+
+      try {
+        $pwdParent = Split-Path -Parent $pwdPath
+        if ($pwdParent) {
+          $candidates += (Join-Path -Path $pwdParent -ChildPath $Root)
+
+          $pwdSiblings = Get-ChildItem -Path $pwdParent -Directory -ErrorAction Stop
+          foreach ($sibling in $pwdSiblings) {
+            $candidates += (Join-Path -Path $sibling.FullName -ChildPath $Root)
+          }
+        }
+      }
+      catch {
+        Write-Verbose -Message ("Failed to enumerate directories from '{0}': {1}" -f $pwdPath, $_)
+      }
+    }
+  }
+  catch {
+    Write-Verbose -Message ("Unable to resolve current location: {0}" -f $_)
+  }
+
+  $commandInfo = $MyInvocation.MyCommand
+  $scriptDirectory = $null
+
+  try {
+    $hasPathProperty = $false
+    if ($commandInfo) {
+      try {
+        $null = $commandInfo | Get-Member -Name 'Path' -ErrorAction Stop
+        $hasPathProperty = $true
+      }
+      catch {
+        Write-Verbose -Message ("MyCommand.Path unavailable: {0}" -f $_)
+        $hasPathProperty = $false
+      }
+    }
+    if ($hasPathProperty -and -not [string]::IsNullOrWhiteSpace($commandInfo.Path)) {
+      $scriptDirectory = Split-Path -Parent $commandInfo.Path
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($PSCommandPath)) {
+      $scriptDirectory = Split-Path -Parent $PSCommandPath
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+      $scriptDirectory = $PSScriptRoot
+    }
+  }
+  catch {
+    Write-Verbose -Message ("Failed to resolve script directory: {0}" -f $_)
+    $scriptDirectory = $null
+  }
+
+  if ($scriptDirectory) {
+    $repoRoot = Split-Path -Parent $scriptDirectory
+    if ($repoRoot) {
+      $candidates += (Join-Path -Path $repoRoot -ChildPath $Root)
+
+      $parent = Split-Path -Parent $repoRoot
+      if ($parent) {
+        $candidates += (Join-Path -Path $parent -ChildPath $Root)
+
+        try {
+          $siblingDirectories = Get-ChildItem -Path $parent -Directory -ErrorAction Stop
+          foreach ($sibling in $siblingDirectories) {
+            $candidates += (Join-Path -Path $sibling.FullName -ChildPath $Root)
+          }
+        }
+        catch {
+          Write-Verbose -Message ("Failed to enumerate siblings under '{0}': {1}" -f $parent, $_)
+        }
+      }
+    }
+  }
+
+  if ($env:BUILD_SOURCESDIRECTORY) {
+    $candidates += (Join-Path -Path $env:BUILD_SOURCESDIRECTORY -ChildPath $Root)
+  }
+
+  if ($env:SYSTEM_DEFAULTWORKINGDIRECTORY) {
+    $candidates += (Join-Path -Path $env:SYSTEM_DEFAULTWORKINGDIRECTORY -ChildPath $Root)
+  }
+
+  return $candidates |
+    ForEach-Object { $_ } |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Select-Object -Unique
+}
+
+function Resolve-VariableRoot {
+  param(
+    [string]$Root
+  )
+
+  foreach ($candidate in Get-VariableRootCandidatePath -Root $Root) {
+    try {
+      if (Test-Path -Path $candidate -PathType Container) {
+        return (Resolve-Path -Path $candidate -ErrorAction Stop).ProviderPath
+      }
+    }
+    catch {
+      continue
+    }
+  }
+
+  return $null
+}
+
 function Get-PropertyValue {
   param(
     [object]$Source,
@@ -82,6 +205,14 @@ function Test-VariableFile {
     Write-Warning -Message "variables file not found: $Description ($Path)"
   }
 }
+
+$resolvedVariableRoot = Resolve-VariableRoot -Root $VariableRoot
+if (-not $resolvedVariableRoot) {
+  Write-Warning -Message "Unable to resolve variable root '$VariableRoot'. Ensure the path exists relative to the checked-out repository."
+  return
+}
+
+$VariableRoot = $resolvedVariableRoot
 
 $globalVariables = $null
 if (-not [string]::IsNullOrWhiteSpace($VariablesConfigJson) -and $VariablesConfigJson -ne 'null') {
