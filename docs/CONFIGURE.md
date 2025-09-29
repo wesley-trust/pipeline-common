@@ -248,9 +248,9 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - Variables are included at compile time using templates so values are available during compilation. Deterministic order:
   1. `vars/common.yml`
-  2. `vars/region/<region>.yml` (region-only, across all environments)
-  3. `vars/env/<env>.yml`
-  4. `vars/<env>/region/<region>.yml`
+  2. `vars/regions/<region>.yml` (region-only, across all environments)
+  3. `vars/environments/<env>/common.yml`
+  4. `vars/environments/<env>/regions/<region>.yml`
 - Missing files can be safely omitted via include flags; no need for blank files.
   - Global defaults (in settings under `configuration.variables`):
     - `includeCommon: true|false` (default true)
@@ -290,9 +290,10 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   - `wesley-trust/pipeline-examples/examples/consumer/bicep-plus-tests.pipeline.yml`
 - Variables folder layout under consumer examples:
   - `wesley-trust/pipeline-examples/examples/consumer/vars/common.yml`
-  - `wesley-trust/pipeline-examples/examples/consumer/vars/env/<env>.yml`
-  - `wesley-trust/pipeline-examples/examples/consumer/vars/<env>/region/<region>.yml`
-  - If you don’t use env or env/region files, set the include flags in settings instead of creating empty files.
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/regions/<region>.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/environments/<env>/common.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/environments/<env>/regions/<region>.yml`
+  - If you don’t use per-environment or env-region files, set the include flags in settings instead of creating empty files.
 - Secure files: use `templates/steps/download-secure-file.yml` and pass `$(downloadSecureFile.secureFilePath)` to scripts.
 - Artifact publish/download: see `templates/steps/publish-artifact.yml` and `templates/steps/download-artifact.yml`.
 

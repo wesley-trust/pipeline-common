@@ -5,6 +5,9 @@ parameters:
   - name: environments
     type: object
     default: []
+  - name: variablesConfig
+    type: object
+    default: {}
   - name: pool
     type: object
     default: {}
@@ -32,3 +35,4 @@ jobs:
           arguments: >-
             -VariableRoot "${{ parameters.variableRoot }}"
             -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
+            -VariablesConfigJson '${{ convertToJson(parameters.variablesConfig) }}'
