@@ -30,6 +30,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 - Each env can define:
   - `primaryRegion: '<code>'` (singular)
   - `secondaryRegions: [ ... ]` (zero or more)
+  - `runSecondaryRegions: true|false` (default true) — when false, skips deploying to the listed secondary regions while keeping them available for DR scenarios.
   - `allowedBranches: [ 'main', 'release/*', '*' ]`
   - `pool`: agent pool selection
   - `serviceConnection`: Azure service connection override
@@ -210,7 +211,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Regional Rollouts & Approvals
 
-- Per environment, regional stages execute secondaries first, primary last (singular `primaryRegion`). All regions (secondary + primary) always deploy.
+- Per environment, regional stages execute secondaries first, primary last (singular `primaryRegion`). Secondary stages are emitted only when `runSecondaryRegions` resolves to true (default); otherwise the primary region is the sole deployment target.
 - The next environment depends only on the previous environment’s primary region stage. Specify `env.dependsOn` and optionally `env.dependsOnRegion` to make the dependency explicit.
 - Each regional task runs as a deployment job bound to the environment (`environment: <env>`), so Azure DevOps Environment approvals/checks apply.
 
