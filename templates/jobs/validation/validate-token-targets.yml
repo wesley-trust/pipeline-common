@@ -17,6 +17,9 @@ parameters:
   - name: serviceConnection
     type: string
     default: ""
+  - name: useLockedSources
+    type: boolean
+    default: true
 
 jobs:
   - job: validate_token_targets
@@ -24,14 +27,19 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+          - template: ../../steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: source-snapshot
+              downloadPath: $(Pipeline.Workspace)/s/self
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+          - checkout: self
+            path: s/self
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
-      - template: ../../steps/download-artifact.yml@PipelineCommon
-        parameters:
-          displayName: Download source snapshot
-          artifactName: source-snapshot
-          downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if ne(coalesce(actionGroup.actions, ''), '') }}:
               - ${{ if ne(actionGroup.enabled, false) }}:
@@ -44,7 +52,7 @@ jobs:
                                   repoAlias: PipelineCommon
                                   script: validate_token_targets.ps1
                                   arguments: >-
-                                    -RootPath "$(Pipeline.Workspace)/locked-sources"
+                                    -RootPath "$(Pipeline.Workspace)/s/self"
                                     -Patterns @('${{ join(action.tokenTargetPatterns, ''',''') }}')
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
           - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon

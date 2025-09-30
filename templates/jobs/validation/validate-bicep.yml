@@ -17,6 +17,9 @@ parameters:
   - name: serviceConnection
     type: string
     default: ""
+  - name: useLockedSources
+    type: boolean
+    default: true
 
 jobs:
   - job: validate_bicep
@@ -24,6 +27,16 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+          - template: ../../steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: source-snapshot
+              downloadPath: $(Pipeline.Workspace)/s/self
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+          - checkout: self
+            path: s/self
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
@@ -34,11 +47,6 @@ jobs:
               azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
               keyVaultName: ${{ parameters.keyVault.name }}
               secretsFilter: ${{ coalesce(parameters.keyVault.secretsFilter, '*') }}
-      - template: ../../steps/download-artifact.yml@PipelineCommon
-        parameters:
-          displayName: Download source snapshot
-          artifactName: source-snapshot
-          downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'bicep'), ne(coalesce(actionGroup.actions, ''), '')) }}:
               - ${{ if ne(actionGroup.enabled, false) }}:
@@ -49,4 +57,4 @@ jobs:
                               displayName: Bicep Lint (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
                               repoAlias: PipelineCommon
                               script: bicep_lint.ps1
-                              arguments: -SearchPath "$(Pipeline.Workspace)/locked-sources"
+                              arguments: -SearchPath "$(Pipeline.Workspace)/s/self"

@@ -79,7 +79,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   resourceGroupName: rg-name
   location: westeurope
   templatePath: infra/bicep/main.bicep
-  parametersFile: infra/bicep/params.bicepparam
+  parametersPath: infra/bicep/params.bicepparam
   additionalParameters: ''         # optional extra arguments passed to az stack (e.g. "--parameters foo=bar")
   managementGroupId: ''
   subscriptionId: ''
@@ -140,7 +140,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Configure at either the `actionGroup` or individual `action` level. Actions inherit prefix/suffix defaults from their parent.
 - Defaults when enabled and `tokenTargetPatterns` are omitted:
   - `actionGroup.tokenReplaceEnabled: true` → Terraform action groups evaluate `**/*.tfvars` in each declared `workingDirectory`; Bicep action groups evaluate `**/*.bicepparam` once per group.
-  - `action.tokenReplaceEnabled: true` → Terraform actions continue to target `**/*.tfvars` under their `workingDirectory`; Bicep actions target only their declared `parametersFile` to avoid double-processing shared parameter assets.
+- `action.tokenReplaceEnabled: true` → Terraform actions continue to target `**/*.tfvars` under their `workingDirectory`; Bicep actions target only their declared `parametersPath` to avoid double-processing shared parameter assets.
 - Override defaults with `tokenTargetPatterns` on the relevant scope; omit the property to fall back to the behaviour above. `tokenPrefix`/`tokenSuffix` honour the same inheritance (action → actionGroup → default `#{{` / `}}`).
 - Applied in review (plan/what-if) and deployment phases; disable with `tokenReplaceEnabled: false` on either scope. PowerShell validation/review runs accept the same flags.
 
@@ -182,6 +182,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   - `azurePowerShellVersion: '<version>'` — optional when `scriptTask: azurePowerShell`; defaults to `LatestVersion`.
   - `delayMinutes: <number>` — inserts a non-blocking Delay task before execution.
   - `runInValidation: true|false` — also runs this action in the Validation stage.
+  - `useLockedSources: true|false` — defaults to true so validation/review/deploy runs execute from the initialise snapshot downloaded into `$(Pipeline.Workspace)/s/self`. Set to false to retain the git checkout in that same location when you intentionally skip the initialise stage. Leave it true if you expect the snapshot—missing artefacts now fail the job so the mismatch is visible.
 - PowerShell review jobs are enabled per action group via `runPowerShellReview: true|false` (defaults to false). When enabled you must supply a review script per action using either `reviewScriptPath` (relative to the locked snapshot) or `reviewScriptFullPath`; actions without a review script are skipped. You can still override behaviour with `reviewScriptTask`, `reviewServiceConnection`, `reviewAzurePowerShellVersion`, `reviewArguments` (defaults to `arguments`), `reviewDisplayName` (defaults to the action display name), `reviewCondition`, `reviewWorkingDirectory` (relative to the locked snapshot), or `reviewWorkingDirectoryFullPath`.
 - Token replacement for PowerShell actions is supported in Validation and Review via `tokenReplaceEnabled`, `tokenTargetPatterns`, `tokenPrefix`, `tokenSuffix`.
 - To reuse the deployment logic, explicitly set `reviewScriptPath` to the same script the deploy action uses. `reviewArguments` defaults to the deployment arguments when omitted.
@@ -248,9 +249,9 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - Variables are included at compile time using templates so values are available during compilation. Deterministic order:
   1. `vars/common.yml`
-  2. `vars/region/<region>.yml` (region-only, across all environments)
-  3. `vars/env/<env>.yml`
-  4. `vars/<env>/region/<region>.yml`
+  2. `vars/regions/<region>.yml` (region-only, across all environments)
+  3. `vars/environments/<env>/common.yml`
+  4. `vars/environments/<env>/regions/<region>.yml`
 - Missing files can be safely omitted via include flags; no need for blank files.
   - Global defaults (in settings under `configuration.variables`):
     - `includeCommon: true|false` (default true)
@@ -290,9 +291,10 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   - `wesley-trust/pipeline-examples/examples/consumer/bicep-plus-tests.pipeline.yml`
 - Variables folder layout under consumer examples:
   - `wesley-trust/pipeline-examples/examples/consumer/vars/common.yml`
-  - `wesley-trust/pipeline-examples/examples/consumer/vars/env/<env>.yml`
-  - `wesley-trust/pipeline-examples/examples/consumer/vars/<env>/region/<region>.yml`
-  - If you don’t use env or env/region files, set the include flags in settings instead of creating empty files.
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/regions/<region>.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/environments/<env>/common.yml`
+  - `wesley-trust/pipeline-examples/examples/consumer/vars/environments/<env>/regions/<region>.yml`
+  - If you don’t use per-environment or env-region files, set the include flags in settings instead of creating empty files.
 - Secure files: use `templates/steps/download-secure-file.yml` and pass `$(downloadSecureFile.secureFilePath)` to scripts.
 - Artifact publish/download: see `templates/steps/publish-artifact.yml` and `templates/steps/download-artifact.yml`.
 

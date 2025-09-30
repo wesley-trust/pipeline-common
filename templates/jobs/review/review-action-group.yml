@@ -47,6 +47,12 @@ parameters:
   - name: dependsOnActionGroups
     type: object
     default: []
+  - name: useLockedSources
+    type: boolean
+    default: true
+  - name: sourcePath
+    type: string
+    default: $(Pipeline.Workspace)/s/self
 
 jobs:
   - job: ${{ parameters.name }}
@@ -63,19 +69,22 @@ jobs:
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
 
     steps:
-      - checkout: self
-        path: s/self
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+          - checkout: self
+            path: s/self
       - checkout: PipelineCommon
         path: s/PipelineCommon
+
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+          - template: ../../steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: source-snapshot
+              downloadPath: ${{ parameters.sourcePath }}
 
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
-      - template: ../../steps/download-artifact.yml@PipelineCommon
-        parameters:
-          displayName: Download source snapshot
-          artifactName: source-snapshot
-          downloadPath: $(Pipeline.Workspace)/locked-sources
 
       # Optional Key Vault secret import
       - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
@@ -95,7 +104,7 @@ jobs:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: Terraform token replacement (${ tokenPattern })
-                          targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                          targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
               - ${{ if eq(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
@@ -103,7 +112,7 @@ jobs:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: Terraform token replacement (${ coalesce(terraformAction.name, terraformAction.workingDirectory) })
-                          targetFiles: $(Pipeline.Workspace)/locked-sources/${{ terraformAction.workingDirectory }}/**/*.tfvars
+                          targetFiles: ${{ format('{0}/{1}/**/*.tfvars', parameters.sourcePath, terraformAction.workingDirectory) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
           - ${{ each action in parameters.actionGroup.actions }}:
@@ -114,14 +123,14 @@ jobs:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
                                   displayName: Terraform token replacement (${ tokenPattern })
-                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
                       - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
                           - template: ../../steps/replace-tokens.yml@PipelineCommon
                             parameters:
                               displayName: Terraform token replacement (default)
-                              targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}/**/*.tfvars
+                              targetFiles: ${{ format('{0}/{1}/**/*.tfvars', parameters.sourcePath, action.workingDirectory) }}
                               tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                               tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
                   - template: ../../steps/azurecli.yml@PipelineCommon
@@ -132,10 +141,10 @@ jobs:
                       script: terraform_run.ps1
                       arguments: >-
                         -Action plan
-                        -WorkDir "$(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}"
+                        -WorkDir "${{ format('{0}/{1}', parameters.sourcePath, action.workingDirectory) }}"
                         -EnvironmentName "${{ parameters.environmentName }}"
                         -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
-                      workingDirectory: $(Pipeline.Workspace)/locked-sources
+                      workingDirectory: ${{ parameters.sourcePath }}
                       ${{ if ne(action.condition, '') }}:
                         condition: ${{ action.condition }}
                       ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
@@ -148,7 +157,7 @@ jobs:
                     parameters:
                       displayName: Publish Terraform Plan (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
                       artifactName: terraform-plan-${{ coalesce(action.name, 'terraform') }}-${{ parameters.environmentName }}-${{ parameters.region }}
-                      targetPath: ${{ format('{0}/{1}/tfplan', '$(Pipeline.Workspace)/locked-sources', action.workingDirectory) }}
+                      targetPath: ${{ format('{0}/{1}/tfplan', parameters.sourcePath, action.workingDirectory) }}
 
       # Bicep Action
       - ${{ if and(eq(parameters.actionGroup.type, 'bicep'), ne(lower(format('{0}', coalesce(parameters.actionGroup.runBicepWhatIf, true))), 'false'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
@@ -159,14 +168,14 @@ jobs:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: Bicep token replacement (${ tokenPattern })
-                          targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                          targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
               - ${{ if eq(coalesce(parameters.actionGroup.tokenTargetPatterns, ''), '') }}:
                   - template: ../../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: Bicep token replacement (group default)
-                      targetFiles: $(Pipeline.Workspace)/locked-sources/**/*.bicepparam
+                      targetFiles: ${{ format('{0}/**/*.bicepparam', parameters.sourcePath) }}
                       tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                       tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
           - ${{ each action in parameters.actionGroup.actions }}:
@@ -177,15 +186,15 @@ jobs:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
                                   displayName: Bicep token replacement (${ tokenPattern })
-                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
                       - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                          - ${{ if ne(coalesce(action.parametersFile, ''), '') }}:
+                          - ${{ if ne(coalesce(action.parametersPath, ''), '') }}:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
-                                  displayName: Bicep token replacement (${{ action.parametersFile }})
-                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ action.parametersFile }}
+                                  displayName: Bicep token replacement (${{ action.parametersPath }})
+                                  targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, action.parametersPath) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
                   - template: ../../steps/azurecli.yml@PipelineCommon
@@ -200,9 +209,8 @@ jobs:
                         -Scope "${{ action.scope }}"
                         -ResourceGroupName "${{ action.resourceGroupName }}"
                         -Location "${{ action.location }}"
-                        -Template "$(Pipeline.Workspace)/locked-sources/${{ action.templatePath }}"
-                        -ParametersRoot "$(Pipeline.Workspace)/locked-sources"
-                        -ParametersFile "${{ action.parametersFile }}"
+                        -Template "${{ format('{0}/{1}', parameters.sourcePath, action.templatePath) }}"
+                        -ParametersPath "${{ action.parametersPath }}"
                         -AdditionalParameters "${{ action.additionalParameters }}"
                         -ManagementGroupId "${{ action.managementGroupId }}"
                         -SubscriptionId "${{ action.subscriptionId }}"
@@ -210,7 +218,7 @@ jobs:
                         -Mode "${{ coalesce(replace(replace(format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)), 'True', 'complete'), 'False', ''), coalesce(action.mode, 'incremental')) }}"
                         -AllowDeleteOnUnmanage ${{ format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)) }}
                         -CleanupStack ${{ format('{0}', eq(coalesce(action.cleanupStack, false), true)) }}
-                      workingDirectory: $(Pipeline.Workspace)/locked-sources
+                      workingDirectory: ${{ parameters.sourcePath }}
                       ${{ if ne(action.condition, '') }}:
                         condition: ${{ action.condition }}
                       ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
@@ -223,12 +231,12 @@ jobs:
                     parameters:
                       displayName: Publish What-If Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
                       artifactName: bicep-whatif-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
-                      targetPath: ${{ format('{0}/whatif.txt', '$(Pipeline.Workspace)/locked-sources') }}
+                      targetPath: ${{ format('{0}/whatif.txt', parameters.sourcePath) }}
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
                       displayName: Publish Stack Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
                       artifactName: bicep-stack-${{ coalesce(action.name, 'bicep') }}-${{ parameters.environmentName }}-${{ parameters.region }}
-                      targetPath: ${{ format('{0}/stack.csv', '$(Pipeline.Workspace)/locked-sources') }}
+                      targetPath: ${{ format('{0}/stack.csv', parameters.sourcePath) }}
 
       # PowerShell Action
       - ${{ if and(eq(parameters.actionGroup.type, 'powershell'), eq(lower(format('{0}', coalesce(parameters.actionGroup.runPowerShellReview, false))), 'true'), ne(coalesce(parameters.actionGroup.actions, ''), '')) }}:
@@ -239,7 +247,7 @@ jobs:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
                           displayName: PowerShell token replacement (${ tokenPattern })
-                          targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                          targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
 
@@ -252,7 +260,7 @@ jobs:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
                                   displayName: PowerShell token replacement (${ tokenPattern })
-                                  targetFiles: $(Pipeline.Workspace)/locked-sources/${{ tokenPattern }}
+                                  targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
 
@@ -262,17 +270,17 @@ jobs:
                       ${{ if ne(coalesce(action.reviewScriptFullPath, ''), '') }}:
                         scriptFullPath: ${{ action.reviewScriptFullPath }}
                       ${{ if and(eq(coalesce(action.reviewScriptFullPath, ''), ''), ne(coalesce(action.reviewScriptPath, ''), '')) }}:
-                        scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ action.reviewScriptPath }}
+                        scriptFullPath: ${{ format('{0}/{1}', parameters.sourcePath, action.reviewScriptPath) }}
                       arguments: ${{ coalesce(action.reviewArguments, action.arguments, '') }}
                       scriptTask: ${{ coalesce(action.reviewScriptTask, action.scriptTask, parameters.actionGroup.scriptTask, 'pwsh') }}
                       ${{ if ne(coalesce(action.reviewWorkingDirectory, ''), '') }}:
-                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.reviewWorkingDirectory }}
+                        workingDirectory: ${{ format('{0}/{1}', parameters.sourcePath, action.reviewWorkingDirectory) }}
                       ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), ne(coalesce(action.reviewWorkingDirectoryFullPath, ''), '')) }}:
                         workingDirectory: ${{ action.reviewWorkingDirectoryFullPath }}
                       ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), eq(coalesce(action.reviewWorkingDirectoryFullPath, ''), ''), ne(coalesce(action.workingDirectory, ''), '')) }}:
-                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ action.workingDirectory }}
+                        workingDirectory: ${{ format('{0}/{1}', parameters.sourcePath, action.workingDirectory) }}
                       ${{ if and(eq(coalesce(action.reviewWorkingDirectory, ''), ''), eq(coalesce(action.reviewWorkingDirectoryFullPath, ''), ''), eq(coalesce(action.workingDirectory, ''), '')) }}:
-                        workingDirectory: $(Pipeline.Workspace)/locked-sources
+                        workingDirectory: ${{ parameters.sourcePath }}
                       ${{ if ne(coalesce(action.reviewServiceConnection, action.serviceConnection, parameters.actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection), '') }}:
                         azureSubscription: ${{ coalesce(action.reviewServiceConnection, action.serviceConnection, parameters.actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
                       ${{ if ne(coalesce(action.reviewAzurePowerShellVersion, action.azurePowerShellVersion, parameters.actionGroup.azurePowerShellVersion, ''), '') }}:
@@ -291,4 +299,4 @@ jobs:
                         parameters:
                           displayName: Publish PowerShell Review Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
                           artifactName: powershell-review-${{ coalesce(action.name, 'powershell') }}-${{ parameters.environmentName }}-${{ parameters.region }}
-                          targetPath: ${{ format('{0}/output', '$(Pipeline.Workspace)/locked-sources') }}
+                          targetPath: ${{ format('{0}/output', parameters.sourcePath) }}

@@ -17,6 +17,9 @@ parameters:
   - name: serviceConnection
     type: string
     default: ""
+  - name: useLockedSources
+    type: boolean
+    default: true
 
 jobs:
   - job: validate_powershell
@@ -24,14 +27,19 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+          - template: ../../steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: source-snapshot
+              downloadPath: $(Pipeline.Workspace)/s/self
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+          - checkout: self
+            path: s/self
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
-      - template: ../../steps/download-artifact.yml@PipelineCommon
-        parameters:
-          displayName: Download source snapshot
-          artifactName: source-snapshot
-          downloadPath: $(Pipeline.Workspace)/locked-sources
       - ${{ each actionGroup in parameters.actionGroups }}:
           - ${{ if and(eq(actionGroup.type, 'powershell'), ne(coalesce(actionGroup.actions, ''), '')) }}:
               - ${{ if ne(actionGroup.enabled, false) }}:
@@ -42,7 +50,7 @@ jobs:
                               displayName: PSScriptAnalyzer (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }})
                               repoAlias: PipelineCommon
                               script: ps_analyse.ps1
-                              arguments: -Path "$(Pipeline.Workspace)/locked-sources/${{ coalesce(action.analysePath, 'scripts') }}"
+                              arguments: -Path "$(Pipeline.Workspace)/s/self/${{ coalesce(action.analysePath, 'scripts') }}"
           - ${{ if ne(coalesce(parameters.keyVault.name, ''), '') }}:
               - template: ../../steps/import-keyvault-secrets.yml@PipelineCommon
                 parameters:

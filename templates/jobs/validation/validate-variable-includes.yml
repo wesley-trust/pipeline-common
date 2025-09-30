@@ -5,6 +5,9 @@ parameters:
   - name: environments
     type: object
     default: []
+  - name: variablesConfig
+    type: object
+    default: {}
   - name: pool
     type: object
     default: {}
@@ -14,6 +17,9 @@ parameters:
   - name: additionalRepositories
     type: object
     default: []
+  - name: useLockedSources
+    type: boolean
+    default: true
 
 jobs:
   - job: validate_variable_includes
@@ -21,6 +27,16 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
+      - ${{ if eq(parameters.useLockedSources, true) }}:
+          - template: ../../steps/download-artifact.yml@PipelineCommon
+            parameters:
+              displayName: Download source snapshot
+              artifactName: source-snapshot
+              downloadPath: $(Pipeline.Workspace)/s/self
+      - ${{ if eq(parameters.useLockedSources, false) }}:
+          - checkout: self
+            path: s/self
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
@@ -32,3 +48,4 @@ jobs:
           arguments: >-
             -VariableRoot "${{ parameters.variableRoot }}"
             -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
+            -VariablesConfigJson '${{ convertToJson(parameters.variablesConfig) }}'

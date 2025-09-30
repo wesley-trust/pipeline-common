@@ -5,8 +5,7 @@ param(
   [string]$ResourceGroupName = '',
   [string]$Location = '',
   [Parameter(Mandatory = $true)][string]$Template,
-  [string]$ParametersRoot = '',
-  [string]$ParametersFile = '',
+  [string]$ParametersPath = '',
   [string]$AdditionalParameters = '',
   [string]$ManagementGroupId = '',
   [string]$SubscriptionId = '',
@@ -190,7 +189,10 @@ if ($ModeOverride) {
 }
 
 $paramArgs = @()
-if ($ParametersFile) { $ParametersFile = "$ParametersRoot/$ParametersFile"; $paramArgs += '--parameters'; $paramArgs += "$ParametersFile" }
+if ($ParametersPath) {
+  $paramArgs += '--parameters'
+  $paramArgs += $ParametersPath
+}
 $additionalParamArgs = ConvertTo-ArgumentList -Raw $AdditionalParameters
 
 # Set variables for optional toggles

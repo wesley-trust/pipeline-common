@@ -17,6 +17,9 @@ parameters:
   - name: variableIncludeCommon
     type: boolean
     default: true
+  - name: variablesConfig
+    type: object
+    default: {}
   - name: validation
     type: object
     default: {}
@@ -32,6 +35,9 @@ parameters:
   - name: enableProduction
     type: boolean
     default: false
+  - name: useLockedSources
+    type: boolean
+    default: true
 
 stages:
   - stage: validation
@@ -74,8 +80,10 @@ stages:
             parameters:
               environments: ${{ parameters.environments }}
               variableRoot: ${{ parameters.variableRoot }}
+              variablesConfig: ${{ parameters.variablesConfig }}
               dependsOnStages: []
               additionalRepositories: ${{ parameters.additionalRepositories }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if ne(coalesce(parameters.validation.enableTokenTargets, true), false) }}:
           - template: ../jobs/validation/validate-token-targets.yml@PipelineCommon
@@ -85,6 +93,7 @@ stages:
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if eq(variables['runBicepValidation'], 'true') }}:
           - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
@@ -94,6 +103,7 @@ stages:
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if eq(variables['runTerraformValidation'], 'true') }}:
           - template: ../jobs/validation/validate-terraform.yml@PipelineCommon
@@ -103,6 +113,7 @@ stages:
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if eq(variables['runPowershellValidation'], 'true') }}:
           - template: ../jobs/validation/validate-powershell.yml@PipelineCommon
@@ -112,29 +123,35 @@ stages:
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if gt(length(parameters.customValidationScripts), 0) }}:
           - job: Custom_Validation
             displayName: Custom Validation Scripts
             steps:
               - checkout: PipelineCommon
-              - template: ../steps/download-artifact.yml@PipelineCommon
-                parameters:
-                  displayName: Download source snapshot
-                  artifactName: source-snapshot
-                  downloadPath: $(Pipeline.Workspace)/locked-sources
+                path: s/PipelineCommon
+              - ${{ if eq(parameters.useLockedSources, true) }}:
+                  - template: ../steps/download-artifact.yml@PipelineCommon
+                    parameters:
+                      displayName: Download source snapshot
+                      artifactName: source-snapshot
+                      downloadPath: $(Pipeline.Workspace)/s/self
+              - ${{ if eq(parameters.useLockedSources, false) }}:
+                  - checkout: self
+                    path: s/self
               - ${{ each script in parameters.customValidationScripts }}:
                   - template: ../steps/powershell.yml@PipelineCommon
                     parameters:
                       displayName: Custom Validation
-                      scriptFullPath: $(Pipeline.Workspace)/locked-sources/${{ script.path }}
+                      scriptFullPath: $(Pipeline.Workspace)/s/self/${{ script.path }}
                       arguments: ${{ script.arguments }}
                       ${{ if ne(coalesce(script.workingDirectory, ''), '') }}:
-                        workingDirectory: $(Pipeline.Workspace)/locked-sources/${{ script.workingDirectory }}
+                        workingDirectory: $(Pipeline.Workspace)/s/self/${{ script.workingDirectory }}
                       ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), ne(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
                         workingDirectory: ${{ script.workingDirectoryFullPath }}
                       ${{ if and(eq(coalesce(script.workingDirectory, ''), ''), eq(coalesce(script.workingDirectoryFullPath, ''), '')) }}:
-                        workingDirectory: $(Pipeline.Workspace)/locked-sources
+                        workingDirectory: $(Pipeline.Workspace)/s/self
 
       # Invoke PowerShell actions in Validation when requested
       - ${{ each actionGroup in parameters.actionGroups }}:
@@ -157,9 +174,9 @@ stages:
                                   variableRoot: ${{ parameters.variableRoot }}
                                   environmentName: ""
                                   region: ""
-                                  useLockedSources: true
                                   lockedArtifactName: source-snapshot
-                                  lockedSourcePath: $(Pipeline.Workspace)/locked-sources
+                                  sourcePath: $(Pipeline.Workspace)/s/self
+                                  useLockedSources: ${{ coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true) }}
                                   tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
                                   tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, createArray()) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}

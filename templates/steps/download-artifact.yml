@@ -9,6 +9,9 @@ parameters:
   - name: condition
     type: string
     default: ""
+  - name: continueOnError
+    type: boolean
+    default: false
 
 steps:
   - task: DownloadPipelineArtifact@2
@@ -18,3 +21,4 @@ steps:
       path: ${{ parameters.downloadPath }}
     ${{ if ne(parameters.condition, '') }}:
       condition: ${{ parameters.condition }}
+    continueOnError: ${{ parameters.continueOnError }}

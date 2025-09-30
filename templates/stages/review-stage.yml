@@ -40,6 +40,12 @@ parameters:
   - name: variableIncludeRegionOnly
     type: boolean
     default: true
+  - name: useLockedSources
+    type: boolean
+    default: true
+  - name: sourcePath
+    type: string
+    default: $(Pipeline.Workspace)/s/self
 
 stages:
   - stage: review_${{ parameters.environmentName }}
@@ -71,6 +77,8 @@ stages:
                           variableIncludeEnv: ${{ parameters.variableIncludeEnv }}
                           variableIncludeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
                           variableIncludeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+                          sourcePath: ${{ parameters.sourcePath }}
+                          useLockedSources: ${{ coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true) }}
                           additionalRepositories: ${{ parameters.additionalRepositories }}
                           keyVault: ${{ parameters.keyVault }}
                           dependsOnActionGroups: ${{ coalesce(actionGroup.dependsOn, '') }}
