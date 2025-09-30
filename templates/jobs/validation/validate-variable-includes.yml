@@ -27,6 +27,7 @@ jobs:
     dependsOn: ${{ parameters.dependsOnStages }}
     steps:
       - checkout: PipelineCommon
+        path: s/PipelineCommon
       - ${{ if eq(parameters.useLockedSources, true) }}:
           - template: ../../steps/download-artifact.yml@PipelineCommon
             parameters:

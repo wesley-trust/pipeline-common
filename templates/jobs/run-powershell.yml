@@ -117,6 +117,7 @@ jobs:
           - checkout: self
             path: s/self
       - checkout: PipelineCommon
+        path: s/PipelineCommon
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
