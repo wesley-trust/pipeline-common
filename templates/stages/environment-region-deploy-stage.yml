@@ -202,22 +202,21 @@ stages:
                                         tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
 
                             # PowerShell action group
-                        - ${{ if eq(actionGroup.type, 'powershell') }}:
-                            - ${{ if ne(coalesce(actionGroup.tokenTargetPatterns, ''), '') }}:
-                                - ${{ each tokenPattern in actionGroup.tokenTargetPatterns }}:
-                                    - template: ../steps/replace-tokens.yml@PipelineCommon
-                                      parameters:
-                                        displayName: PowerShell token replacement (${ tokenPattern })
-                                        targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
-                                        tokenPrefix: ${{ coalesce(actionGroup.tokenPrefix, '#{{') }}
-                                        tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
+                            - ${{ if eq(actionGroup.type, 'powershell') }}:
+                                - ${{ if ne(coalesce(actionGroup.tokenTargetPatterns, ''), '') }}:
+                                    - ${{ each tokenPattern in actionGroup.tokenTargetPatterns }}:
+                                        - template: ../steps/replace-tokens.yml@PipelineCommon
+                                          parameters:
+                                            displayName: PowerShell token replacement (${ tokenPattern })
+                                            targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
+                                            tokenPrefix: ${{ coalesce(actionGroup.tokenPrefix, '#{{') }}
+                                            tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
 
                         # Mandatory Action per Action Group
                         - ${{ each action in actionGroup.actions }}:
                             - ${{ if ne(action.enabled, false) }}:
                                 # Terraform Action
                                 - ${{ if eq(actionGroup.type, 'terraform') }}:
-
                                     # Optional Replace Tokens
                                     - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
                                         - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
@@ -259,7 +258,6 @@ stages:
 
                                 # Bicep Action
                                 - ${{ if eq(actionGroup.type, 'bicep') }}:
-
                                     # Optional Replace Tokens
                                     - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
                                         - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
@@ -311,45 +309,44 @@ stages:
                                           condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                                 # PowerShell Action
-                            - ${{ if eq(actionGroup.type, 'powershell') }}:
+                                - ${{ if eq(actionGroup.type, 'powershell') }}:
+                                    # Optional Replace Tokens
+                                    - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
+                                        - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
+                                            - ${{ each tokenPattern in action.tokenTargetPatterns }}:
+                                                - template: ../steps/replace-tokens.yml@PipelineCommon
+                                                  parameters:
+                                                    displayName: PowerShell token replacement (${ tokenPattern })
+                                                    targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
+                                                    tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
+                                                    tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
 
-                                # Optional Replace Tokens
-                                - ${{ if eq(coalesce(action.tokenReplaceEnabled, false), true) }}:
-                                    - ${{ if ne(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                                        - ${{ each tokenPattern in action.tokenTargetPatterns }}:
-                                            - template: ../steps/replace-tokens.yml@PipelineCommon
-                                              parameters:
-                                                displayName: PowerShell token replacement (${ tokenPattern })
-                                                targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
-                                                tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
-                                                tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
-
-                                    # Execute PowerShell
-                                    - template: ../steps/powershell.yml@PipelineCommon
-                                      parameters:
-                                        displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
-                                        scriptFullPath: ${{ format('{0}/{1}', parameters.sourcePath, action.scriptPath) }}
-                                        arguments: ${{ action.arguments }}
-                                        scriptTask: ${{ coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh') }}
-                                        ${{ if ne(coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection), '') }}:
-                                          azureSubscription: ${{ coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
-                                        ${{ if ne(coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, ''), '') }}:
-                                          azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion) }}
-                                        addSpnToEnvironment: ${{ eq(lower(coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
-                                        ${{ if ne(coalesce(action.workingDirectory, ''), '') }}:
-                                          workingDirectory: ${{ format('{0}/{1}', parameters.sourcePath, action.workingDirectory) }}
-                                        ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), ne(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
-                                          workingDirectory: ${{ action.workingDirectoryFullPath }}
-                                        ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), eq(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
-                                          workingDirectory: ${{ parameters.sourcePath }}
-                                        ${{ if ne(action.condition, '') }}:
-                                          condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        # Execute PowerShell
+                                        - template: ../steps/powershell.yml@PipelineCommon
+                                          parameters:
+                                            displayName: ${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))) }}
+                                            scriptFullPath: ${{ format('{0}/{1}', parameters.sourcePath, action.scriptPath) }}
+                                            arguments: ${{ action.arguments }}
+                                            scriptTask: ${{ coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh') }}
+                                            ${{ if ne(coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection), '') }}:
+                                              azureSubscription: ${{ coalesce(action.serviceConnection, actionGroup.serviceConnection, variables[parameters.serviceConnection], parameters.serviceConnection) }}
+                                            ${{ if ne(coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion, ''), '') }}:
+                                              azurePowerShellVersion: ${{ coalesce(action.azurePowerShellVersion, actionGroup.azurePowerShellVersion) }}
+                                            addSpnToEnvironment: ${{ eq(lower(coalesce(action.scriptTask, actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
+                                            ${{ if ne(coalesce(action.workingDirectory, ''), '') }}:
+                                              workingDirectory: ${{ format('{0}/{1}', parameters.sourcePath, action.workingDirectory) }}
+                                            ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), ne(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
+                                              workingDirectory: ${{ action.workingDirectoryFullPath }}
+                                            ${{ if and(eq(coalesce(action.workingDirectory, ''), ''), eq(coalesce(action.workingDirectoryFullPath, ''), '')) }}:
+                                              workingDirectory: ${{ parameters.sourcePath }}
+                                            ${{ if ne(action.condition, '') }}:
+                                              condition: ${{ action.condition }}
+                                            ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
+                                              condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
+                                            ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
+                                              condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
+                                            ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
+                                              condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
 
                         # Optional Post Deployment Scripts
                         - ${{ if ne(coalesce(actionGroup.postDeploy.scripts, ''), '') }}:
