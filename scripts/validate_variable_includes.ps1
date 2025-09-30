@@ -295,7 +295,7 @@ foreach ($env in $environments) {
 
   $envInclude = Get-IncludeFlag -Environment $env -GlobalConfig $globalVariables -FlagName 'includeEnv'
   if ($envInclude) {
-    $envPath = Join-Path -Path $VariableRoot -ChildPath ("environments/{0}/common.yml" -f $envName)
+    $envPath = Join-Path -Path (Join-Path -Path $VariableRoot -ChildPath 'environments') -ChildPath (Join-Path -Path $envName -ChildPath 'common.yml')
     Test-VariableFile -Path $envPath -Description "environment variables for '$envName'"
   }
   else {
