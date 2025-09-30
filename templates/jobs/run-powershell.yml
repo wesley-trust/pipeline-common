@@ -41,9 +41,9 @@ parameters:
   - name: lockedArtifactName
     type: string
     default: source-snapshot
-  - name: lockedSourcePath
+  - name: sourcePath
     type: string
-    default: $(Pipeline.Workspace)/locked-sources
+    default: $(Pipeline.Workspace)/s/self
   - name: workingDirectory
     type: string
     default: ""
@@ -108,16 +108,15 @@ jobs:
     steps:
       # Use locked sources for RTL integrity
       - ${{ if eq(parameters.useLockedSources, true) }}:
-          - checkout: PipelineCommon
           - template: ../steps/download-artifact.yml@PipelineCommon
             parameters:
               displayName: Download source snapshot
               artifactName: ${{ parameters.lockedArtifactName }}
-              downloadPath: ${{ parameters.lockedSourcePath }}
+              downloadPath: ${{ parameters.sourcePath }}
       - ${{ if eq(parameters.useLockedSources, false) }}:
           - checkout: self
             path: s/self
-          - checkout: PipelineCommon
+      - checkout: PipelineCommon
       - ${{ if ne(coalesce(parameters.additionalRepositories, ''), '') }}:
           - ${{ each repo in parameters.additionalRepositories }}:
               - checkout: ${{ repo.alias }}
@@ -138,7 +137,7 @@ jobs:
                   - template: ../steps/replace-tokens.yml@PipelineCommon
                     parameters:
                       displayName: PowerShell token replacement (${ tokenPattern })
-                      targetFiles: ${{ format('{0}/{1}', parameters.lockedSourcePath, tokenPattern) }}
+                      targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                       tokenPrefix: ${{ parameters.tokenPrefix }}
                       tokenSuffix: ${{ parameters.tokenSuffix }}
 
@@ -150,10 +149,8 @@ jobs:
           scriptTask: ${{ parameters.scriptTask }}
           ${{ if ne(parameters.scriptFullPath, '') }}:
             scriptFullPath: ${{ parameters.scriptFullPath }}
-          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, ''), eq(parameters.useLockedSources, true)) }}:
-            scriptFullPath: ${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.scriptPath) }}
-          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, ''), ne(parameters.useLockedSources, true)) }}:
-            script: ${{ parameters.scriptPath }}
+          ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.scriptPath, '')) }}:
+            scriptFullPath: ${{ format('{0}/{1}', parameters.sourcePath, parameters.scriptPath) }}
           arguments: ${{ parameters.arguments }}
           pwsh: ${{ parameters.pwsh }}
           azurePowerShellVersion: ${{ parameters.azurePowerShellVersion }}
@@ -161,8 +158,8 @@ jobs:
             azureSubscription: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
           addSpnToEnvironment: ${{ eq(lower(parameters.scriptTask), 'azurecli') }}
           ${{ if ne(coalesce(parameters.workingDirectory, ''), '') }}:
-            workingDirectory: ${{ format('{0}/{1}', parameters.lockedSourcePath, parameters.workingDirectory) }}
+            workingDirectory: ${{ format('{0}/{1}', parameters.sourcePath, parameters.workingDirectory) }}
           ${{ if and(eq(coalesce(parameters.workingDirectory, ''), ''), ne(coalesce(parameters.workingDirectoryFullPath, ''), '')) }}:
             workingDirectory: ${{ parameters.workingDirectoryFullPath }}
-          ${{ if and(eq(coalesce(parameters.workingDirectory, ''), ''), eq(coalesce(parameters.workingDirectoryFullPath, ''), ''), eq(parameters.useLockedSources, true)) }}:
-            workingDirectory: ${{ parameters.lockedSourcePath }}
+          ${{ if and(eq(coalesce(parameters.workingDirectory, ''), ''), eq(coalesce(parameters.workingDirectoryFullPath, ''), '')) }}:
+            workingDirectory: ${{ parameters.sourcePath }}

@@ -24,6 +24,11 @@ function Get-VariableRootCandidatePath {
 
   $candidates += $Root
 
+  if ($env:PIPELINE_WORKSPACE) {
+    $snapshotRoot = Join-Path -Path $env:PIPELINE_WORKSPACE -ChildPath 's/self'
+    $candidates += (Join-Path -Path $snapshotRoot -ChildPath $Root)
+  }
+
   try {
     $pwdPath = (Get-Location).ProviderPath
     if ($pwdPath) {
