@@ -94,8 +94,7 @@ stages:
                         - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                             - ${{ env.dependsOn }}
 
-              ## Non-DR Invocation)
-
+              ## Non-DR Invocation
               - ${{ if ne(coalesce(parameters.configuration.drInvocation, false), true) }}:
                   ### Optional Secondary Region Deployment (non DR-invocation)
                   - ${{ if eq(coalesce(env.runSecondaryRegions, true), true) }}:
@@ -130,7 +129,6 @@ stages:
                               useLockedSources: ${{ coalesce(env.useLockedSources, parameters.configuration.useLockedSources, true) }}
 
                   ### Primary Region Deployment (non DR-invocation)
-
                   - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                     parameters:
                       environmentName: ${{ env.name }}
@@ -163,8 +161,7 @@ stages:
                                 - deploy_${{ env.name }}_${{ secondaryRegion }}
                       bicepModeOverride: ${{ parameters.configuration.bicepModeOverride }}
 
-              ## DR Invocation)
-
+              ## DR Invocation
               - ${{ if eq(coalesce(parameters.configuration.drInvocation, false), true) }}:
                   - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
                       - template: stages/environment-region-deploy-stage.yml@PipelineCommon
