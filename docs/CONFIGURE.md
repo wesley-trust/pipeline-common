@@ -79,7 +79,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   resourceGroupName: rg-name
   location: westeurope
   templatePath: infra/bicep/main.bicep
-  parametersFile: infra/bicep/params.bicepparam
+  parametersPath: infra/bicep/params.bicepparam
   additionalParameters: ''         # optional extra arguments passed to az stack (e.g. "--parameters foo=bar")
   managementGroupId: ''
   subscriptionId: ''
@@ -140,7 +140,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Configure at either the `actionGroup` or individual `action` level. Actions inherit prefix/suffix defaults from their parent.
 - Defaults when enabled and `tokenTargetPatterns` are omitted:
   - `actionGroup.tokenReplaceEnabled: true` → Terraform action groups evaluate `**/*.tfvars` in each declared `workingDirectory`; Bicep action groups evaluate `**/*.bicepparam` once per group.
-  - `action.tokenReplaceEnabled: true` → Terraform actions continue to target `**/*.tfvars` under their `workingDirectory`; Bicep actions target only their declared `parametersFile` to avoid double-processing shared parameter assets.
+- `action.tokenReplaceEnabled: true` → Terraform actions continue to target `**/*.tfvars` under their `workingDirectory`; Bicep actions target only their declared `parametersPath` to avoid double-processing shared parameter assets.
 - Override defaults with `tokenTargetPatterns` on the relevant scope; omit the property to fall back to the behaviour above. `tokenPrefix`/`tokenSuffix` honour the same inheritance (action → actionGroup → default `#{{` / `}}`).
 - Applied in review (plan/what-if) and deployment phases; disable with `tokenReplaceEnabled: false` on either scope. PowerShell validation/review runs accept the same flags.
 

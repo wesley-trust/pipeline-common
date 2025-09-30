@@ -271,11 +271,11 @@ stages:
                                                     tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                                     tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
                                         - ${{ if eq(coalesce(action.tokenTargetPatterns, ''), '') }}:
-                                            - ${{ if ne(coalesce(action.parametersFile, ''), '') }}:
+                                            - ${{ if ne(coalesce(action.parametersPath, ''), '') }}:
                                                 - template: ../steps/replace-tokens.yml@PipelineCommon
                                                   parameters:
-                                                    displayName: Bicep token replacement (${{ action.parametersFile }})
-                                                    targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, action.parametersFile) }}
+                                                    displayName: Bicep token replacement (${{ action.parametersPath }})
+                                                    targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, action.parametersPath) }}
                                                     tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                                     tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
 
@@ -293,8 +293,7 @@ stages:
                                           -ResourceGroupName "${{ action.resourceGroupName }}"
                                           -Location "${{ action.location }}"
                                           -Template "${{ format('{0}/{1}', parameters.sourcePath, action.templatePath) }}"
-                                          -ParametersFile "${{ format('{0}/{1}', parameters.sourcePath, action.parametersFile) }}"
-                                          -ParametersRoot "${{ parameters.sourcePath }}"
+                                          -ParametersPath "${{ format('{0}/{1}', parameters.sourcePath, action.parametersPath) }}"
                                           -AdditionalParameters "${{ action.additionalParameters }}"
                                           -ManagementGroupId "${{ action.managementGroupId }}"
                                           -SubscriptionId "${{ action.subscriptionId }}"
