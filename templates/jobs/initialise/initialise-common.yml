@@ -25,4 +25,4 @@ jobs:
         parameters:
           displayName: Publish Source Snapshot
           artifactName: ${{ parameters.artifactName }}
-          targetPath: $(Build.SourcesDirectory)/self
+          targetPath: $(Pipeline.Workspace)/s/self

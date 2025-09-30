@@ -36,7 +36,7 @@ steps:
       ${{ if ne(parameters.scriptFullPath, '') }}:
         scriptPath: ${{ parameters.scriptFullPath }}
       ${{ if and(eq(parameters.scriptFullPath, ''), ne(parameters.script, '')) }}:
-        scriptPath: $(Build.SourcesDirectory)/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
+        scriptPath: $(Pipeline.Workspace)/s/${{ parameters.repoAlias }}/scripts/${{ parameters.script }}
       ${{ if ne(parameters.arguments, '') }}:
         arguments: ${{ parameters.arguments }}
       ${{ if ne(parameters.workingDirectory, '') }}:
