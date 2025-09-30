@@ -93,6 +93,7 @@ stages:
               additionalRepositories: ${{ parameters.additionalRepositories }}
               keyVault: ${{ parameters.keyVault }}
               serviceConnection: ${{ coalesce(variables[parameters.serviceConnection], parameters.serviceConnection) }}
+              useLockedSources: ${{ parameters.useLockedSources }}
 
       - ${{ if eq(variables['runBicepValidation'], 'true') }}:
           - template: ../jobs/validation/validate-bicep.yml@PipelineCommon
