@@ -293,6 +293,7 @@ stages:
                                           -ResourceGroupName "${{ action.resourceGroupName }}"
                                           -Location "${{ action.location }}"
                                           -Template "${{ format('{0}/{1}', parameters.sourcePath, action.templatePath) }}"
+                                          -ParametersFile "${{ format('{0}/{1}', parameters.sourcePath, action.parametersFile) }}"
                                           -ParametersRoot "${{ parameters.sourcePath }}"
                                           -AdditionalParameters "${{ action.additionalParameters }}"
                                           -ManagementGroupId "${{ action.managementGroupId }}"
