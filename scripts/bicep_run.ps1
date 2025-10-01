@@ -17,13 +17,6 @@ param(
   [object]$CleanupStack = $false
 )
 
-Write-Host "Mode Value"
-Write-Host $Mode
-Write-Host "Mode Override Value"
-Write-Host $ModeOverride
-
-break
-
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -290,7 +283,7 @@ switch ($Scope) {
 
       if ($ResourceGroupExists) {
 
-        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --only-show-errors | Tee-Object -FilePath $OutFile
+        az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --mode $Mode --only-show-errors | Tee-Object -FilePath $OutFile
 
         $StackExists = az stack group list --resource-group $ResourceGroupName --query "[?name=='$StackName']"
 
