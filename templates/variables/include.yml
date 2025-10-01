@@ -11,7 +11,7 @@ parameters:
   - name: includeCommon
     type: boolean
     default: true
-  - name: includeRegionOnly
+  - name: includeRegion
     type: boolean
     default: true
   - name: includeEnv
@@ -27,7 +27,7 @@ variables:
       - template: ${{ format('{0}/common.yml', parameters.variableRoot) }}@self
 
   # Region-only variables (applies across all environments)
-  - ${{ if and(eq(parameters.includeRegionOnly, true), ne(parameters.regionName, '')) }}:
+  - ${{ if and(eq(parameters.includeRegion, true), ne(parameters.regionName, '')) }}:
       - template: ${{ format('{0}/regions/{1}.yml', parameters.variableRoot, parameters.regionName) }}@self
 
   # Per-environment variables

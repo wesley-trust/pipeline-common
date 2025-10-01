@@ -49,7 +49,7 @@ parameters:
   - name: variableIncludeEnvRegion
     type: boolean
     default: true
-  - name: variableIncludeRegionOnly
+  - name: variableincludeRegion
     type: boolean
     default: true
   - name: sourcePath
@@ -82,7 +82,7 @@ stages:
           environmentName: ${{ parameters.environmentName }}
           regionName: ${{ parameters.regionName }}
           includeCommon: ${{ parameters.variableIncludeCommon }}
-          includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+          includeRegion: ${{ parameters.variableincludeRegion }}
           includeEnv: ${{ parameters.variableIncludeEnv }}
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
     jobs:

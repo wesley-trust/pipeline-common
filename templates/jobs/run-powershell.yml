@@ -74,7 +74,7 @@ parameters:
   - name: variableIncludeEnvRegion
     type: boolean
     default: true
-  - name: variableIncludeRegionOnly
+  - name: variableincludeRegion
     type: boolean
     default: true
   - name: tokenReplaceEnabled
@@ -101,7 +101,7 @@ jobs:
           environmentName: ${{ parameters.environmentName }}
           regionName: ${{ parameters.region }}
           includeCommon: ${{ parameters.variableIncludeCommon }}
-          includeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+          includeRegion: ${{ parameters.variableincludeRegion }}
           includeEnv: ${{ parameters.variableIncludeEnv }}
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
 

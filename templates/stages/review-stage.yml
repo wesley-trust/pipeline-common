@@ -37,7 +37,7 @@ parameters:
   - name: variableIncludeEnvRegion
     type: boolean
     default: true
-  - name: variableIncludeRegionOnly
+  - name: variableincludeRegion
     type: boolean
     default: true
   - name: useLockedSources
@@ -76,7 +76,7 @@ stages:
                           variableIncludeCommon: ${{ parameters.variableIncludeCommon }}
                           variableIncludeEnv: ${{ parameters.variableIncludeEnv }}
                           variableIncludeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
-                          variableIncludeRegionOnly: ${{ parameters.variableIncludeRegionOnly }}
+                          variableincludeRegion: ${{ parameters.variableincludeRegion }}
                           sourcePath: ${{ parameters.sourcePath }}
                           useLockedSources: ${{ coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true) }}
                           additionalRepositories: ${{ parameters.additionalRepositories }}

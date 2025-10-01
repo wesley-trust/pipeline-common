@@ -4,13 +4,13 @@ parameters:
     default: []
   - name: pipelineCommonRef
     type: string
-    default: 'refs/heads/main'
+    default: "refs/heads/main"
   - name: pipelineDispatcherRef
     type: string
-    default: 'refs/heads/main'
+    default: "refs/heads/main"
   - name: examplesBranch
     type: string
-    default: 'refs/heads/main'
+    default: "refs/heads/main"
   - name: previewPipelineId
     type: int
     default: 132
@@ -46,6 +46,6 @@ extends:
         includeCommon: false
         includeEnv: false
         includeEnvRegion: false
-        includeRegionOnly: false
+        includeRegion: false
       environments: []
       customValidationScripts: []

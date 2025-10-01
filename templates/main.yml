@@ -85,7 +85,7 @@ stages:
                       variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                       variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
                       variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                      variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                      variableincludeRegion: ${{ coalesce(env.variables.includeRegion, parameters.configuration.variables.includeRegion, true) }}
                       useLockedSources: ${{ coalesce(env.useLockedSources, parameters.configuration.useLockedSources, true) }}
                       additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
                       keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
@@ -116,7 +116,7 @@ stages:
                               variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                               variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
                               variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                              variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                              variableincludeRegion: ${{ coalesce(env.variables.includeRegion, parameters.configuration.variables.includeRegion, true) }}
                               additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
                               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
@@ -146,7 +146,7 @@ stages:
                       variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                       variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
                       variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                      variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                      variableincludeRegion: ${{ coalesce(env.variables.includeRegion, parameters.configuration.variables.includeRegion, true) }}
                       useLockedSources: ${{ coalesce(env.useLockedSources, parameters.configuration.useLockedSources, true) }}
                       additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
                       keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
@@ -181,7 +181,7 @@ stages:
                           variableIncludeCommon: ${{ coalesce(env.variables.includeCommon, parameters.configuration.variables.includeCommon, true) }}
                           variableIncludeEnv: ${{ coalesce(env.variables.includeEnv, parameters.configuration.variables.includeEnv, true) }}
                           variableIncludeEnvRegion: ${{ coalesce(env.variables.includeEnvRegion, parameters.configuration.variables.includeEnvRegion, true) }}
-                          variableIncludeRegionOnly: ${{ coalesce(env.variables.includeRegionOnly, parameters.configuration.variables.includeRegionOnly, true) }}
+                          variableincludeRegion: ${{ coalesce(env.variables.includeRegion, parameters.configuration.variables.includeRegion, true) }}
                           useLockedSources: ${{ coalesce(env.useLockedSources, parameters.configuration.useLockedSources, true) }}
                           additionalRepositories: ${{ coalesce(parameters.configuration.additionalRepositories, '') }}
                           keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}

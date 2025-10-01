@@ -255,11 +255,11 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Missing files can be safely omitted via include flags; no need for blank files.
   - Global defaults (in settings under `configuration.variables`):
     - `includeCommon: true|false` (default true)
-    - `includeRegionOnly: true|false` (default true)
+    - `includeRegion: true|false` (default true)
     - `includeEnv: true|false` (default true)
     - `includeEnvRegion: true|false` (default true)
   - Per‑environment overrides (optional):
-    - `environment.variables.includeCommon|includeRegionOnly|includeEnv|includeEnvRegion`
+    - `environment.variables.includeCommon|includeRegion|includeEnv|includeEnvRegion`
   - These flags control whether the corresponding template is included at compile‑time and avoid file‑not‑found errors when a layer is not used.
 
 ## Defaults Location

@@ -115,9 +115,9 @@ function Get-VariableRootCandidatePath {
   }
 
   return $candidates |
-    ForEach-Object { $_ } |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -Unique
+  ForEach-Object { $_ } |
+  Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+  Select-Object -Unique
 }
 
 function Resolve-VariableRoot {
@@ -236,15 +236,15 @@ if ($null -eq $globalVariables) {
 
 $environments = @()
 if (-not [string]::IsNullOrWhiteSpace($EnvironmentsJson)) {
-    $deserialized = $EnvironmentsJson | ConvertFrom-Json -Depth 10
-    if ($null -ne $deserialized) {
-      if ($deserialized -is [System.Collections.IEnumerable] -and $deserialized -isnot [string]) {
-        $environments = @($deserialized)
-      }
-      else {
-        $environments = @($deserialized)
-      }
+  $deserialized = $EnvironmentsJson | ConvertFrom-Json -Depth 10
+  if ($null -ne $deserialized) {
+    if ($deserialized -is [System.Collections.IEnumerable] -and $deserialized -isnot [string]) {
+      $environments = @($deserialized)
     }
+    else {
+      $environments = @($deserialized)
+    }
+  }
 }
 
 $environments = $environments | Where-Object { $_ -ne $null }
@@ -275,14 +275,14 @@ if ($candidateRegions) {
   $uniqueRegions = $candidateRegions | ForEach-Object { $_ } | Where-Object { $_ } | Sort-Object -Unique
 }
 
-$includeRegionOnly = Get-IncludeFlag -Environment $null -GlobalConfig $globalVariables -FlagName 'includeRegionOnly'
-if ($includeRegionOnly -and $uniqueRegions.Count -gt 0) {
+$includeRegion = Get-IncludeFlag -Environment $null -GlobalConfig $globalVariables -FlagName 'includeRegion'
+if ($includeRegion -and $uniqueRegions.Count -gt 0) {
   foreach ($region in $uniqueRegions) {
     $regionPath = Join-Path -Path $VariableRoot -ChildPath ("regions/{0}.yml" -f $region)
     Test-VariableFile -Path $regionPath -Description "region variables for '$region'"
   }
 }
-elseif (-not $includeRegionOnly) {
+elseif (-not $includeRegion) {
   Write-Information -InformationAction Continue -MessageData 'Skipping region-only variables include (disabled by configuration).'
 }
 
