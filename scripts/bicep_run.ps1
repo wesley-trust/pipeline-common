@@ -292,7 +292,7 @@ switch ($Scope) {
           # Check against deployment stack
           Write-Information -InformationAction Continue -MessageData "Checking What-If Resources against Deployment Stack Resources" 
 
-          $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --result-format ResourceIdOnly --only-show-errors --no-pretty-print | ConvertFrom-Json
+          $WhatIf = az deployment group what-if --resource-group $ResourceGroupName --template-file $Template @paramArgs @additionalParamArgs --mode $Mode --result-format ResourceIdOnly --only-show-errors --no-pretty-print | ConvertFrom-Json
       
           if ($WhatIf) {
 
@@ -302,7 +302,7 @@ switch ($Scope) {
               --only-show-errors `
               --output json | ConvertFrom-Json
 
-            if ($Stack) {
+            if ($Stack.resources) {
               $StackResources = foreach ($Change in $whatIf.changes) {
 
                 $Resource = [ordered]@{
@@ -314,7 +314,7 @@ switch ($Scope) {
                   StackAllowDeleteOnUnmanage = "N/A"
                   allowDelete                = "N/A"
                 }
-            
+                
                 if ($Change.resourceId -in $Stack.resources.id) {
                   $StackResource = $null
                   $StackResource = $Stack.resources | Where-Object { $_.id -eq $Change.resourceId }
