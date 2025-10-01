@@ -363,7 +363,7 @@ switch ($Scope) {
               }
             }
             else {
-              Write-Output -InformationAction Continue -MessageData "No Deployment Stack Resources to check against, any What-If resource changes will be ignored" | Tee-Object -FilePath $StackOutFile
+              Write-Output "No Deployment Stack Resources to check against, any What-If resource changes will be ignored" | Tee-Object -FilePath $StackOutFile
             }
           }
           else {
@@ -562,7 +562,7 @@ switch ($Scope) {
               }
             }
             else {
-              Write-Output -InformationAction Continue -MessageData "No Deployment Stack Resources to check against, any What-If resource changes will be ignored" | Tee-Object -FilePath $StackOutFile
+              Write-Output "No Deployment Stack Resources to check against, any What-If resource changes will be ignored" | Tee-Object -FilePath $StackOutFile
             }
           }
           else {
