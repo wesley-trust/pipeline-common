@@ -501,7 +501,7 @@ switch ($Scope) {
               --only-show-errors `
               --output json | ConvertFrom-Json
 
-            if ($Stack) {
+            if ($Stack.resources) {
               $StackResources = foreach ($Change in $whatIf.changes) {
 
                 $Resource = [ordered]@{
