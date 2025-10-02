@@ -24,7 +24,7 @@ resources:
       ref: ${{ parameters.pipelineDispatcherRef }}
 
 extends:
-  template: /templates/pipeline-dispatcher.yml@PipelineDispatcher
+  template: /templates/pipeline-common-dispatcher.yml@PipelineDispatcher
   parameters:
     configuration:
       initialise:
