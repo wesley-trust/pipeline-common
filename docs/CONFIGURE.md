@@ -8,7 +8,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 - You keep two consumer-side files per example:
   - `<example>.pipeline.yml` (top-level): declares standard triggers, individual parameters (e.g., enableProduction, runReviewStage, per-environment skip booleans), and an `actionGroups` object in the unified main-group/child model.
   - `<example>.settings.yml`: composes a single `configuration` object from the pipeline parameters, actionGroups, and defaults. It extends the shared dispatcher and passes only `configuration` through.
-  - The shared dispatcher lives in the dispatcher repo (`wesley-trust/pipeline-dispatcher/templates/pipeline-dispatcher.yml`) and references the `PipelineCommon` resource alias to extend `templates/main.yml`.
+  - The shared dispatcher lives in the dispatcher repo (`wesley-trust/pipeline-dispatcher/templates/pipeline-configuration-dispatcher.yml`). That entry point merges configuration defaults and then re-extends `templates/pipeline-common-dispatcher.yml`, which declares this repo as resource `PipelineCommon` and calls `templates/main.yml`.
 - All scripts run PowerShell 7 (pwsh) from a central `pipeline-common/scripts/` folder via reusable task templates. Inline scripts are not allowed.
 - The initialise stage locks sources by publishing a snapshot artifact; every later stage downloads and uses the same snapshot.
 
@@ -43,7 +43,8 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
 ```
 <example>.pipeline.yml (parameters + actionGroups) →
 <example>.settings.yml (compose `configuration`) →
-pipeline-dispatcher/templates/pipeline-dispatcher.yml (pass `configuration`) →
+pipeline-dispatcher/templates/pipeline-configuration-dispatcher.yml (merge defaults, pass `configuration`) →
+pipeline-dispatcher/templates/pipeline-common-dispatcher.yml (declare `PipelineCommon`, extend shared main template) →
 templates/main.yml@PipelineCommon (consume `configuration`)
 ```
 
@@ -282,7 +283,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Examples
 
-- Shared dispatcher: `wesley-trust/pipeline-dispatcher/templates/pipeline-dispatcher.yml` (all examples extend and pass one `configuration`).
+- Shared dispatcher: `wesley-trust/pipeline-dispatcher/templates/pipeline-configuration-dispatcher.yml` (examples extend this entry point, which re-extends `templates/pipeline-common-dispatcher.yml` and passes a single `configuration`).
 - Consumer pipelines:
   - `wesley-trust/pipeline-examples/examples/consumer/bicep.pipeline.yml`
   - `wesley-trust/pipeline-examples/examples/consumer/terraform.pipeline.yml`

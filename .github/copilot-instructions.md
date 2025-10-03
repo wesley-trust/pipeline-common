@@ -7,7 +7,7 @@
 
 ## What matters for an AI coding agent (quick bullets)
 - Work in PowerShell-only automation. All runtime scripts live under `scripts/` (e.g. `terraform_run.ps1`, `bicep_run.ps1`, `ps_analyse.ps1`). Do not add Bash.
-- Consumers extend `templates/main.yml` via the dispatcher; check `pipeline-dispatcher/templates/pipeline-dispatcher.yml` and `pipeline-examples/examples/consumer/*` for real usage examples.
+- Consumers extend `templates/main.yml` via the dispatcher; inspect `pipeline-dispatcher/templates/pipeline-configuration-dispatcher.yml` (entry point) and `pipeline-dispatcher/templates/pipeline-common-dispatcher.yml` (declares `PipelineCommon`) alongside `pipeline-examples/examples/consumer/*` for end-to-end usage examples.
 - Validation is local-first: the harness `scripts/invoke_local_tests.ps1` is the canonical check before pushing changes.
 
 ## Key workflows & concrete commands

@@ -22,7 +22,7 @@
 ## How Things Fit Together
 1. **Consumer pipeline (`*.pipeline.yml`)** lives in the consumer repo (see `wesley-trust/pipeline-examples` for reference). It collects parameters + actionGroups and extends the matching settings template.
 2. **Consumer settings (`*.settings.yml`)** declares the dispatcher resource (`wesley-trust/pipeline-dispatcher`) and passes a single `configuration` object (environments, pools, variables, actionGroups, flags, etc.).
-3. **Dispatcher (`pipeline-dispatcher`)** extends `/templates/pipeline-dispatcher.yml`, which fetches this repo as resource `PipelineCommon` and re-extends `templates/main.yml` with the same `configuration`.
+3. **Dispatcher (`pipeline-dispatcher`)** extends `/templates/pipeline-configuration-dispatcher.yml@PipelineDispatcher`, which merges defaults before re-extending `/templates/pipeline-common-dispatcher.yml@PipelineDispatcher`. That second template declares this repo as resource `PipelineCommon` and forwards the composed `configuration` into `templates/main.yml`.
 4. **Main template** materialises stages:
    - Optional **Initialise** (global + per-environment) – publishes source snapshot, installs tooling (Terraform/Bicep) driven by `initialise-*` jobs.
    - **Validation** – only emits jobs that are relevant based on `configuration.validation` flags and detected action group types. Enforces environment model, branch allow-list, variable include sanity, token target existence, and technology linting (Terraform fmt/validate, Bicep build, PSScriptAnalyzer).
