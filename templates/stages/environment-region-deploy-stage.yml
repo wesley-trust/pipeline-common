@@ -363,7 +363,7 @@ stages:
                                             testResultsFormat: ${{ coalesce(action.testResultsFormat, 'NUnit') }}
                                             testRunTitle: ${{ coalesce(action.testRunTitle, format('{0} {1}', coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))), coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))))) }}
                                         - ${{ if eq(coalesce(variables.publishTestArtifacts, false), true) }}:
-                                            - template: publish-artifact.yml@PipelineCommon
+                                            - template: ./steps/publish-artifact.yml@PipelineCommon
                                               parameters:
                                                 displayName: ${{ coalesce(action.publishDisplayName, format('Publish {0} artifacts', coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))))) }}
                                                 targetPath: $(Build.ArtifactStagingDirectory)
