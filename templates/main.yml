@@ -59,7 +59,7 @@ stages:
       - ${{ if ne(env.skipEnvironment, true) }}:
           - ${{ if or(ne(env.class, 'production'), eq(coalesce(parameters.configuration.enableProduction, false), true)) }}:
               ## Optional Review Stage
-              - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
+              - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
                   - template: stages/review-stage.yml@PipelineCommon
                     parameters:
                       environmentName: ${{ env.name }}
@@ -124,7 +124,7 @@ stages:
                               keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                               poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                               dependsOnStages:
-                                - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
+                                - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
                                     - review_${{ env.name }}
                                 - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                                     - ${{ env.dependsOn }}
@@ -156,7 +156,7 @@ stages:
                           keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                           poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                           dependsOnStages:
-                            - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
+                            - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
                                 - review_${{ env.name }}
                             - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                                 - ${{ env.dependsOn }}
@@ -191,7 +191,7 @@ stages:
                           keyVault: ${{ coalesce(parameters.configuration.keyVault, '') }}
                           poolRegionDemand: ${{ coalesce(env.poolRegionDemand, false) }}
                           dependsOnStages:
-                            - ${{ if or(eq(coalesce(parameters.configuration.runReviewStage, true), true), eq(env.class, 'production')) }}:
+                            - ${{ if eq(coalesce(parameters.configuration.runReviewStage, true), true) }}:
                                 - review_${{ env.name }}
                             - ${{ if ne(coalesce(env.dependsOn, ''), '') }}:
                                 - ${{ env.dependsOn }}
