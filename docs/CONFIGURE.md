@@ -20,6 +20,7 @@ This guide explains how to consume the shared Azure DevOps pipeline templates in
   - `configuration.actionGroups`: action group selections
   - `configuration.defaultPool` and per-env `env.pool`
   - `configuration.variableGroups`
+  - `configuration.pipelineType` (suffix applied to Azure DevOps environments when the pipeline represents an automated variant)
   - `configuration.runReviewStage`, `configuration.enableProduction`
   - `configuration.bicepModeOverride` (forces Bicep mode at runtime)
 
@@ -183,6 +184,7 @@ templates/main.yml@PipelineCommon (consume `configuration`)
   - `azurePowerShellVersion: '<version>'` — optional when `scriptTask: azurePowerShell`; defaults to `LatestVersion`.
   - `delayMinutes: <number>` — inserts a non-blocking Delay task before execution.
   - `runInValidation: true|false` — also runs this action in the Validation stage.
+  - `kind: pester` — marks the action (or its parent actionGroup) as a test run. When set, `PublishTestResults@2` is injected after the PowerShell step and looks for `TestResults/<actionGroup>_<action>.xml`. Override with `testResultsFiles` / `testRunTitle` if the script emits files elsewhere.
   - `useLockedSources: true|false` — defaults to true so validation/review/deploy runs execute from the initialise snapshot downloaded into `$(Pipeline.Workspace)/s/self`. Set to false to retain the git checkout in that same location when you intentionally skip the initialise stage. Leave it true if you expect the snapshot—missing artefacts now fail the job so the mismatch is visible.
 - PowerShell review jobs are enabled per action group via `runPowerShellReview: true|false` (defaults to false). When enabled you must supply a review script per action using either `reviewScriptPath` (relative to the locked snapshot) or `reviewScriptFullPath`; actions without a review script are skipped. You can still override behaviour with `reviewScriptTask`, `reviewServiceConnection`, `reviewAzurePowerShellVersion`, `reviewArguments` (defaults to `arguments`), `reviewDisplayName` (defaults to the action display name), `reviewCondition`, `reviewWorkingDirectory` (relative to the locked snapshot), or `reviewWorkingDirectoryFullPath`.
 - Token replacement for PowerShell actions is supported in Validation and Review via `tokenReplaceEnabled`, `tokenTargetPatterns`, `tokenPrefix`, `tokenSuffix`.
