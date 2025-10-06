@@ -1,8 +1,12 @@
 param(
-  [string[]]$AllowedBranches = @(),
-  [string]$AllowedBranchesCsv = '',
   [string]$AllowedBranchesJson = ''
 )
+
+$AllowedBranchesJson
+
+$AllowedBranchesJson | ConvertFrom-Json
+
+break
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -18,11 +22,6 @@ function ConvertTo-NormalizedList {
   ForEach-Object { if ($null -eq $_) { '' } else { $_.ToString() } } |
   ForEach-Object { $_.Trim() } |
   Where-Object { $_ -ne '' }
-}
-
-$fromCsv = @()
-if ((-not $AllowedBranches) -and -not [string]::IsNullOrWhiteSpace($AllowedBranchesCsv)) {
-  $fromCsv = $AllowedBranchesCsv -split ',' | ForEach-Object { ($_ ?? '').Trim().Trim('\'',''\"') }
 }
 
 $fromJson = @()
