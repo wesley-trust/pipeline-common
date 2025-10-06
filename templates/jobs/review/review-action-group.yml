@@ -103,7 +103,7 @@ jobs:
                   - ${{ each tokenPattern in parameters.actionGroup.tokenTargetPatterns }}:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
-                          displayName: Terraform token replacement (${ tokenPattern })
+                          displayName: Terraform token replacement (${{ tokenPattern }})
                           targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
@@ -122,7 +122,7 @@ jobs:
                           - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
-                                  displayName: Terraform token replacement (${ tokenPattern })
+                                  displayName: Terraform token replacement (${{ tokenPattern }})
                                   targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
@@ -167,7 +167,7 @@ jobs:
                   - ${{ each tokenPattern in parameters.actionGroup.tokenTargetPatterns }}:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
-                          displayName: Bicep token replacement (${ tokenPattern })
+                          displayName: Bicep token replacement (${{ tokenPattern }})
                           targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
@@ -185,7 +185,7 @@ jobs:
                           - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
-                                  displayName: Bicep token replacement (${ tokenPattern })
+                                  displayName: Bicep token replacement (${{ tokenPattern }})
                                   targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}
@@ -246,7 +246,7 @@ jobs:
                   - ${{ each tokenPattern in parameters.actionGroup.tokenTargetPatterns }}:
                       - template: ../../steps/replace-tokens.yml@PipelineCommon
                         parameters:
-                          displayName: PowerShell token replacement (${ tokenPattern })
+                          displayName: PowerShell token replacement (${{ tokenPattern }})
                           targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                           tokenPrefix: ${{ coalesce(parameters.actionGroup.tokenPrefix, '#{{') }}
                           tokenSuffix: ${{ coalesce(parameters.actionGroup.tokenSuffix, '}}') }}
@@ -259,7 +259,7 @@ jobs:
                           - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                               - template: ../../steps/replace-tokens.yml@PipelineCommon
                                 parameters:
-                                  displayName: PowerShell token replacement (${ tokenPattern })
+                                  displayName: PowerShell token replacement (${{ tokenPattern }})
                                   targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, parameters.actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, parameters.actionGroup.tokenSuffix, '}}') }}

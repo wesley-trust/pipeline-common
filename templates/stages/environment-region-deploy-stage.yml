@@ -176,7 +176,7 @@ stages:
                                     - ${{ each tokenPattern in actionGroup.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
-                                            displayName: Terraform token replacement (${ tokenPattern })
+                                            displayName: Terraform token replacement (${{ tokenPattern }})
                                             targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                             tokenPrefix: ${{ coalesce(actionGroup.tokenPrefix, '#{{') }}
                                             tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
@@ -195,7 +195,7 @@ stages:
                                     - ${{ each tokenPattern in actionGroup.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
-                                            displayName: Bicep token replacement (${ tokenPattern })
+                                            displayName: Bicep token replacement (${{ tokenPattern }})
                                             targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                             tokenPrefix: ${{ coalesce(actionGroup.tokenPrefix, '#{{') }}
                                             tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
@@ -213,7 +213,7 @@ stages:
                                     - ${{ each tokenPattern in actionGroup.tokenTargetPatterns }}:
                                         - template: ../steps/replace-tokens.yml@PipelineCommon
                                           parameters:
-                                            displayName: PowerShell token replacement (${ tokenPattern })
+                                            displayName: PowerShell token replacement (${{ tokenPattern }})
                                             targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                             tokenPrefix: ${{ coalesce(actionGroup.tokenPrefix, '#{{') }}
                                             tokenSuffix: ${{ coalesce(actionGroup.tokenSuffix, '}}') }}
@@ -229,7 +229,7 @@ stages:
                                             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                                 - template: ../steps/replace-tokens.yml@PipelineCommon
                                                   parameters:
-                                                    displayName: Terraform token replacement (${ tokenPattern })
+                                                    displayName: Terraform token replacement (${{ tokenPattern }})
                                                     targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                                     tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                                     tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
@@ -270,7 +270,7 @@ stages:
                                             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                                 - template: ../steps/replace-tokens.yml@PipelineCommon
                                                   parameters:
-                                                    displayName: Bicep token replacement (${ tokenPattern })
+                                                    displayName: Bicep token replacement (${{ tokenPattern }})
                                                     targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                                     tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                                     tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
@@ -322,7 +322,7 @@ stages:
                                             - ${{ each tokenPattern in action.tokenTargetPatterns }}:
                                                 - template: ../steps/replace-tokens.yml@PipelineCommon
                                                   parameters:
-                                                    displayName: PowerShell token replacement (${ tokenPattern })
+                                                    displayName: PowerShell token replacement (${{ tokenPattern }})
                                                     targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                                                     tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                                     tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}

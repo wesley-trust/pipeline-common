@@ -137,7 +137,7 @@ jobs:
               - ${{ each tokenPattern in parameters.tokenTargetPatterns }}:
                   - template: ../steps/replace-tokens.yml@PipelineCommon
                     parameters:
-                      displayName: PowerShell token replacement (${ tokenPattern })
+                      displayName: PowerShell token replacement (${{ tokenPattern }})
                       targetFiles: ${{ format('{0}/{1}', parameters.sourcePath, tokenPattern) }}
                       tokenPrefix: ${{ parameters.tokenPrefix }}
                       tokenSuffix: ${{ parameters.tokenSuffix }}
