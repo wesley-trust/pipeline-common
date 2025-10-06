@@ -103,7 +103,7 @@ stages:
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
                 ${{ if parameters.environmentSuffix }}:
-                  environment: ${{ upper(parameters.environmentName) }}-${{ upper(parameters.environmentSuffix)) }}
+                  environment: ${{ upper(parameters.environmentName) }}-${{ upper(parameters.environmentSuffix) }}
                 ${{ else }}:
                   environment: ${{ upper(parameters.environmentName) }}
                 ${{ if or(ne(coalesce(actionGroup.dependsOn, ''), ''), ne(coalesce(actionGroup.delayMinutes, 0), 0)) }}:
