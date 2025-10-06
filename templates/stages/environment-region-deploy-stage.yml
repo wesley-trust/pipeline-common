@@ -367,7 +367,7 @@ stages:
                                               parameters:
                                                 displayName: ${{ coalesce(action.publishDisplayName, format('Publish {0} artifacts', coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))))) }}
                                                 targetPath: $(Build.ArtifactStagingDirectory)
-                                                artifactName: ${{ format('{0}-{1}', coalesce(action.publishDisplayName, format('Publish {0} artifacts', coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' ')))))), upper(replace(parameters.regionName, ' ', '-'))) }}
+                                                artifactName: ${{ format('{0}-{1}', coalesce(action.publishDisplayName, format('Publish {0} artifacts', coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))))), upper(replace(parameters.regionName, ' ', '-'))) }}
 
                         # Optional Post Deployment Scripts
                         - ${{ if ne(coalesce(actionGroup.postDeploy.scripts, ''), '') }}:
