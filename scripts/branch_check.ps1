@@ -65,7 +65,8 @@ if ($AllowedBranches -contains '*') {
 }
 else {
   foreach ($p in $AllowedBranches) {
-    if (Test-BranchPattern -Text $branchName -Pattern $p -or Test-BranchPattern -Text $branchFull -Pattern $p) { $allowed = $true; break }
+    if (Test-BranchPattern -Text $branchFull -Pattern $p) { $allowed = $true; break }
+    #if (Test-BranchPattern -Text $branchName -Pattern $p -or Test-BranchPattern -Text $branchFull -Pattern $p) { $allowed = $true; break }
   }
 }
 
