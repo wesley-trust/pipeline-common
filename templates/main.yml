@@ -43,6 +43,7 @@ stages:
       actionGroups: ${{ parameters.configuration.actionGroups }}
       serviceConnection: ${{ parameters.configuration.serviceConnection }}
       environments: ${{ parameters.configuration.environments }}
+      pipelineType: ${{ coalesce(parameters.configuration.pipelineType, '') }}
       pool: ${{ parameters.configuration.defaultPool }}
       variableRoot: ${{ coalesce(parameters.configuration.variableRoot, 'vars') }}
       variableIncludeCommon: ${{ coalesce(parameters.configuration.variables.includeCommon, true) }}
@@ -105,6 +106,7 @@ stages:
                           - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                             parameters:
                               environmentName: ${{ env.name }}
+                              environmentSuffix: ${{ coalesce(parameters.configuration.pipelineType, '') }}
                               regionName: ${{ secondaryRegion }}
                               envClass: ${{ env.class }}
                               enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
@@ -136,6 +138,7 @@ stages:
                       - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                         parameters:
                           environmentName: ${{ env.name }}
+                          environmentSuffix: ${{ coalesce(parameters.configuration.pipelineType, '') }}
                           regionName: ${{ env.primaryRegion }}
                           envClass: ${{ env.class }}
                           enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}
@@ -171,6 +174,7 @@ stages:
                       - template: stages/environment-region-deploy-stage.yml@PipelineCommon
                         parameters:
                           environmentName: ${{ env.name }}
+                          environmentSuffix: ${{ coalesce(parameters.configuration.pipelineType, '') }}
                           regionName: ${{ coalesce(env.drRegion, env.primaryRegion) }}
                           envClass: ${{ env.class }}
                           enableProduction: ${{ coalesce(parameters.configuration.enableProduction, false) }}

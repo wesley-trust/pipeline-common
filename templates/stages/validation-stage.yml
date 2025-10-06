@@ -38,6 +38,9 @@ parameters:
   - name: useLockedSources
     type: boolean
     default: true
+  - name: pipelineType
+    type: string
+    default: ""
 
 stages:
   - stage: validation
@@ -66,6 +69,7 @@ stages:
           dependsOnStages: []
           additionalRepositories: ${{ parameters.additionalRepositories }}
           enableProduction: ${{ parameters.enableProduction }}
+          pipelineType: ${{ parameters.pipelineType }}
 
       - ${{ if ne(coalesce(parameters.validation.enableBranchAllowlist, true), false) }}:
           - template: ../jobs/validation/validate-branch-allowlist.yml@PipelineCommon

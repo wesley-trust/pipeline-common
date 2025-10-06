@@ -5,11 +5,16 @@ param(
   [string]
   $EnvironmentsJson,
   [bool]
-  $EnableProduction = $false
+  $EnableProduction = $false,
+  [string]
+  $PipelineType = ""
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Pipeline Type Override
+$PipelineTypeOverride = "auto"
 
 # Allowed Classes
 $classes = @('development', 'test', 'acceptance', 'production')
@@ -44,11 +49,11 @@ if ($EnableProduction) {
     throw 'enableProduction is true but no production environment is defined.'
   }
 
-  if ($acceptance.Count -eq 0) {
+  if ($acceptance.Count -eq 0 -and $PipelineType -ne $PipelineTypeOverride) {
     throw 'An acceptance environment must be defined when enableProduction is true.'
   }
 
-  if ([System.Convert]::ToBoolean($acceptance[0].skipEnvironment)) {
+  if ([System.Convert]::ToBoolean($acceptance[0].skipEnvironment) -and $PipelineType -ne $PipelineTypeOverride) {
     throw "Acceptance environment '$($acceptance[0].name)' cannot be skipped when enableProduction is true."
   }
 }

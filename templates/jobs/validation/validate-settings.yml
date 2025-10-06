@@ -14,6 +14,9 @@ parameters:
   - name: enableProduction
     type: boolean
     default: false
+  - name: pipelineType
+    type: string
+    default: ""
 
 jobs:
   - job: validate_settings
@@ -45,17 +48,17 @@ jobs:
               arguments: >-
                 -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
                 -EnableProduction $true
+                -PipelineType '${{ coalesce(parameters.pipelineType, '') }}'
 
-      # when enableProduction == false
       - ${{ if ne(parameters.enableProduction, true) }}:
-        - template: ../../steps/powershell.yml@PipelineCommon
-          parameters:
-            displayName: "Validate environment model"
-            repoAlias: PipelineCommon
-            script: validate_environment_model.ps1
-            arguments: >-
-              -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
-              -EnableProduction $false
+          - template: ../../steps/powershell.yml@PipelineCommon
+            parameters:
+              displayName: "Validate environment model"
+              repoAlias: PipelineCommon
+              script: validate_environment_model.ps1
+              arguments: >-
+                -EnvironmentsJson '${{ convertToJson(parameters.environments) }}'
+                -EnableProduction $false
 
         # One run per environment
       - ${{ each env in parameters.environments }}:
