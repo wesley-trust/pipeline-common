@@ -11,7 +11,7 @@ if (-not $branchFull) { Write-Information -InformationAction Continue -MessageDa
 
 $AllowedBranches = $AllowedBranchesJson | ConvertFrom-Json -ErrorAction Stop
 
-if (-not $AllowedBranches -or $AllowedBranches.Count -eq 0) {
+if (!$AllowedBranches) {
   Write-Information -InformationAction Continue -MessageData "No branch restrictions configured."
   exit 0
 }
