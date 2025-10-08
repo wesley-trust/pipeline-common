@@ -42,12 +42,12 @@ variables:
   - name: runSuffix
     value: $[ coalesce(variables['Build.BuildId'], '0') ]
   - name: baseDeploymentVersion
-    value: $[ variables['deploymentVersion'] ]
+    value: ${{ variables.deploymentVersion }}
   - name: applyDynamicSuffix
     value: $[ and(
-                  eq(coalesce(variables['enableDynamicDeploymentSuffix'], 'false'), 'true'),
-                  contains(coalesce(variables['Build.DefinitionName'], ''), 'test')
-                ) ]
+      eq(coalesce(variables['enableDynamicDeploymentSuffix'], 'false'), 'true'),
+      contains(coalesce(variables['Build.DefinitionName'], ''), 'test')
+      ) ]
   - name: dynamicSuffixPrefix
     value: $[ replace(
       replace(
