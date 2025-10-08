@@ -410,9 +410,9 @@ switch ($Scope) {
         'stack', 'group', 'create',
         '--name', $StackName,
         '--resource-group', $ResourceGroupName,
-        '--template-file', $Template
-        '--deny-settings-mode', 'denyDelete'
-        '--deny-settings-apply-to-child-scopes'
+        '--template-file', $Template,
+        '--deny-settings-mode', 'DenyWriteAndDelete',
+        '--deny-settings-apply-to-child-scopes',
         '--only-show-errors'
       )
 
@@ -607,8 +607,8 @@ switch ($Scope) {
         'stack', 'sub', 'create',
         '--name', $StackName,
         '--location', $Location,
-        '--template-file', $Template
-        '--deny-settings-mode', 'denyDelete'
+        '--template-file', $Template,
+        '--deny-settings-mode', 'DenyWriteAndDelete',
         '--only-show-errors'
       )
 
@@ -632,8 +632,8 @@ switch ($Scope) {
         '--name', $StackName,
         '--management-group-id', $ManagementGroupId,
         '--location', $Location,
-        '--template-file', $Template
-        '--deny-settings-mode', 'denyDelete'
+        '--template-file', $Template,
+        '--deny-settings-mode', 'DenyWriteAndDelete',
         '--only-show-errors'
       )
 
