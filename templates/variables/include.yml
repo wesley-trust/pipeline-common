@@ -38,14 +38,14 @@ variables:
   - ${{ if and(eq(parameters.includeEnvRegion, true), ne(parameters.environmentName, ''), ne(parameters.regionName, '')) }}:
       - template: ${{ format('{0}/environments/{1}/regions/{2}.yml', parameters.variableRoot, parameters.environmentName, parameters.regionName) }}@self
 
-  # Dynamic test suffix support (opt-in via enableDynamicDeploymentSuffix in variable layers)
+  # Dynamic test suffix support (opt-in via enableTestsDeploymentSuffix in variable layers)
   - name: runSuffix
     value: $[ coalesce(variables['Build.BuildId'], '0') ]
   - name: baseDeploymentVersion
     value: ${{ variables.deploymentVersion }}
   - name: applyDynamicSuffix
     value: $[ and(
-      eq(coalesce(variables['enableDynamicDeploymentSuffix'], 'false'), 'true'),
+      eq(coalesce(variables['enableTestsDeploymentSuffix'], 'false'), 'true'),
       contains(coalesce(variables['Build.DefinitionName'], ''), 'test')
       ) ]
   - name: dynamicSuffixPrefix
