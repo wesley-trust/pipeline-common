@@ -40,15 +40,15 @@ variables:
 
   # Dynamic test suffix support (opt-in via enableDynamicDeploymentSuffix in variable layers)
   - name: runSuffix
-    value: $[ format('{0:x}', int(variables['Build.BuildId'])) ]
+    value: $[ coalesce(variables['Build.BuildId'], '0') ]
   - name: baseDeploymentVersion
     value: $[ variables['deploymentVersion'] ]
   - name: deploymentVersion
     value: $[ if(
-                  and(
-                    eq(coalesce(variables['enableDynamicDeploymentSuffix'], 'false'), 'true'),
-                    contains(toLower(coalesce(variables['Build.DefinitionName'], '')), 'test')
-                  ),
-                  format('{0}-{1}', variables['runSuffix'], variables['baseDeploymentVersion']),
-                  variables['baseDeploymentVersion']
-                ) ]
+      and(
+      eq(coalesce(variables['enableDynamicDeploymentSuffix'], 'false'), 'true'),
+      contains(toLower(coalesce(variables['Build.DefinitionName'], '')), 'test')
+      ),
+      format('{0}-{1}', variables['runSuffix'], variables['baseDeploymentVersion']),
+      variables['baseDeploymentVersion']
+      ) ]
