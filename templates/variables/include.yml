@@ -54,7 +54,7 @@ variables:
       replace(
       format('{0}', variables['applyDynamicSuffix']),
       'True',
-      format('{0}-', variables['runSuffix'])
+      format('{0}_', variables['runSuffix'])
       ),
       'False',
       ''
