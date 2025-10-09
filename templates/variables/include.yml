@@ -60,4 +60,4 @@ variables:
       ''
       ) ]
   - name: deploymentVersion
-    value: $[ format('{0}{1}{2}', variables['baseDeploymentVersion'], '_' variables['dynamicSuffixPrefix']) ]
+    value: $[ format('{0}_{1}', variables['baseDeploymentVersion'], variables['dynamicSuffixPrefix']) ]
