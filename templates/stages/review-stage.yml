@@ -62,7 +62,7 @@ stages:
     jobs:
       - ${{ each region in parameters.regions }}:
           - ${{ each actionGroup in parameters.actionGroups }}:
-              - ${{ if and(ne(actionGroup.enabled, false), or(eq(actionGroup.environments, ''), eq(actionGroup.environments, null), and(ne(actionGroup.environments, ''), ne(actionGroup.environments, null), containsValue(actionGroup.environments, parameters.environmentName)))) }}:
+              - ${{ if and(ne(actionGroup.enabled, false), or(eq(actionGroup.environments, ''), eq(actionGroup.environments, ''), and(ne(actionGroup.environments, ''), ne(actionGroup.environments, ''), containsValue(actionGroup.environments, parameters.environmentName)))) }}:
                   - ${{ if or(or(and(eq(actionGroup.type, 'terraform'), ne(lower(format('{0}', coalesce(actionGroup.runTerraformPlan, true))), 'false')), and(eq(actionGroup.type, 'bicep'), ne(lower(format('{0}', coalesce(actionGroup.runBicepWhatIf, true))), 'false'))), and(eq(actionGroup.type, 'powershell'), eq(lower(format('{0}', coalesce(actionGroup.runPowerShellReview, false))), 'true'))) }}:
                       - template: ../jobs/review/review-action-group.yml@PipelineCommon
                         parameters:
