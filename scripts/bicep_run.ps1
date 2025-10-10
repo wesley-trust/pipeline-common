@@ -615,7 +615,7 @@ switch ($Scope) {
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
         '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
-        '--deny-settings-excluded-actions', 'Microsoft.Resources/subscriptions/resourceGroups/write',
+        #'--deny-settings-excluded-actions', 'Microsoft.Resources/subscriptions/resourceGroups/write',
         '--only-show-errors'
       )
 
