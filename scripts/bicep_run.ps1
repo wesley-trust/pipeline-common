@@ -429,10 +429,6 @@ switch ($Scope) {
     }
   }
   'subscription' {
-    # Test var output
-    write-host "$ENV:DEPLOYMENTVERSION"
-    exit 0
-    
     if (-not $Location) { throw 'Location is required for subscription scope' }
     
     $StackName = Get-StackName -Prefix 'ds-sub' -Identifier $ResourceGroupName
