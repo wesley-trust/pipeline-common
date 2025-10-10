@@ -49,7 +49,5 @@ variables:
       contains(variables['Build.DefinitionName'], variables['testsDeploymentSuffixPipelineFilter'])
       ) ]
 
-  - name: dynamicSuffixPrefix
-    value: $[ replace(replace(format('{0}', variables['applyDynamicSuffix']), 'True', format('_{0}', variables['runSuffix'])), 'False', '') ]
   - name: deploymentVersion
-    value: $[ format('{0}{1}', variables['baseDeploymentVersion'], variables['dynamicSuffixPrefix']) ]
+    value: $[ iif(eq(variables['applyDynamicSuffix'], 'True'), format('{0}_{1}', variables['baseDeploymentVersion'], variables['runSuffix']), variables['baseDeploymentVersion']) ]
