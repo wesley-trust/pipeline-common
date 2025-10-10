@@ -60,4 +60,4 @@ variables:
       ''
       ) ]
   - name: deploymentVersion
-    value: $[ format('{0}_{1}', variables['baseDeploymentVersion'], variables['dynamicSuffixPrefix']) ]
+    value: $[ if( equals(variables['dynamicSuffixPrefix'], ''), variables['baseDeploymentVersion'], format('{0}_{1}', variables['baseDeploymentVersion'], variables['dynamicSuffixPrefix']) )]
