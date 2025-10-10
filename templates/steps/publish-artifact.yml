@@ -12,6 +12,7 @@ parameters:
 
 steps:
   - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
     displayName: ${{ parameters.displayName }}
     inputs:
       artifact: ${{ parameters.artifactName }}

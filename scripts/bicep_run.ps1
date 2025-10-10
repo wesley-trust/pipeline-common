@@ -189,7 +189,7 @@ if ($ModeOverride) {
 }
 
 # Get Object Id
-$ServiceConnectionObjectId = (Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id).Id
+$ServiceConnectionObjectId = $(az ad sp show --id $(az account show --query user.name -o tsv) --query id -o tsv)
 
 $paramArgs = @()
 if ($ParametersPath) {
