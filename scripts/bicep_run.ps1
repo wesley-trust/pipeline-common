@@ -188,6 +188,9 @@ if ($ModeOverride) {
   $Mode = $ModeOverride
 }
 
+# Get Object Id
+$ServiceConnectionObjectId = (Get-AzADServicePrincipal -ApplicationId (Get-AzContext).Account.Id).Id
+
 $paramArgs = @()
 if ($ParametersPath) {
   $paramArgs += '--parameters'
@@ -412,6 +415,7 @@ switch ($Scope) {
         '--resource-group', $ResourceGroupName,
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
+        '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
         '--deny-settings-apply-to-child-scopes',
         '--only-show-errors'
       )
@@ -609,6 +613,7 @@ switch ($Scope) {
         '--location', $Location,
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
+        '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
         '--only-show-errors'
       )
 
@@ -634,6 +639,7 @@ switch ($Scope) {
         '--location', $Location,
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
+        '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
         '--only-show-errors'
       )
 
