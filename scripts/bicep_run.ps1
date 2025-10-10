@@ -416,6 +416,7 @@ switch ($Scope) {
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
         '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
+        '--deny-settings-excluded-actions', 'Microsoft.Resources/subscriptions/resourceGroups/write',
         '--deny-settings-apply-to-child-scopes',
         '--only-show-errors'
       )
@@ -614,6 +615,7 @@ switch ($Scope) {
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
         '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
+        '--deny-settings-excluded-actions', 'Microsoft.Resources/subscriptions/resourceGroups/write',
         '--only-show-errors'
       )
 
@@ -640,6 +642,7 @@ switch ($Scope) {
         '--template-file', $Template,
         '--deny-settings-mode', 'DenyWriteAndDelete',
         '--deny-settings-excluded-principals', $ServiceConnectionObjectId,
+        '--deny-settings-excluded-actions', 'Microsoft.Resources/subscriptions/resourceGroups/write',
         '--only-show-errors'
       )
 
