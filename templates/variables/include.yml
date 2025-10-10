@@ -50,14 +50,6 @@ variables:
       ) ]
 
   - name: dynamicSuffixPrefix
-    value: $[ replace(
-      replace(
-      format('{0}', variables['applyDynamicSuffix']),
-      'True',
-      format('_{0}', variables['runSuffix'])
-      ),
-      'False',
-      ''
-      ) ]
+    value: $[ replace(replace(format('{0}', variables['applyDynamicSuffix']), 'True', format('_{0}', variables['runSuffix'])), 'False', '') ]
   - name: deploymentVersion
     value: $[ format('{0}{1}', variables['baseDeploymentVersion'], variables['dynamicSuffixPrefix']) ]
