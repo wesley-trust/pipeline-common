@@ -40,7 +40,7 @@ variables:
 
   # Dynamic test suffix support (opt-in via testsDeploymentSuffixEnabled in variable layers)
   - name: runSuffix
-    value: $[ format('{0}_{1}', coalesce(variables['Build.BuildId'], '0'), counter(variables['Build.BuildId'], 1)) ]
+    value: $[ format('{0}_{1}', variables['Build.BuildId'], split(variables['System.JobId'], '-')[0]) ]
   - name: baseDeploymentVersion
     value: ${{ variables.deploymentVersion }}
   - name: applyDynamicSuffix
