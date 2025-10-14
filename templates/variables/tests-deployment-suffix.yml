@@ -1,13 +1,27 @@
+parameters:
+  - name: baseDeploymentVersion
+    type: string
+    default: ""
+  - name: suffixToken
+    type: string
+    default: ""
+
 variables:
   # Enable dynamic suffixing for the current job
   - name: testsDeploymentSuffixEnabled
     value: 'true'
 
+  # Persist the base deployment version for later formatting
+  - name: baseDeploymentVersion
+    value: ${{ parameters.baseDeploymentVersion }}
+
+  # Action-group supplied suffix token (ensures uniqueness across parallel jobs)
+  - name: testsDeploymentSuffixToken
+    value: ${{ parameters.suffixToken }}
+
   # Dynamic test suffix support (opt-in per action group)
   - name: runSuffix
-    value: $[ format('{0}_{1}', variables['Build.BuildId'], replace(variables['System.JobId'], '-', '')) ]
-  - name: baseDeploymentVersion
-    value: $[ variables['deploymentVersion'] ]
+    value: $[ format('{0}_{1}', variables['Build.BuildId'], coalesce(variables['testsDeploymentSuffixToken'], 'action')) ]
   - name: applyDynamicSuffix
     value: $[ and(
       eq(coalesce(variables['testsDeploymentSuffixEnabled'], 'false'), 'true'),

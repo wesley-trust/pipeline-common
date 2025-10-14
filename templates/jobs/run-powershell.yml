@@ -80,6 +80,9 @@ parameters:
   - name: testsDeploymentSuffixEnabled
     type: boolean
     default: false
+  - name: testsDeploymentSuffixToken
+    type: string
+    default: ""
   - name: tokenReplaceEnabled
     type: boolean
     default: false
@@ -109,6 +112,9 @@ jobs:
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
       - ${{ if eq(parameters.testsDeploymentSuffixEnabled, true) }}:
           - template: ../variables/tests-deployment-suffix.yml@PipelineCommon
+            parameters:
+              baseDeploymentVersion: ${{ variables.deploymentVersion }}
+              suffixToken: ${{ parameters.testsDeploymentSuffixToken }}
 
     steps:
       # Use locked sources for RTL integrity
