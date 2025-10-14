@@ -181,6 +181,7 @@ stages:
                                   lockedArtifactName: source-snapshot
                                   sourcePath: $(Pipeline.Workspace)/s/self
                                   useLockedSources: ${{ coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true) }}
+                                  testsDeploymentSuffixEnabled: ${{ coalesce(action.testsDeploymentSuffixEnabled, actionGroup.testsDeploymentSuffixEnabled, false) }}
                                   tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
                                   tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, createArray()) }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}

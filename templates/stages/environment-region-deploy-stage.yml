@@ -102,6 +102,9 @@ stages:
 
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
+                ${{ if eq(coalesce(actionGroup.testsDeploymentSuffixEnabled, false), true) }}:
+                  variables:
+                    - template: ../variables/tests-deployment-suffix.yml@PipelineCommon
                 ${{ if parameters.environmentSuffix }}:
                   environment: ${{ upper(parameters.environmentName) }}-${{ upper(parameters.environmentSuffix) }}
                 ${{ else }}:

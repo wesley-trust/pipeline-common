@@ -1,0 +1,18 @@
+variables:
+  # Enable dynamic suffixing for the current job
+  - name: testsDeploymentSuffixEnabled
+    value: 'true'
+
+  # Dynamic test suffix support (opt-in per action group)
+  - name: runSuffix
+    value: $[ format('{0}_{1}', variables['Build.BuildId'], split(variables['System.JobId'], '-')[0]) ]
+  - name: baseDeploymentVersion
+    value: ${{ variables.deploymentVersion }}
+  - name: applyDynamicSuffix
+    value: $[ and(
+      eq(coalesce(variables['testsDeploymentSuffixEnabled'], 'false'), 'true'),
+      contains(variables['Build.DefinitionName'], variables['testsDeploymentSuffixPipelineFilter'])
+      ) ]
+
+  - name: deploymentVersion
+    value: $[ iif(eq(variables['applyDynamicSuffix'], 'True'), format('{0}_{1}', variables['baseDeploymentVersion'], variables['runSuffix']), variables['baseDeploymentVersion']) ]
