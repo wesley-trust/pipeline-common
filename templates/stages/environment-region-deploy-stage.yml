@@ -102,12 +102,13 @@ stages:
 
               - deployment: deploy_${{ parameters.environmentName }}_${{ parameters.regionName }}_${{ coalesce(actionGroup.name, 'actionGroup') }}
                 displayName: "${{ coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))) }}"
-                ${{ if eq(coalesce(actionGroup.testsDeploymentSuffixEnabled, false), true) }}:
+                ${{ if eq(coalesce(actionGroup.variableOverridesEnabled, false), true) }}:
                   variables:
-                    - template: ../variables/tests-deployment-suffix.yml@PipelineCommon
+                    - template: ../variables/include-overrides.yml@PipelineCommon
                       parameters:
                         baseDeploymentVersion: ${{ variables.deploymentVersion }}
                         suffixToken: ${{ coalesce(actionGroup.testsDeploymentSuffixToken, coalesce(actionGroup.name, 'actionGroup')) }}
+                        variableOverrides: ${{ coalesce(actionGroup.variableOverrides, {}) }}
                 ${{ if parameters.environmentSuffix }}:
                   environment: ${{ upper(parameters.environmentName) }}-${{ upper(parameters.environmentSuffix) }}
                 ${{ else }}:

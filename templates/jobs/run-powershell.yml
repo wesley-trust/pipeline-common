@@ -77,12 +77,15 @@ parameters:
   - name: variableincludeRegion
     type: boolean
     default: true
-  - name: testsDeploymentSuffixEnabled
+  - name: variableOverridesEnabled
     type: boolean
     default: false
   - name: testsDeploymentSuffixToken
     type: string
     default: ""
+  - name: variableOverrides
+    type: object
+    default: {}
   - name: tokenReplaceEnabled
     type: boolean
     default: false
@@ -110,11 +113,12 @@ jobs:
           includeRegion: ${{ parameters.variableincludeRegion }}
           includeEnv: ${{ parameters.variableIncludeEnv }}
           includeEnvRegion: ${{ parameters.variableIncludeEnvRegion }}
-      - ${{ if eq(parameters.testsDeploymentSuffixEnabled, true) }}:
-          - template: ../variables/tests-deployment-suffix.yml@PipelineCommon
+      - ${{ if eq(parameters.variableOverridesEnabled, true) }}:
+          - template: ../variables/include-overrides.yml@PipelineCommon
             parameters:
               baseDeploymentVersion: ${{ variables.deploymentVersion }}
               suffixToken: ${{ parameters.testsDeploymentSuffixToken }}
+              variableOverrides: ${{ coalesce(parameters.variableOverrides, {}) }}
 
     steps:
       # Use locked sources for RTL integrity
