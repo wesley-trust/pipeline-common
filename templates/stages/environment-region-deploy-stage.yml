@@ -108,7 +108,7 @@ stages:
                       parameters:
                         baseDeploymentVersion: ${{ variables.deploymentVersion }}
                         suffixToken: ${{ coalesce(actionGroup.testsDeploymentSuffixToken, coalesce(actionGroup.name, 'actionGroup')) }}
-                        variableOverrides: ${{ coalesce(actionGroup.variableOverrides, {}) }}
+                        variableOverrides: ${{ coalesce(actionGroup.variableOverrides, '') }}
                 ${{ if parameters.environmentSuffix }}:
                   environment: ${{ upper(parameters.environmentName) }}-${{ upper(parameters.environmentSuffix) }}
                 ${{ else }}:
