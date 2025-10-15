@@ -118,7 +118,7 @@ jobs:
             parameters:
               baseDeploymentVersion: ${{ variables.deploymentVersion }}
               suffixToken: ${{ parameters.testsDeploymentSuffixToken }}
-              variableOverrides: ${{ coalesce(parameters.variableOverrides, {}) }}
+              variableOverrides: ${{ parameters.variableOverrides }}
 
     steps:
       # Use locked sources for RTL integrity

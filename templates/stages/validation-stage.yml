@@ -183,7 +183,7 @@ stages:
                                   useLockedSources: ${{ coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true) }}
                                   variableOverridesEnabled: ${{ coalesce(action.variableOverridesEnabled, actionGroup.variableOverridesEnabled, false) }}
                                   testsDeploymentSuffixToken: ${{ coalesce(action.testsDeploymentSuffixToken, actionGroup.testsDeploymentSuffixToken, action.name, actionGroup.name, 'action') }}
-                                  variableOverrides: ${{ coalesce(action.variableOverrides, actionGroup.variableOverrides, {}) }}
+                                  variableOverrides: ${{ coalesce(action.variableOverrides, actionGroup.variableOverrides) }}
                                   tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
                                   tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, '') }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
