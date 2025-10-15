@@ -185,7 +185,7 @@ stages:
                                   testsDeploymentSuffixToken: ${{ coalesce(action.testsDeploymentSuffixToken, actionGroup.testsDeploymentSuffixToken, action.name, actionGroup.name, 'action') }}
                                   variableOverrides: ${{ coalesce(action.variableOverrides, actionGroup.variableOverrides, {}) }}
                                   tokenReplaceEnabled: ${{ coalesce(action.tokenReplaceEnabled, actionGroup.tokenReplaceEnabled, true) }}
-                                  tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, []) }}
+                                  tokenTargetPatterns: ${{ coalesce(action.tokenTargetPatterns, actionGroup.tokenTargetPatterns, '') }}
                                   tokenPrefix: ${{ coalesce(action.tokenPrefix, actionGroup.tokenPrefix, '#{{') }}
                                   tokenSuffix: ${{ coalesce(action.tokenSuffix, actionGroup.tokenSuffix, '}}') }}
                                   additionalRepositories: ${{ parameters.additionalRepositories }}
