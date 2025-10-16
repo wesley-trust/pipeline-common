@@ -122,12 +122,12 @@ stages:
                         - ${{ format('delay_deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, coalesce(actionGroup.name, 'actionGroup')) }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
-                ${{ if and(eq(actionGroup.condition, ''), eq(coalesce(actionGroup.runConditions.manualOnly, false), true)) }}:
-                  condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), eq(coalesce(actionGroup.runConditions.scheduleOnly, false), true)) }}:
-                  condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                ${{ if and(eq(actionGroup.condition, ''), ne(coalesce(actionGroup.runConditions.manualOnly, false), true), ne(coalesce(actionGroup.runConditions.scheduleOnly, false), true), eq(coalesce(actionGroup.runConditions.prOnly, false), true)) }}:
-                  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                ${{ elseif and(gt(length(coalesce(actionGroup.runConditions.allowReasons, '')), 0), gt(length(coalesce(actionGroup.runConditions.denyReasons, '')), 0)) }}:
+                  condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
+                ${{ elseif gt(length(coalesce(actionGroup.runConditions.allowReasons, '')), 0) }}:
+                  condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])))
+                ${{ elseif gt(length(coalesce(actionGroup.runConditions.denyReasons, '')), 0) }}:
+                  condition: and(succeeded(), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
                 strategy:
                   runOnce:
                     deploy:
@@ -262,12 +262,12 @@ stages:
                                           -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        ${{ elseif and(gt(length(coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons, '')), 0), gt(length(coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons, '')), 0)) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])), not(containsValue(${{ coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons, '')), 0) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons, '')), 0) }}:
+                                          condition: and(succeeded(), not(containsValue(${{ coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
 
                                 # Bicep Action
                                 - ${{ if eq(actionGroup.type, 'bicep') }}:
@@ -314,12 +314,12 @@ stages:
                                           -CleanupStack ${{ format('{0}', eq(coalesce(action.cleanupStack, false), true)) }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        ${{ elseif and(gt(length(coalesce(action.runConditions.allowReasons, parameters.actionGroup.runConditions.allowReasons, '')), 0), gt(length(coalesce(action.runConditions.denyReasons, parameters.actionGroup.runConditions.denyReasons, '')), 0)) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, parameters.actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])), not(containsValue(${{ coalesce(action.runConditions.denyReasons, parameters.actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.allowReasons, parameters.actionGroup.runConditions.allowReasons, '')), 0) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, parameters.actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.denyReasons, parameters.actionGroup.runConditions.denyReasons, '')), 0) }}:
+                                          condition: and(succeeded(), not(containsValue(${{ coalesce(action.runConditions.denyReasons, parameters.actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
 
                                 # PowerShell Action
                                 - ${{ if eq(actionGroup.type, 'powershell') }}:
@@ -354,12 +354,12 @@ stages:
                                           workingDirectory: ${{ parameters.sourcePath }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                                        ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                                          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                                        ${{ elseif and(gt(length(coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons, '')), 0), gt(length(coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons, '')), 0)) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])), not(containsValue(${{ coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons, '')), 0) }}:
+                                          condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ coalesce(action.runConditions.allowReasons, actionGroup.runConditions.allowReasons) }}, variables['Build.Reason'])))
+                                        ${{ elseif gt(length(coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons, '')), 0) }}:
+                                          condition: and(succeeded(), not(containsValue(${{ coalesce(action.runConditions.denyReasons, actionGroup.runConditions.denyReasons) }}, variables['Build.Reason'])))
 
                                     # Optional PowerShell test publishing
                                     - ${{ if eq(coalesce(action.kind, actionGroup.kind, ''), 'pester') }}:

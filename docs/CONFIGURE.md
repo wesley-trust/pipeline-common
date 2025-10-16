@@ -271,9 +271,14 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Run Conditions
 
-- Two ways to control when a task runs:
-  - Simple flags: `runConditions.manualOnly|scheduleOnly|prOnly`
-  - Explicit `condition` expression (Azure DevOps runtime condition)
+- Control action group / action execution with:
+  - `runConditions.allowReasons`: list of `Build.Reason` values that must match (e.g. `['PullRequest']`).
+  - `runConditions.denyReasons`: list of reasons that should skip execution.
+  - Action-level `runConditions` inherit from their parent actionGroup unless explicitly set, so you can define shared behaviour once.
+  - `Manual` runs are always permitted unless listed in `runConditions.denyReasons`; you don’t need to include it in `allowReasons`.
+  - Run conditions are only evaluated for deploy-stage actions; review-stage jobs run with the default Azure DevOps behaviour unless you set `reviewCondition` or `condition`.
+  - Use `reviewCondition` (per action) when you need the review stage to diverge from deploy behaviour; `condition` continues to take precedence during deployment.
+  - Explicit `condition` expression (takes precedence over all of the above).
 
 ## Terraform Params (single file)
 

@@ -145,14 +145,8 @@ jobs:
                         -EnvironmentName "${{ parameters.environmentName }}"
                         -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
                       workingDirectory: ${{ parameters.sourcePath }}
-                      ${{ if ne(action.condition, '') }}:
-                        condition: ${{ action.condition }}
-                      ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                      ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                      ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                      ${{ if ne(coalesce(action.reviewCondition, action.condition, ''), '') }}:
+                        condition: ${{ coalesce(action.reviewCondition, action.condition) }}
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
                       displayName: Publish Terraform Plan (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'TERRAFORM'), '_', ' '))) }})
@@ -219,14 +213,8 @@ jobs:
                         -AllowDeleteOnUnmanage ${{ format('{0}', eq(coalesce(action.allowDeleteOnUnmanage, false), true)) }}
                         -CleanupStack ${{ format('{0}', eq(coalesce(action.cleanupStack, false), true)) }}
                       workingDirectory: ${{ parameters.sourcePath }}
-                      ${{ if ne(action.condition, '') }}:
-                        condition: ${{ action.condition }}
-                      ${{ if and(eq(action.condition, ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                      ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                      ${{ if and(eq(action.condition, ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                        condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+                      ${{ if ne(coalesce(action.reviewCondition, action.condition, ''), '') }}:
+                        condition: ${{ coalesce(action.reviewCondition, action.condition) }}
                   - template: ../../steps/publish-artifact.yml@PipelineCommon
                     parameters:
                       displayName: Publish What-If Output (${{ coalesce(action.displayName, upper(replace(coalesce(action.name, 'BICEP'), '_', ' '))) }})
@@ -288,12 +276,6 @@ jobs:
                       addSpnToEnvironment: ${{ eq(lower(coalesce(action.reviewScriptTask, action.scriptTask, parameters.actionGroup.scriptTask, 'pwsh')), 'azurecli') }}
                     ${{ if ne(coalesce(action.reviewCondition, action.condition, ''), '') }}:
                       condition: ${{ coalesce(action.reviewCondition, action.condition) }}
-                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), eq(coalesce(action.runConditions.manualOnly, false), true)) }}:
-                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'))
-                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), ne(coalesce(action.runConditions.manualOnly, false), true), eq(coalesce(action.runConditions.scheduleOnly, false), true)) }}:
-                      condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-                    ${{ if and(eq(coalesce(action.reviewCondition, action.condition, ''), ''), ne(coalesce(action.runConditions.manualOnly, false), true), ne(coalesce(action.runConditions.scheduleOnly, false), true), eq(coalesce(action.runConditions.prOnly, false), true)) }}:
-                      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
                   - ${{ if ne(coalesce(action.publishReviewOutput, false), false) }}:
                       - template: ../../steps/publish-artifact.yml@PipelineCommon
                         parameters:
