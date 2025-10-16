@@ -32,6 +32,7 @@ Reusable Azure DevOps YAML templates that standardise validation and deployment 
 
 ## Validation and Testing
 - Run `pwsh -File scripts/invoke_local_tests.ps1` for local smoke tests before pushing.
+- PowerShell action groups can set `kind: pester` so the templates wire up `PublishTestResults@2` automatically, following the naming convention `TestResults/<actionGroup>_<action>.xml`. Override with `testResultsFiles` when consumer scripts emit to a custom path.
 - To preview how Azure DevOps compiles templates, export the required PAT environment variables and execute `scripts/preview_examples.ps1` or `scripts/preview_pipeline_definitions.ps1` (docs cover parameters).
 - CI pipeline (`azure-pipelines.yml`) executes the same validation suite with NUnit reporting; configure a PAT as secret `AzureDevOpsPat` when enabling it in Azure DevOps.
 
