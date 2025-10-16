@@ -122,13 +122,6 @@ stages:
                         - ${{ format('delay_deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, coalesce(actionGroup.name, 'actionGroup')) }}
                 ${{ if ne(actionGroup.condition, '') }}:
                   condition: ${{ actionGroup.condition }}
-                ${{ elseif ne(convertToJson(actionGroup.runConditions), 'null') }}:
-                  ${{ if and(ne(convertToJson(actionGroup.runConditions.allowReasons), 'null'), ne(convertToJson(actionGroup.runConditions.denyReasons), 'null')) }}:
-                    condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
-                  ${{ elseif ne(convertToJson(actionGroup.runConditions.allowReasons), 'null') }}:
-                    condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])))
-                  ${{ elseif ne(convertToJson(actionGroup.runConditions.denyReasons), 'null') }}:
-                    condition: and(succeeded(), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
                 strategy:
                   runOnce:
                     deploy:
@@ -263,20 +256,6 @@ stages:
                                           -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ elseif ne(convertToJson(action.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(action.runConditions.allowReasons), 'null'), ne(convertToJson(action.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                        ${{ elseif ne(convertToJson(actionGroup.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(actionGroup.runConditions.allowReasons), 'null'), ne(convertToJson(actionGroup.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
 
                                 # Bicep Action
                                 - ${{ if eq(actionGroup.type, 'bicep') }}:
@@ -323,20 +302,6 @@ stages:
                                           -CleanupStack ${{ format('{0}', eq(coalesce(action.cleanupStack, false), true)) }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ elseif ne(convertToJson(action.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(action.runConditions.allowReasons), 'null'), ne(convertToJson(action.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                        ${{ elseif ne(convertToJson(actionGroup.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(actionGroup.runConditions.allowReasons), 'null'), ne(convertToJson(actionGroup.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
 
                                 # PowerShell Action
                                 - ${{ if eq(actionGroup.type, 'powershell') }}:
@@ -371,20 +336,6 @@ stages:
                                           workingDirectory: ${{ parameters.sourcePath }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: ${{ action.condition }}
-                                        ${{ elseif ne(convertToJson(action.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(action.runConditions.allowReasons), 'null'), ne(convertToJson(action.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ action.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(action.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ action.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                        ${{ elseif ne(convertToJson(actionGroup.runConditions), 'null') }}:
-                                          ${{ if and(ne(convertToJson(actionGroup.runConditions.allowReasons), 'null'), ne(convertToJson(actionGroup.runConditions.denyReasons), 'null')) }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.allowReasons), 'null') }}:
-                                            condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), containsValue(${{ actionGroup.runConditions.allowReasons }}, variables['Build.Reason'])))
-                                          ${{ elseif ne(convertToJson(actionGroup.runConditions.denyReasons), 'null') }}:
-                                            condition: and(succeeded(), not(containsValue(${{ actionGroup.runConditions.denyReasons }}, variables['Build.Reason'])))
 
                                     # Optional PowerShell test publishing
                                     - ${{ if eq(coalesce(action.kind, actionGroup.kind, ''), 'pester') }}:

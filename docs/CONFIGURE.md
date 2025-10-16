@@ -269,16 +269,11 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 - Define defaults in the settings files when composing the `configuration` object. Pipelines provide per‑run values only (individual parameters and actionGroups).
 
-## Run Conditions
+## Conditions
 
-- Control action group / action execution with:
-  - `runConditions.allowReasons`: list of `Build.Reason` values that must match (e.g. `['PullRequest']`).
-  - `runConditions.denyReasons`: list of reasons that should skip execution.
-  - Action-level `runConditions` inherit from their parent actionGroup unless explicitly set, so you can define shared behaviour once.
-  - `Manual` runs are always permitted unless listed in `runConditions.denyReasons`; you don’t need to include it in `allowReasons`.
-  - Run conditions are only evaluated for deploy-stage actions; review-stage jobs run with the default Azure DevOps behaviour unless you set `reviewCondition` or `condition`.
-  - Use `reviewCondition` (per action) when you need the review stage to diverge from deploy behaviour; `condition` continues to take precedence during deployment.
-  - Explicit `condition` expression (takes precedence over all of the above).
+- Supply complete Azure DevOps expressions with the `condition` property on action groups or individual actions when you need custom gating (for example, `and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))`).
+- Review-stage actions use the same `condition` property; you can also provide a dedicated `reviewCondition` if you need a different gate during the review stage.
+- If you omit `condition`, the template defaults to Azure DevOps’ standard behaviour (`succeeded()` for deploy stages).
 
 ## Terraform Params (single file)
 
