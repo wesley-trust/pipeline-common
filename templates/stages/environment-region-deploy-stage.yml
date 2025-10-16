@@ -121,7 +121,7 @@ stages:
                     - ${{ if ne(coalesce(actionGroup.delayMinutes, 0), 0) }}:
                         - ${{ format('delay_deploy_{0}_{1}_{2}', parameters.environmentName, parameters.regionName, coalesce(actionGroup.name, 'actionGroup')) }}
                 ${{ if ne(actionGroup.condition, '') }}:
-                  condition: ${{ format("and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), {0}))", actionGroup.condition) }}
+                  condition: ${{ format(and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), {0})), actionGroup.condition) }}
                 strategy:
                   runOnce:
                     deploy:
@@ -255,7 +255,7 @@ stages:
                                           -EnvironmentName "${{ parameters.environmentName }}"
                                           -VarFilesString "${{ coalesce(action.varFilesString, '') }}"
                                         ${{ if ne(action.condition, '') }}:
-                                          condition: ${{ format("and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), {0}))", action.condition) }}
+                                          condition: ${{ format(and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), {0})), action.condition) }}
 
                                 # Bicep Action
                                 - ${{ if eq(actionGroup.type, 'bicep') }}:
