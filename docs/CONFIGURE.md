@@ -271,9 +271,10 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 
 ## Conditions
 
-- Supply complete Azure DevOps expressions with the `condition` property on action groups or individual actions when you need custom gating (for example, `and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))`).
-- Review-stage actions use the same `condition` property; you can also provide a dedicated `reviewCondition` if you need a different gate during the review stage.
-- If you omit `condition`, the template defaults to Azure DevOps’ standard behaviour (`succeeded()` for deploy stages).
+- Provide the additional expression you want appended to the default manual gate by setting `condition` on an action group or action (for example, `eq(variables['Build.Reason'], 'PullRequest')` or `or(eq(...), eq(...))`).
+- The deploy template automatically wraps this value as `and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), <your expression>))`, so manual runs always remain allowed alongside anything you specify.
+- Review-stage actions use the same pattern; you may alternatively set `reviewCondition` when you need a different expression for the review stage.
+- If you omit `condition`, the template falls back to the Azure DevOps default (`succeeded()`).
 
 ## Terraform Params (single file)
 
