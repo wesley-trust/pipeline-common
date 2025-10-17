@@ -12,10 +12,11 @@ parameters:
 
 steps:
   - task: PublishPipelineArtifact@1
-    condition: succeededOrFailed()
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+    ${{ else }}:
+      condition: succeededOrFailed()
     displayName: ${{ parameters.displayName }}
     inputs:
       artifact: ${{ parameters.artifactName }}
       targetPath: ${{ parameters.targetPath }}
-    ${{ if ne(parameters.condition, '') }}:
-      condition: ${{ parameters.condition }}

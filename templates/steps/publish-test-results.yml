@@ -16,11 +16,12 @@ parameters:
 
 steps:
   - task: PublishTestResults@2
-    condition: succeededOrFailed()
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
+    ${{ else }}:
+      condition: succeededOrFailed()
     displayName: ${{ parameters.displayName }}
     inputs:
       testResultsFiles: ${{ parameters.testResultsFiles }}
       testResultsFormat: ${{ parameters.testResultsFormat }}
       testRunTitle: ${{ parameters.testRunTitle }}
-    ${{ if ne(parameters.condition, '') }}:
-      condition: ${{ parameters.condition }}

@@ -345,12 +345,16 @@ stages:
                                             testResultsFiles: ${{ format('{0}/{1}', parameters.sourcePath, coalesce(action.testResultsFiles, format('TestResults/{0}_{1}.xml', coalesce(actionGroup.name, actionGroup.displayName, format('actiongroup_{0}_{1}', parameters.environmentName, parameters.regionName)), coalesce(action.name, 'action')))) }}
                                             testResultsFormat: ${{ coalesce(action.testResultsFormat, 'NUnit') }}
                                             testRunTitle: ${{ coalesce(action.testRunTitle, format('{0} {1} ({2})', coalesce(actionGroup.displayName, upper(replace(coalesce(actionGroup.name, 'ACTION GROUP'), '_', ' '))), coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))), upper(replace(parameters.regionName, ' ', '-')))) }}
+                                            ${{ if ne(action.condition, '') }}:
+                                              condition: and(succeededOrFailed(), or(eq(variables['Build.Reason'], 'Manual'), ${{ action.condition }}))
                                         - ${{ if eq(coalesce(variables.publishTestArtifacts, false), true) }}:
                                             - template: ../steps/publish-artifact.yml@PipelineCommon
                                               parameters:
                                                 displayName: ${{ coalesce(action.publishDisplayName, format('Publish {0} artifacts', coalesce(action.displayName, upper(replace(coalesce(action.name, 'POWERSHELL'), '_', ' '))))) }}
                                                 targetPath: $(Build.ArtifactStagingDirectory)
                                                 artifactName: ${{ coalesce(action.publishArtifactName, format('{0}-{1}-{2}', coalesce(actionGroup.name, actionGroup.displayName, format('actiongroup_{0}_{1}', parameters.environmentName, parameters.regionName)), coalesce(action.name, 'action'), upper(replace(parameters.regionName, ' ', '-')))) }}
+                                                ${{ if ne(action.condition, '') }}:
+                                                  condition: and(succeededOrFailed(), or(eq(variables['Build.Reason'], 'Manual'), ${{ action.condition }}))
 
                         # Optional Post Deployment Scripts
                         - ${{ if ne(coalesce(actionGroup.postDeploy.scripts, ''), '') }}:
