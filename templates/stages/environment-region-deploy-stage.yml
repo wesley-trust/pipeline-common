@@ -347,7 +347,7 @@ stages:
                                             repositoryName: ${{ coalesce(action.release.repositoryName, actionGroup.release.repositoryName, '$(Build.Repository.Name)') }}
                                             action: ${{ coalesce(action.release.action, actionGroup.release.action, 'create') }}
                                             target: ${{ coalesce(action.release.target, actionGroup.release.target, '$(Build.SourceVersion)') }}
-                                            tagSource: ${{ coalesce(action.release.tagSource, actionGroup.release.tagSource, 'manual') }}
+                                            tagSource: ${{ coalesce(action.release.tagSource, actionGroup.release.tagSource, 'userSpecifiedTag') }}
                                             tag: ${{ coalesce(action.release.tag, actionGroup.release.tag, '$(ReleaseTag)') }}
                                             title: ${{ coalesce(action.release.title, actionGroup.release.title, '$(ReleaseTitle)') }}
                                             releaseNotesSource: ${{ coalesce(action.release.releaseNotesSource, actionGroup.release.releaseNotesSource, 'file') }}
