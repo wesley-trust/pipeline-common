@@ -76,3 +76,5 @@ steps:
       assetUploadMode: ${{ parameters.assetUploadMode }}
       ${{ if ne(parameters.assets, '') }}:
         assets: ${{ parameters.assets }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}
