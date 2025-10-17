@@ -66,10 +66,10 @@ steps:
         title: ${{ parameters.title }}
       ${{ if ne(parameters.releaseNotesSource, '') }}:
         releaseNotesSource: ${{ parameters.releaseNotesSource }}
-      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'input')) }}:
-        releaseNotes: ${{ parameters.releaseNotes }}
-      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'file')) }}:
-        releaseNotesFile: ${{ parameters.releaseNotesFile }}
+      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'inline')) }}:
+        releaseNotesInline: ${{ parameters.releaseNotes }}
+      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'filePath')) }}:
+        releaseNotesFilePath: ${{ parameters.releaseNotesFile }}
       isDraft: ${{ parameters.isDraft }}
       isPreRelease: ${{ parameters.isPreRelease }}
       addChangeLog: ${{ parameters.addChangeLog }}
