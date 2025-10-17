@@ -350,9 +350,9 @@ stages:
                                             tagSource: ${{ coalesce(action.release.tagSource, actionGroup.release.tagSource, 'userSpecifiedTag') }}
                                             tag: ${{ coalesce(action.release.tag, actionGroup.release.tag, '$(ReleaseTag)') }}
                                             title: ${{ coalesce(action.release.title, actionGroup.release.title, '$(ReleaseTitle)') }}
-                                            releaseNotesSource: ${{ coalesce(action.release.releaseNotesSource, actionGroup.release.releaseNotesSource, 'inline') }}
-                                            releaseNotes: ${{ coalesce(action.release.releaseNotes, actionGroup.release.releaseNotes, '$(ReleaseNotes)') }}
-                                            releaseNotesFile: ${{ coalesce(action.release.releaseNotesFile, actionGroup.release.releaseNotesFile, '') }}
+                                            releaseNotesSource: ${{ coalesce(action.release.releaseNotesSource, actionGroup.release.releaseNotesSource, 'filePath') }}
+                                            releaseNotes: ${{ coalesce(action.release.releaseNotes, actionGroup.release.releaseNotes, '') }}
+                                            releaseNotesFile: ${{ coalesce(action.release.releaseNotesFile, actionGroup.release.releaseNotesFile, '$(ReleaseNotesFile)') }}
                                             isDraft: ${{ coalesce(action.release.isDraft, actionGroup.release.isDraft, false) }}
                                             isPreRelease: ${{ coalesce(action.release.isPreRelease, actionGroup.release.isPreRelease, false) }}
                                             addChangeLog: ${{ coalesce(action.release.addChangeLog, actionGroup.release.addChangeLog, false) }}
