@@ -46,7 +46,7 @@ Reusable Azure DevOps YAML templates that standardise validation and deployment 
 - Add new jobs or steps under `templates/jobs/` and `templates/steps/` so they can be reused by multiple consumers.
 - Use feature flags in `configuration` when introducing behaviour that existing pipelines should opt into gradually.
 - When tests or preview jobs need unique identifiers, supply `variableOverridesEnabled: true` plus `variableOverrides` on an action group. The overrides merge with the standard variable includes and expose dynamic suffix helpers from `include-overrides.yml`.
-- For GitHub releases, define a pipeline variable such as `gitHubServiceConnection` (or override per action) so `kind: release` actions can reuse the same connection and metadata without extra boilerplate.
+- For GitHub releases, define a pipeline variable such as `gitHubServiceConnection` (or override per action) so `kind: release` actions can reuse the same connection and metadata without extra boilerplate. The release script should set `ReleaseTag`, `ReleaseTitle`, and `ReleaseNotes` (and optionally `ReleaseSkip`) so the helper can publish the release without extra YAML.
 - Document schema or behavioural changes in both this README and `docs/CONFIGURE.md`, then communicate through dispatcher release notes so consumers can adopt safely.
 
 ## Related Repositories
