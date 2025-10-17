@@ -16,7 +16,7 @@ parameters:
     default: "$(Build.SourceVersion)"
   - name: tagSource
     type: string
-    default: manual
+    default: userSpecifiedTag
   - name: tag
     type: string
     default: ""
