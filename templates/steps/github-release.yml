@@ -1,0 +1,80 @@
+parameters:
+  - name: displayName
+    type: string
+    default: Publish GitHub release
+  - name: gitHubConnection
+    type: string
+    default: ""
+  - name: repositoryName
+    type: string
+    default: ""
+  - name: action
+    type: string
+    default: create
+  - name: target
+    type: string
+    default: "$(Build.SourceVersion)"
+  - name: tagSource
+    type: string
+    default: manual
+  - name: tag
+    type: string
+    default: ""
+  - name: title
+    type: string
+    default: ""
+  - name: releaseNotesSource
+    type: string
+    default: ""
+  - name: releaseNotes
+    type: string
+    default: ""
+  - name: releaseNotesFile
+    type: string
+    default: ""
+  - name: isDraft
+    type: boolean
+    default: false
+  - name: isPreRelease
+    type: boolean
+    default: false
+  - name: addChangeLog
+    type: boolean
+    default: false
+  - name: assets
+    type: string
+    default: ""
+  - name: assetUploadMode
+    type: string
+    default: replace
+  - name: condition
+    type: string
+    default: ""
+
+steps:
+  - task: GitHubRelease@1
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      gitHubConnection: ${{ parameters.gitHubConnection }}
+      repositoryName: ${{ parameters.repositoryName }}
+      action: ${{ parameters.action }}
+      target: ${{ parameters.target }}
+      tagSource: ${{ parameters.tagSource }}
+      ${{ if ne(parameters.tag, '') }}:
+        tag: ${{ parameters.tag }}
+      ${{ if ne(parameters.title, '') }}:
+        title: ${{ parameters.title }}
+      ${{ if ne(parameters.releaseNotesSource, '') }}:
+        releaseNotesSource: ${{ parameters.releaseNotesSource }}
+      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'input')) }}:
+        releaseNotes: ${{ parameters.releaseNotes }}
+      ${{ if and(ne(parameters.releaseNotesSource, ''), eq(parameters.releaseNotesSource, 'file')) }}:
+        releaseNotesFile: ${{ parameters.releaseNotesFile }}
+      isDraft: ${{ parameters.isDraft }}
+      isPreRelease: ${{ parameters.isPreRelease }}
+      addChangeLog: ${{ parameters.addChangeLog }}
+      assetUploadMode: ${{ parameters.assetUploadMode }}
+      ${{ if ne(parameters.assets, '') }}:
+        assets: ${{ parameters.assets }}
+    ${{ if ne(parameters.condition, '') }}:
+      condition: ${{ parameters.condition }}

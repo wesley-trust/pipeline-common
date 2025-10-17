@@ -20,6 +20,7 @@ Reusable Azure DevOps YAML templates that standardise validation and deployment 
 - `templates/jobs/` – technology-specific jobs for Terraform, Bicep, PowerShell, and initialise helpers.
 - `templates/steps/` – single-step templates (AzureCLI, PowerShell, publish/download artifacts, Replace Tokens, Key Vault import, etc.).
 - `templates/variables/include.yml` – compile-time matrix controlling which variable files (common/env/region/env-region) are loaded.
+- `templates/steps/github-release.yml` – wrapper around `GitHubRelease@1` for publishing GitHub Releases from PowerShell action groups with `kind: release`.
 - `templates/variables/include-overrides.yml` – injects action-level overrides (dynamic deployment versions, suffix tokens, arbitrary key/value pairs) when action groups enable variable overrides.
 - `scripts/` – PowerShell implementations used by jobs (initialise installers, validators, Terraform/Bicep runners, previews).
 - `tests/` – Pester suites covering template compilation and helper scripts. `scripts/invoke_local_tests.ps1` orchestrates them locally.
@@ -39,11 +40,13 @@ Reusable Azure DevOps YAML templates that standardise validation and deployment 
 - To preview how Azure DevOps compiles templates, export the required PAT environment variables and execute `scripts/preview_examples.ps1` or `scripts/preview_pipeline_definitions.ps1` (docs cover parameters).
 - CI pipeline (`azure-pipelines.yml`) executes the same validation suite with NUnit reporting; configure a PAT as secret `AzureDevOpsPat` when enabling it in Azure DevOps.
 - PowerShell action groups can opt into `variableOverridesEnabled: true` to inject ephemeral variables (for example, dynamic deployment versions or test-only flags). Overrides are processed via `templates/variables/include-overrides.yml`; see `docs/CONFIGURE.md` for schema details.
+- PowerShell action groups that use `kind: release` gain automatic access to the GitHub release helper – run your script to calculate/tag a version and set variables such as `ReleaseTag`/`ReleaseNotesFile`, then the helper wraps `GitHubRelease@1` to publish the release.
 
 ## Extending the Templates
 - Add new jobs or steps under `templates/jobs/` and `templates/steps/` so they can be reused by multiple consumers.
 - Use feature flags in `configuration` when introducing behaviour that existing pipelines should opt into gradually.
 - When tests or preview jobs need unique identifiers, supply `variableOverridesEnabled: true` plus `variableOverrides` on an action group. The overrides merge with the standard variable includes and expose dynamic suffix helpers from `include-overrides.yml`.
+- For GitHub releases, define a pipeline variable such as `gitHubServiceConnection` (or override per action) so `kind: release` actions can reuse the same connection and metadata without extra boilerplate.
 - Document schema or behavioural changes in both this README and `docs/CONFIGURE.md`, then communicate through dispatcher release notes so consumers can adopt safely.
 
 ## Related Repositories

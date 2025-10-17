@@ -129,6 +129,7 @@ stages:
                         - ${{ if eq(coalesce(actionGroup.useLockedSources, parameters.useLockedSources, true), false) }}:
                             - checkout: self
                               path: s/self
+                              persistCredentials: ${{ coalesce(actionGroup.persistCredentials, eq(coalesce(actionGroup.kind, ''), 'release'), false) }}
                         - checkout: PipelineCommon
                           path: s/PipelineCommon
 
@@ -336,6 +337,28 @@ stages:
                                           workingDirectory: ${{ parameters.sourcePath }}
                                         ${{ if ne(action.condition, '') }}:
                                           condition: and(succeeded(), or(eq(variables['Build.Reason'], 'Manual'), ${{ action.condition }}))
+
+                                    # Optional GitHub Release publication
+                                    - ${{ if eq(coalesce(action.kind, actionGroup.kind, ''), 'release') }}:
+                                        - template: ../steps/github-release.yml@PipelineCommon
+                                          parameters:
+                                            displayName: ${{ coalesce(action.release.displayName, actionGroup.release.displayName, 'Publish GitHub release') }}
+                                            gitHubConnection: ${{ coalesce(action.release.gitHubConnection, actionGroup.release.gitHubConnection, variables['gitHubServiceConnection'], '$(gitHubServiceConnection)') }}
+                                            repositoryName: ${{ coalesce(action.release.repositoryName, actionGroup.release.repositoryName, '$(Build.Repository.Name)') }}
+                                            action: ${{ coalesce(action.release.action, actionGroup.release.action, 'create') }}
+                                            target: ${{ coalesce(action.release.target, actionGroup.release.target, '$(Build.SourceVersion)') }}
+                                            tagSource: ${{ coalesce(action.release.tagSource, actionGroup.release.tagSource, 'manual') }}
+                                            tag: ${{ coalesce(action.release.tag, actionGroup.release.tag, '$(ReleaseTag)') }}
+                                            title: ${{ coalesce(action.release.title, actionGroup.release.title, '$(ReleaseTitle)') }}
+                                            releaseNotesSource: ${{ coalesce(action.release.releaseNotesSource, actionGroup.release.releaseNotesSource, 'file') }}
+                                            releaseNotes: ${{ coalesce(action.release.releaseNotes, actionGroup.release.releaseNotes, '') }}
+                                            releaseNotesFile: ${{ coalesce(action.release.releaseNotesFile, actionGroup.release.releaseNotesFile, '$(ReleaseNotesFile)') }}
+                                            isDraft: ${{ coalesce(action.release.isDraft, actionGroup.release.isDraft, false) }}
+                                            isPreRelease: ${{ coalesce(action.release.isPreRelease, actionGroup.release.isPreRelease, false) }}
+                                            addChangeLog: ${{ coalesce(action.release.addChangeLog, actionGroup.release.addChangeLog, false) }}
+                                            assets: ${{ coalesce(action.release.assets, actionGroup.release.assets, '') }}
+                                            assetUploadMode: ${{ coalesce(action.release.assetUploadMode, actionGroup.release.assetUploadMode, 'replace') }}
+                                            condition: ${{ coalesce(action.release.condition, actionGroup.release.condition, 'and(succeeded(), ne(variables.ReleaseSkip, ''true''))') }}
 
                                     # Optional PowerShell test publishing
                                     - ${{ if eq(coalesce(action.kind, actionGroup.kind, ''), 'pester') }}:
