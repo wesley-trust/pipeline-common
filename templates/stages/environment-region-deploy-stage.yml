@@ -358,7 +358,6 @@ stages:
                                             addChangeLog: ${{ coalesce(action.release.addChangeLog, actionGroup.release.addChangeLog, false) }}
                                             assets: ${{ coalesce(action.release.assets, actionGroup.release.assets, '') }}
                                             assetUploadMode: ${{ coalesce(action.release.assetUploadMode, actionGroup.release.assetUploadMode, 'replace') }}
-                                            condition: ${{ coalesce(action.release.condition, actionGroup.release.condition, 'and(succeeded(), ne(variables.ReleaseSkip, ''true''))') }}
 
                                     # Optional PowerShell test publishing
                                     - ${{ if eq(coalesce(action.kind, actionGroup.kind, ''), 'pester') }}:
