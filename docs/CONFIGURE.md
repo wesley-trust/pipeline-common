@@ -146,6 +146,31 @@ templates/main.yml@PipelineCommon (consume `configuration`)
 - Override defaults with `tokenTargetPatterns` on the relevant scope; omit the property to fall back to the behaviour above. `tokenPrefix`/`tokenSuffix` honour the same inheritance (action → actionGroup → default `#{{` / `}}`).
 - Applied in review (plan/what-if) and deployment phases; disable with `tokenReplaceEnabled: false` on either scope. PowerShell validation/review runs accept the same flags.
 
+## Variable Overrides & Dynamic Versions
+
+- PowerShell actions (validation/review/deploy) can opt into `variableOverridesEnabled: true`. Set the flag on the action or its parent actionGroup.
+- Provide a `variableOverrides` object containing key/value pairs. Values are converted to strings and surfaced as pipeline variables alongside the standard include layers.
+- When overrides are enabled, `templates/variables/include-overrides.yml` also exposes:
+  - `runSuffix` – derived from `$(Build.BuildId)` and the optional token supplied via `testsDeploymentSuffixToken` (defaults to the action/actionGroup name).
+  - `deploymentVersion` – when you set `dynamicDeploymentVersionEnabled = true` in `variableOverrides`, the helper combines the original deployment version with `runSuffix` to produce a unique value per run. Leaving the flag false keeps the original version untouched.
+- Use overrides to toggle test behaviours (for example, `excludeTypeVirtualNetworkPeerings = true`) or to inject temporary feature gates consumed by scripts/templates.
+- Example:
+
+```yaml
+actionGroups:
+  - name: bicep_tests_network_services_ci
+    type: powershell
+    variableOverridesEnabled: true
+    testsDeploymentSuffixToken: ci
+    variableOverrides:
+      dynamicDeploymentVersionEnabled: true
+      excludeTypeVirtualNetworkPeerings: true
+    actions:
+      - name: unit_tests
+        scriptPath: scripts/pester_run.ps1
+        arguments: "-PathRoot tests -Type unit -TestData @{Name='network_services'} -ResultsFile TestResults/bicep_tests_network_services_ci_unit_tests.xml"
+```
+
 ## Additional Repository Checkouts
 
 - In settings under `configuration.additionalRepositories`, declare repositories to be available during Validation/Review/Deploy (e.g., Bicep modules):
