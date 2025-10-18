@@ -1,0 +1,47 @@
+# Run Conditions
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - feature/*
+      - release/*
+  paths:
+    include:
+      - platform/
+      - pipeline/
+      - scripts/
+      - tests/
+      - vars/
+
+parameters:
+  # Global flags
+  - name: drInvocation
+    displayName: "Invoke Pipeline DR Operation"
+    type: boolean
+    default: false
+  
+  # Pipeline test toggles & settings
+  - name: doNotRunUnit
+    displayName: "Pipeline Tests: Skip Unit"
+    type: boolean
+    default: false
+
+extends:
+  template: pipeline-common.settings.yml
+  parameters:
+    drInvocation: ${{ parameters.drInvocation }}
+    actionGroups:
+      - name: pipeline_tests
+        type: powershell
+        scriptTask: azureCli
+        kind: pester
+        environments:
+          - dev
+        useLockedSources: false
+        actions:
+          - name: unit_tests
+            enabled: ${{ not(parameters.doNotRunUnit) }}
+            scriptPath: scripts/pester_run.ps1
+            arguments: "-PathRoot tests -Type unit -TestData @{Name='pipeline_validation'} -ResultsFile TestResults/pipeline_tests_unit_tests.xml"
+            condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
