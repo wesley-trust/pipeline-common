@@ -2,26 +2,32 @@ parameters:
   - name: actionGroups
     type: object
     default: []
+  - name: enableProduction
+    type: boolean
+    default: false
   - name: runReviewStage
     type: boolean
-    default: true
+    default: false
+  - name: drInvocation
+    type: boolean
+    default: false
   - name: skipEnvironments
     type: object
     default:
       dev: false
-      qa: false
-      ppr: false
+      qa: true
+      ppr: true
   - name: skipRegions
     type: object
     default:
       primary: false
-      secondary: false
+      secondary: true
   - name: globalDependsOn
     type: string
-    default: ""
+    default: validation
   - name: pipelineType
     type: string
-    default: ""
+    default: auto
 
 resources:
   repositories:
@@ -39,12 +45,29 @@ extends:
     globalDependsOn: ${{ parameters.globalDependsOn }}
     configuration:
       actionGroups: ${{ parameters.actionGroups }}
+      enableProduction: ${{ parameters.enableProduction }}
       runReviewStage: ${{ parameters.runReviewStage }}
-      enableProduction: false
-      drInvocation: false
+      drInvocation: ${{ parameters.drInvocation }}
+
+      # Configuration Override
       pipelineType: ${{ parameters.pipelineType }}
-      variables:
-        includeCommon: true
-        includeEnv: true
-        includeEnvRegion: true
-        includeRegion: true
+      # variables:
+      #   includeCommon: true
+      #   includeEnv: true
+      #   includeEnvRegion: true
+      #   includeRegion: true
+
+    # Environments Override
+    # environments:
+    #   - name: dev
+    #     class: development
+    #     dependsOnSecondaryRegions: false
+    #     primaryRegion: weu
+    #     secondaryRegions:
+    #       - neu
+    #     drRegion: neu
+    #     allowedBranches:
+    #       - "*"
+    #     pool:
+    #       vmImage: "ubuntu-latest"
+    #     poolRegionDemand: false

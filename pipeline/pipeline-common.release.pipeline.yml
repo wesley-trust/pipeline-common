@@ -15,15 +15,7 @@ parameters:
 extends:
   template: pipeline-common.settings.yml
   parameters:
-    runReviewStage: false
     drInvocation: ${{ parameters.drInvocation }}
-    skipEnvironments:
-      qa: true
-      ppr: true
-    skipRegions:
-      secondary: true
-    globalDependsOn: validation
-    pipelineType: auto
     actionGroups:
       - name: github_release
         type: powershell
