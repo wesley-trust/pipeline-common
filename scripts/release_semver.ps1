@@ -11,7 +11,7 @@ function Set-PipelineVariable {
     [Parameter(Mandatory = $true)][string]$Value
   )
 
-  Write-Host "##vso[task.setvariable variable=$Name]$Value"
+  Write-Information -InformationAction Continue -MessageData "##vso[task.setvariable variable=$Name]$Value"
 }
 
 try {
@@ -35,7 +35,7 @@ try {
     git fetch --prune --unshallow | Out-Null
   }
   catch {
-    Write-Host 'Repository already contains full history.'
+    Write-Information -InformationAction Continue -MessageData 'Repository already contains full history.'
   }
 
   $commitMessage = (git log -1 --format=%B | Out-String).Trim()
@@ -48,7 +48,7 @@ try {
     $latestTag = (git describe --tags --abbrev=0).Trim()
   }
   catch {
-    Write-Host 'No existing tags detected. Starting from v0.0.0.'
+    Write-Information -InformationAction Continue -MessageData 'No existing tags detected. Starting from v0.0.0.'
   }
 
   if ($latestTag -notmatch '^v(\d+)\.(\d+)\.(\d+)$') {
@@ -62,12 +62,12 @@ try {
       $latestTagCommit = (git rev-list -n 1 $latestTag).Trim()
     }
     catch {
-      Write-Host "Unable to resolve commit for tag $latestTag. Proceeding with new release."
+      Write-Information -InformationAction Continue -MessageData "Unable to resolve commit for tag $latestTag. Proceeding with new release."
     }
   }
 
   if ($latestTagCommit -eq $headCommit -and $latestTag -ne 'v0.0.0') {
-    Write-Host "Latest tag $latestTag already points to HEAD ($headCommit). Skipping release creation."
+    Write-Information -InformationAction Continue -MessageData "Latest tag $latestTag already points to HEAD ($headCommit). Skipping release creation."
     Set-PipelineVariable -Name 'ReleaseSkip' -Value 'true'
     Set-PipelineVariable -Name 'ReleaseTag' -Value $latestTag
     Set-PipelineVariable -Name 'ReleaseTitle' -Value "Release $latestTag"
@@ -85,7 +85,7 @@ try {
     Set-Content -Path $ReleaseNotesFile -Value $notesContent -Encoding UTF8
     Set-PipelineVariable -Name 'ReleaseNotesFile' -Value $ReleaseNotesFile
     Set-PipelineVariable -Name 'ReleaseNotes' -Value $notesContent
-    Write-Host "##vso[build.updatebuildnumber]$latestTag"
+    Write-Information -InformationAction Continue -MessageData "##vso[build.updatebuildnumber]$latestTag"
     return
   }
 
@@ -101,7 +101,7 @@ try {
     $bump = 'minor'
   }
 
-  Write-Host "Semantic version bump detected: $bump"
+  Write-Information -InformationAction Continue -MessageData "Semantic version bump detected: $bump"
 
   $null = $latestTag -match '^v(\d+)\.(\d+)\.(\d+)$'
   $major = [int]$Matches[1]
@@ -124,20 +124,20 @@ try {
   }
 
   $newTag = "v$major.$minor.$patch"
-  Write-Host "Latest tag: $latestTag"
-  Write-Host "New tag: $newTag"
+  Write-Information -InformationAction Continue -MessageData "Latest tag: $latestTag"
+  Write-Information -InformationAction Continue -MessageData "New tag: $newTag"
 
   Set-PipelineVariable -Name 'ReleaseSkip' -Value 'false'
 
   $existingTag = (git tag -l $newTag)
   if (-not [string]::IsNullOrWhiteSpace($existingTag)) {
-    Write-Host "Tag $newTag already exists. Skipping creation."
+    Write-Information -InformationAction Continue -MessageData "Tag $newTag already exists. Skipping creation."
     Set-PipelineVariable -Name 'ReleaseSkip' -Value 'true'
   }
   else {
     git tag $newTag
     git push origin $newTag | Out-Null
-    Write-Host "Created and pushed tag $newTag."
+    Write-Information -InformationAction Continue -MessageData "Created and pushed tag $newTag."
   }
 
   if ([string]::IsNullOrWhiteSpace($ReleaseNotesFile)) {
@@ -157,7 +157,7 @@ try {
   Set-PipelineVariable -Name 'ReleaseNotesFile' -Value $ReleaseNotesFile
   Set-PipelineVariable -Name 'ReleaseNotes' -Value $notesContent
 
-  Write-Host "##vso[build.updatebuildnumber]$newTag"
+  Write-Information -InformationAction Continue -MessageData "##vso[build.updatebuildnumber]$newTag"
 }
 catch {
   Write-Error $_

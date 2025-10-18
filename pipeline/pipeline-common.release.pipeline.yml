@@ -31,7 +31,3 @@ extends:
             condition: eq(variables['ReleaseSkip'], 'false')
             scriptPath: scripts/update_dispatcher_ref.ps1
             arguments: "-PipelineCommonTag $(ReleaseTag) -GitHubRepository wesley-trust/pipeline-dispatcher"
-          - name: update_dispatcher
-            condition: eq(variables['ReleaseSkip'], 'false')
-            scriptPath: scripts/update_dispatcher_ref.ps1
-            arguments: "-PipelineCommonTag $(ReleaseTag) -GitHubRepository wesley-trust/pipeline-dispatcher"

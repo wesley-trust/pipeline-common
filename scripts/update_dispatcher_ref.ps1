@@ -21,13 +21,23 @@ function Set-PipelineVariable {
 function Get-GitHubToken {
   param([string]$PreferredHost)
 
+  $preferredUri = [System.Uri]$PreferredHost
+  $preferredHost = $preferredUri.Host
+  $candidateHosts = @($preferredHost, "api.$preferredHost")
+
   $envVars = Get-ChildItem Env: | Where-Object { $_.Name -like 'ENDPOINT_AUTH_PARAMETER_*_ACCESSTOKEN' }
   foreach ($var in $envVars) {
     $endpointId = ($var.Name -replace '^ENDPOINT_AUTH_PARAMETER_', '') -replace '_ACCESSTOKEN$', ''
     $urlVar = "ENDPOINT_URL_$endpointId"
     $url = (Get-Item -Path "Env:$urlVar" -ErrorAction SilentlyContinue).Value
     if (-not $url) { continue }
-    if ($url.StartsWith($PreferredHost, [System.StringComparison]::OrdinalIgnoreCase)) {
+    try {
+      $uri = [System.Uri]$url
+    }
+    catch {
+      continue
+    }
+    if ($candidateHosts -contains $uri.Host) {
       return $var.Value
     }
   }
