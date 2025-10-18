@@ -5,10 +5,18 @@ trigger:
       - main
 pr: none
 
+parameters:
+  # Global flags
+  - name: drInvocation
+    displayName: "Invoke Pipeline DR Operation"
+    type: boolean
+    default: false
+
 extends:
   template: pipeline-common.settings.yml
   parameters:
     runReviewStage: false
+    drInvocation: ${{ parameters.drInvocation }}
     skipEnvironments:
       qa: true
       ppr: true
