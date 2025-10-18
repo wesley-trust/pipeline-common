@@ -1,0 +1,29 @@
+# Run Conditions
+trigger:
+  branches:
+    include:
+      - main
+pr: none
+
+extends:
+  template: pipeline-common.settings.yml
+  parameters:
+    runReviewStage: false
+    skipEnvironments:
+      qa: true
+      ppr: true
+    skipRegions:
+      secondary: true
+    globalDependsOn: validation
+    pipelineType: auto
+    actionGroups:
+      - name: github_release
+        type: powershell
+        kind: release
+        environments:
+          - dev
+        useLockedSources: false
+        actions:
+          - name: create_tag
+            scriptPath: scripts/release_semver.ps1
+            arguments: "-ReleaseNotesFile $(Build.SourcesDirectory)/release/release-notes.md"

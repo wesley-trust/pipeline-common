@@ -49,6 +49,7 @@
 - `scripts/initialise_bicep.ps1` – installs/updates Azure CLI Bicep tooling.
 - `scripts/ps_analyse.ps1` – executes PSScriptAnalyzer for PowerShell actions.
 - `scripts/branch_check.ps1` – enforces runtime branch allow-list per environment.
+- `scripts/release_semver.ps1` – drives the semantic-release pipeline (calculates semver, tags the repo, and exports release metadata for the GitHub release task).
 - `scripts/validate_variable_includes.ps1`, `scripts/validate_token_targets.ps1`, `scripts/validate_environment_model.ps1`, `scripts/validate_pools.ps1` – static validation helpers invoked during the Validation stage.
 
 ## Working With Examples

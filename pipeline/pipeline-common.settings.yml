@@ -1,0 +1,50 @@
+parameters:
+  - name: actionGroups
+    type: object
+    default: []
+  - name: runReviewStage
+    type: boolean
+    default: true
+  - name: skipEnvironments
+    type: object
+    default:
+      dev: false
+      qa: false
+      ppr: false
+  - name: skipRegions
+    type: object
+    default:
+      primary: false
+      secondary: false
+  - name: globalDependsOn
+    type: string
+    default: ""
+  - name: pipelineType
+    type: string
+    default: ""
+
+resources:
+  repositories:
+    - repository: PipelineDispatcher
+      type: github
+      endpoint: wesley-trust
+      name: wesley-trust/pipeline-dispatcher
+      ref: "refs/heads/main"
+
+extends:
+  template: /templates/pipeline-configuration-dispatcher.yml@PipelineDispatcher
+  parameters:
+    skipEnvironments: ${{ parameters.skipEnvironments }}
+    skipRegions: ${{ parameters.skipRegions }}
+    globalDependsOn: ${{ parameters.globalDependsOn }}
+    configuration:
+      actionGroups: ${{ parameters.actionGroups }}
+      runReviewStage: ${{ parameters.runReviewStage }}
+      enableProduction: false
+      drInvocation: false
+      pipelineType: ${{ parameters.pipelineType }}
+      variables:
+        includeCommon: true
+        includeEnv: true
+        includeEnvRegion: true
+        includeRegion: true
