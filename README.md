@@ -6,7 +6,6 @@ Reusable Azure DevOps YAML templates that standardise validation and deployment 
 - `AGENTS.md` – AI-focused handbook explaining runtime behaviour and validation tooling.
 - `docs/CONFIGURE.md` – canonical parameter reference and deep-dive guidance for consumers.
 - `pipeline/pipeline-common.release.pipeline.yml` – semantic-release pipeline that tags this repo and publishes GitHub releases.
-  The pipeline also updates `pipeline-dispatcher` by opening a pull request against `templates/pipeline-common-dispatcher.yml` with the new tag.
 - `pipeline-dispatcher` repo – dispatcher templates that lock this repository and merge configuration defaults.
 - `pipeline-examples` repo – sample consumer pipelines showing how to compose `*.pipeline.yml` and `*.settings.yml` pairs.
 
