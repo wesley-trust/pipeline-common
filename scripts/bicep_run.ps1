@@ -400,6 +400,10 @@ switch ($Scope) {
           $actionOnUnmanage = if ($allowDelete) { 'deleteAll' } else { 'detachAll' }
           $deleteArgs += @('--action-on-unmanage', $actionOnUnmanage)
 
+          $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
+          $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the resource group stack '$StackName' in '$ResourceGroupName' to $actionDescription."
+          Write-Information -InformationAction Continue -MessageData $message
+
           az @deleteArgs
         }
         else {
@@ -597,8 +601,13 @@ switch ($Scope) {
           if ($SubscriptionId) { $deleteArgs += @('--subscription', $SubscriptionId) }
 
           $actionOnUnmanage = if ($allowDelete) { 'deleteAll' } else { 'detachAll' }
+          
           $deleteArgs += @('--action-on-unmanage', $actionOnUnmanage)
 
+          $actionDescription = if ($allowDelete) { 'delete all managed resources' } else { 'detach resources from the stack' }
+          $message = "CleanupStack is enabled. Deploy stage will skip Bicep deployment and delete the subscription stack '$StackName' to $actionDescription."
+          Write-Information -InformationAction Continue -MessageData $message
+          
           az @deleteArgs
         }
         else {
